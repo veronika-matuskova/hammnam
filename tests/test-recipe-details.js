@@ -36,6 +36,43 @@ test('new recipes initialize with empty detail fields', () => {
   assert.equal(app.newRecipe.notes, '');
 });
 
+test('recipe details open, follow the selected language, and close', () => {
+  const app = createRecipeApp();
+  const recipe = {
+    title_cs: 'Polévka',
+    title_sk: 'Polievka',
+    ingredients: [{ name: 'Mrkev', amount: '2', unit: 'ks' }, null],
+    steps: ['Nakrájet zeleninu.', '  ']
+  };
+  app.showForm = true;
+
+  app.openRecipe(recipe);
+
+  assert.equal(app.showForm, false);
+  assert.equal(app.selectedRecipe, recipe);
+  assert.equal(app.displayTitle(app.selectedRecipe), 'Polévka');
+  app.language = 'sk';
+  assert.equal(app.displayTitle(app.selectedRecipe), 'Polievka');
+  assert.deepEqual(JSON.parse(JSON.stringify(app.recipeIngredients(recipe))), [
+    { name: 'Mrkev', amount: '2', unit: 'ks' }
+  ]);
+  assert.equal(app.ingredientMeasure(recipe.ingredients[0]), '2 ks');
+  assert.deepEqual(JSON.parse(JSON.stringify(app.recipeSteps(recipe))), ['Nakrájet zeleninu.']);
+
+  app.closeRecipe();
+  assert.equal(app.selectedRecipe, null);
+});
+
+test('GI badges use numeric and localized low/medium/high ranges', () => {
+  const app = createRecipeApp();
+
+  assert.equal(app.giClass('55'), 'bg-emerald-50 text-emerald-800');
+  assert.equal(app.giClass('56'), 'bg-amber-50 text-amber-800');
+  assert.equal(app.giClass('70'), 'bg-red-50 text-red-800');
+  assert.equal(app.giClass('nízký'), 'bg-emerald-50 text-emerald-800');
+  assert.equal(app.giClass('vysoký'), 'bg-red-50 text-red-800');
+});
+
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {
   let requestUrl;
   let requestOptions;

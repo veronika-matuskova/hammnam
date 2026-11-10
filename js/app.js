@@ -17,6 +17,10 @@ const translations = {
     carbsShort: 'Sach.',
     addFavorite: 'Přidat mezi oblíbené',
     removeFavorite: 'Odebrat z oblíbených',
+    openRecipe: 'Otevřít recept',
+    backToRecipes: 'Zpět na recepty',
+    noIngredients: 'U tohoto receptu zatím nejsou uvedené suroviny.',
+    noSteps: 'U tohoto receptu zatím není uvedený postup.',
     noMatches: 'Nic jsme nenašli',
     changeFilters: 'Zkuste změnit hledání nebo filtry.',
     emptyTitle: 'Zatím tu nejsou žádné recepty',
@@ -71,6 +75,10 @@ const translations = {
     carbsShort: 'Sach.',
     addFavorite: 'Pridať medzi obľúbené',
     removeFavorite: 'Odobrať z obľúbených',
+    openRecipe: 'Otvoriť recept',
+    backToRecipes: 'Späť na recepty',
+    noIngredients: 'Pri tomto recepte zatiaľ nie sú uvedené suroviny.',
+    noSteps: 'Pri tomto recepte zatiaľ nie je uvedený postup.',
     noMatches: 'Nič sme nenašli',
     changeFilters: 'Skúste zmeniť hľadanie alebo filtre.',
     emptyTitle: 'Zatiaľ tu nie sú žiadne recepty',
@@ -141,6 +149,7 @@ function recipeApp() {
     loading: true,
     saving: false,
     showForm: false,
+    selectedRecipe: null,
     errorMessage: '',
     formError: '',
     search: '',
@@ -190,10 +199,35 @@ function recipeApp() {
       return value === null || value === undefined || value === '' ? '—' : value;
     },
 
+    recipeIngredients(recipe) {
+      return Array.isArray(recipe.ingredients)
+        ? recipe.ingredients.filter((ingredient) => ingredient && typeof ingredient === 'object')
+        : [];
+    },
+
+    ingredientMeasure(ingredient) {
+      const measure = [ingredient.amount, ingredient.unit]
+        .filter((value) => value !== null && value !== undefined && String(value).trim())
+        .join(' ');
+      return measure || '—';
+    },
+
+    recipeSteps(recipe) {
+      return Array.isArray(recipe.steps)
+        ? recipe.steps.filter((step) => typeof step === 'string' && step.trim())
+        : [];
+    },
+
     giClass(value) {
       const gi = String(value || '').toLocaleLowerCase();
       if (gi.includes('nízk') || gi.includes('nizk') || gi.includes('low')) return 'bg-emerald-50 text-emerald-800';
       if (gi.includes('vysok') || gi.includes('high')) return 'bg-red-50 text-red-800';
+      if (/^\d+(?:[.,]\d+)?$/.test(gi)) {
+        const numericGi = Number(gi.replace(',', '.'));
+        if (numericGi <= 55) return 'bg-emerald-50 text-emerald-800';
+        if (numericGi >= 70) return 'bg-red-50 text-red-800';
+        return 'bg-amber-50 text-amber-800';
+      }
       return 'bg-violet-50 text-violet-800';
     },
 
@@ -254,7 +288,17 @@ function recipeApp() {
 
     openForm() {
       this.formError = '';
+      this.selectedRecipe = null;
       this.showForm = true;
+    },
+
+    openRecipe(recipe) {
+      this.showForm = false;
+      this.selectedRecipe = recipe;
+    },
+
+    closeRecipe() {
+      this.selectedRecipe = null;
     },
 
     closeForm() {
