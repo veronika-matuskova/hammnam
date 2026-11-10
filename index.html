@@ -7,6 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="translations.js"></script>
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- Supabase JS Client -->
@@ -15,9 +16,9 @@
 <body class="bg-amber-50 min-h-screen font-sans text-gray-800" x-data="recipeApp()">
 
   <header class="bg-amber-600 text-white p-4 shadow-md flex justify-between items-center">
-    <h1 class="text-2xl font-bold tracking-wide">🍲 hamMňam</h1>
+    <h1 class="text-2xl font-bold tracking-wide">🍲 <span x-text="translations.cs.title"></span></h1>
     <button @click="showForm = !showForm" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-1 rounded-lg text-sm font-semibold transition">
-      <span x-text="showForm ? '✕ Zavřít' : '+ Nový recept'"></span>
+      <span x-text="showForm ? '✕ Zavřít' : translations.cs.newRecipe"></span>
     </button>
   </header>
 
@@ -46,9 +47,7 @@
       </form>
     </div>
 
-    <div x-show="loading" class="text-center py-8 text-gray-500">
-      Načítám recepty z cloudu...
-    </div>
+    <div x-show="loading" class="text-center py-8 text-gray-500" x-text="translations.cs.loading"></div>
 
     <div x-show="dbError" class="bg-red-100 border border-red-300 text-red-700 rounded-lg p-3 text-sm" x-text="dbError"></div>
 
