@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hamMňam</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-amber-50 min-h-screen font-sans text-gray-800" x-data="recipeApp()">
+
+  <!-- Hlavička -->
+  <header class="bg-amber-600 text-white p-4 shadow-md flex justify-between items-center">
+    <h1 class="text-2xl font-bold tracking-wide">🍲 hamMňam</h1>
+    <button @click="showForm = !showForm" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-1 rounded-lg text-sm font-semibold transition">
+      <span x-text="showForm ? '✕ Zavřít' : '+ Nový recept'"></span>
+    </button>
+  </header>
+
+  <main class="max-w-3xl mx-auto p-4 space-y-6">
+
+    <!-- Formulář pro přidání receptu -->
+    <div x-show="showForm" x-transition class="bg-white p-4 rounded-xl shadow-md border border-amber-200">
+      <h2 class="text-xl font-bold mb-4 text-amber-900">Přidat nový recept</h2>
+      <form @submit.prevent="addRecipe" class="space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" x-model="newRecipe.title_cs" placeholder="Název (CZ)" required class="border p-2 rounded">
+          <input type="text" x-model="newRecipe.title_sk" placeholder="Názov (SK)" class="border p-2 rounded">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" x-model="newRecipe.category_cs" placeholder="Kategorie (CZ)" required class="border p-2 rounded">
+          <input type="text" x-model="newRecipe.category_sk" placeholder="Kategória (SK)" class="border p-2 rounded">
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <input type="number" step="0.1" x-model="newRecipe.sj" placeholder="SJ" class="border p-2 rounded">
+          <input type="number" step="0.1" x-model="newRecipe.carbs" placeholder="Sacharidy (g)" class="border p-2 rounded">
+          <input type="text" x-model="newRecipe.gi" placeholder="GI (Nízký/Střední)" class="border p-2 rounded">
+        </div>
+        <input type="url" x-model="newRecipe.photo" placeholder="URL obrázku (volitelné)" class="border p-2 rounded w-full">
+        <button type="submit" :disabled="saving" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold transition">
+          <span x-text="saving ? 'Ukládám...' : 'Uložit recept'"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Stav načítání -->
+    <div x-show="loading" class="text-center py-8 text-gray-500">
+      Načítám recepty z cloudu...
+    </div>
+
+    <!-- Seznam receptů -->
+    <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <template x-for="recipe in recipes" :key="recipe.id">
+        <div class="bg-white rounded-xl shadow border border-amber-100 overflow-hidden flex flex-col justify-between">
+          <div class="p-4">
+            <div class="flex justify-between items-start">
+              <h3 class="font-bold text-lg text-amber-950" x-text="recipe.title_cs"></h3>
+              <button @click="toggleFavorite(recipe)" class="text-xl">
+                <span x-text="recipe.favorite ? '⭐' : '☆'"></span>
+              </button>
+            </div>
+            <p class="text-xs text-amber-700 font-medium mb-2" x-text="recipe.category_cs"></p>
+            
+            <div class="flex gap-2 text-xs bg-amber-50 p-2 rounded-lg text-gray-600 mt-2">
+              <span><strong>SJ:</strong> <span x-text="recipe.sj || '-'"></span></span>
+              <span>•</span>
+              <span><strong>Sacharidy:</strong> <span x-text="recipe.carbs ? recipe.carbs + 'g' : '-'"></span></span>
+              <span>•</span>
+              <span><strong>GI:</strong> <span x-text="recipe.gi || '-'"></span></span>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+  </main>
+
+  <script>
+    // GitHub Actions nahradí tyto značky při nasazení na základě vašich GH variables/secrets:
+    const SUPABASE_URL = 'https://bjeboxfypkkhvdqxviip.supabase.co/rest/v1/';
+    const SUPABASE_ANON_KEY = 'sb_publishable_rMQTYZsuyY-RpCbUvzRvYQ_bjh8i70S';
+
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function recipeApp() {
+      return {
+        recipes: [],
+        loading: true,
+        saving: false,
+        showForm: false,
+        newRecipe: {
+          title_cs: '', title_sk: '',
+          category_cs: '', category_sk: '',
+          photo: '', sj: null, carbs: null, gi: ''
+        },
+
+        async init() {
+          await this.fetchRecipes();
+        },
+
+        async fetchRecipes() {
+          this.loading = true;
+          const { data, error } = await db
+            .from('recipes')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            console.error('Chyba při načítání:', error);
+          } else {
+            this.recipes = data || [];
+          }
+          this.loading = false;
+        },
+
+        async addRecipe() {
+          this.saving = true;
+          const { data, error } = await db
+            .from('recipes')
+            .insert([this.newRecipe])
+            .select();
+
+          if (error) {
+            alert('Chyba při ukládání receptu!');
+            console.error(error);
+          } else {
+            if (data && data.length > 0) {
+              this.recipes.unshift(data[0]);
+            }
+            this.newRecipe = { title_cs: '', title_sk: '', category_cs: '', category_sk: '', photo: '', sj: null, carbs: null, gi: '' };
+            this.showForm = false;
+          }
+          this.saving = false;
+        },
+
+        async toggleFavorite(recipe) {
+          const updatedState = !recipe.favorite;
+          recipe.favorite = updatedState;
+
+          const { error } = await db
+            .from('recipes')
+            .update({ favorite: updatedState })
+            .eq('id', recipe.id);
+
+          if (error) {
+            console.error('Chyba při aktualizaci oblíbeného:', error);
+            recipe.favorite = !updatedState;
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
