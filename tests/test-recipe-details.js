@@ -166,6 +166,14 @@ test('recipe details render as a dedicated page rather than a modal', () => {
   assert.doesNotMatch(html, /aria-modal="true"[^]*recipe-detail-title/);
 });
 
+test('nutrition tables can scroll horizontally when they exceed mobile width', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+
+  assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 2);
+  assert.match(html, /min-w-\[36rem\] divide-y/);
+  assert.match(html, /min-w-\[40rem\] border-collapse/);
+});
+
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {
   let requestUrl;
   let requestOptions;
