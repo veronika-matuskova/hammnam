@@ -17,10 +17,9 @@ const translations = {
     saving: "Ukládám...",
     saveRecipe: "Uložit recept",
     carbsLabel: "Sacharidy:",
-    configError: "Supabase není nakonfigurován. Přidejte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znovu nasaďte aplikaci.",
     connectionError: "Nelze se připojit k Supabase. Zkontrolujte URL databáze, anon key a nastavení Row Level Security.",
     saveError: "Při ukládání receptu došlo k chybě!",
-    databaseUnavailable: "Databáze není nakonfigurována. Přidejte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znovu nasaďte aplikaci."
+    databaseUnavailable: "Databáze není nakonfigurována. Doplňte URL a anon key do config.js a znovu nasaďte aplikaci."
   },
   sk: {
     title: "hamMňam",
@@ -40,9 +39,8 @@ const translations = {
     saving: "Ukladám...",
     saveRecipe: "Uložiť recept",
     carbsLabel: "Sacharidy:",
-    configError: "Supabase nie je nakonfigurovaný. Pridajte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znova nasaďte aplikáciu.",
     connectionError: "Nedá sa pripojiť k Supabase. Skontrolujte URL databázy, anon key a nastavenia Row Level Security.",
     saveError: "Pri ukladaní receptu došlo k chybe!",
-    databaseUnavailable: "Databáza nie je nakonfigurovaná. Pridajte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znova nasaďte aplikáciu."
+    databaseUnavailable: "Databáza nie je nakonfigurovaná. Doplňte URL a anon key do config.js a znova nasaďte aplikáciu."
   }
 };
