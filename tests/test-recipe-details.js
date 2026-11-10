@@ -3,8 +3,24 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 
-function createRecipeApp(fetch) {
+function createRecipeApp(fetch, initialHash = '') {
   let factory;
+  const location = { hash: initialHash, pathname: '/', search: '' };
+  const history = {
+    state: null,
+    pushState(state, title, url) {
+      this.state = state;
+      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
+    },
+    replaceState(state, title, url) {
+      this.state = state;
+      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
+    },
+    back() {
+      this.state = null;
+      location.hash = '';
+    }
+  };
   const context = {
     Alpine: {
       data(name, registeredFactory) {
@@ -20,7 +36,10 @@ function createRecipeApp(fetch) {
     fetch,
     localStorage: { getItem: () => null, setItem: () => {} },
     window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' }
+      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
+      location,
+      history,
+      addEventListener() {}
     },
     console
   };
@@ -39,6 +58,7 @@ test('new recipes initialize with empty detail fields', () => {
 test('recipe details open, follow the selected language, and close', () => {
   const app = createRecipeApp();
   const recipe = {
+    id: 1,
     title_cs: 'Polévka',
     title_sk: 'Polievka',
     ingredients: [{ name: 'Mrkev', amount: '2', unit: 'ks' }, null],
@@ -50,6 +70,7 @@ test('recipe details open, follow the selected language, and close', () => {
 
   assert.equal(app.showForm, false);
   assert.equal(app.selectedRecipe, recipe);
+  assert.equal(app.selectedRecipe.id, 1);
   assert.equal(app.displayTitle(app.selectedRecipe), 'Polévka');
   app.language = 'sk';
   assert.equal(app.displayTitle(app.selectedRecipe), 'Polievka');
@@ -61,6 +82,16 @@ test('recipe details open, follow the selected language, and close', () => {
 
   app.closeRecipe();
   assert.equal(app.selectedRecipe, null);
+});
+
+test('recipe detail routes work when opening a direct link', () => {
+  const app = createRecipeApp(undefined, '#recipe/42');
+  const recipe = { id: 42, title_cs: 'Koláč' };
+  app.recipes = [recipe];
+
+  app.syncRecipeRoute();
+
+  assert.equal(app.selectedRecipe, recipe);
 });
 
 test('GI badges use numeric and localized low/medium/high ranges', () => {
@@ -80,6 +111,14 @@ test('the app script URL bypasses stale service worker cache entries', () => {
   assert.match(html, /src="\.\/js\/app\.js\?v=2"/);
   assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v2'/);
   assert.match(serviceWorker, /'\.\/js\/app\.js\?v=2'/);
+});
+
+test('recipe details render as a dedicated page rather than a modal', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+
+  assert.match(html, /<main x-show="selectedRecipe" x-cloak/);
+  assert.match(html, /<button\s+type="button"\s+@click="closeRecipe\(\)"/);
+  assert.doesNotMatch(html, /aria-modal="true"[^]*recipe-detail-title/);
 });
 
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {

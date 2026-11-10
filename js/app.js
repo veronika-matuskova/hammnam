@@ -3,6 +3,7 @@ const translations = {
     tagline: 'Vaše recepty, přehledně',
     switchLanguage: 'Přepnout jazyk na slovenštinu',
     newRecipe: '+ Nový recept',
+    backToRecipes: 'Zpět na recepty',
     eyebrow: 'Vaše kuchařka',
     heading: 'Recepty na jednom místě',
     intro: 'Ukládejte oblíbená jídla a mějte nutriční hodnoty vždy po ruce.',
@@ -61,6 +62,7 @@ const translations = {
     tagline: 'Vaše recepty, prehľadne',
     switchLanguage: 'Prepnúť jazyk na češtinu',
     newRecipe: '+ Nový recept',
+    backToRecipes: 'Späť na recepty',
     eyebrow: 'Vaša kuchárka',
     heading: 'Recepty na jednom mieste',
     intro: 'Ukladajte obľúbené jedlá a majte nutričné hodnoty vždy poruke.',
@@ -266,7 +268,15 @@ function recipeApp() {
           console.error('Service worker registration failed:', error);
         });
       }
+      window.addEventListener('popstate', () => this.syncRecipeRoute());
       await this.fetchRecipes();
+    },
+
+    syncRecipeRoute() {
+      const route = window.location.hash.match(/^#recipe\/(.+)$/);
+      this.selectedRecipe = route
+        ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === route[1]) || null
+        : null;
     },
 
     async fetchRecipes() {
@@ -276,6 +286,7 @@ function recipeApp() {
         const data = await this.request('?select=*&order=created_at.desc');
         if (!Array.isArray(data)) throw new Error('Supabase returned an unexpected recipes response.');
         this.recipes = data;
+        this.syncRecipeRoute();
       } catch (error) {
         console.error('Could not load recipes:', error);
         this.errorMessage = error.message === this.t('databaseUnavailable')
@@ -294,11 +305,23 @@ function recipeApp() {
 
     openRecipe(recipe) {
       this.showForm = false;
+      window.history.pushState(
+        { ...(window.history.state || {}), hamMnamRecipeDetail: true },
+        '',
+        `#recipe/${encodeURIComponent(String(recipe.id))}`
+      );
       this.selectedRecipe = recipe;
     },
 
     closeRecipe() {
       this.selectedRecipe = null;
+      if (!window.location.hash.startsWith('#recipe/')) return;
+
+      if (window.history.state && window.history.state.hamMnamRecipeDetail) {
+        window.history.back();
+      } else {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
     },
 
     closeForm() {

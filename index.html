@@ -37,6 +37,7 @@
             x-text="language.toUpperCase()"
           ></button>
           <button
+            x-show="!selectedRecipe"
             type="button"
             @click="openForm()"
             class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
@@ -46,7 +47,7 @@
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main x-show="!selectedRecipe" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <section class="mb-8">
         <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500" x-text="t('eyebrow')"></p>
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -157,19 +158,9 @@
       </div>
     </main>
 
-    <div
-      x-show="selectedRecipe"
-      x-cloak
-      x-transition.opacity
-      @keydown.escape.window="closeRecipe()"
-      @click.self="closeRecipe()"
-      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="recipe-detail-title"
-    >
-      <section x-transition class="max-h-[95vh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl">
-        <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur sm:px-7">
+    <main x-show="selectedRecipe" x-cloak class="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+      <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3 sm:px-7">
           <button
             type="button"
             @click="closeRecipe()"
@@ -177,19 +168,13 @@
           >
             <span aria-hidden="true">←</span><span x-text="t('backToRecipes')"></span>
           </button>
-          <button
-            type="button"
-            @click="closeRecipe()"
-            :aria-label="t('close')"
-            class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-          >✕</button>
         </div>
         <div class="p-5 sm:p-7">
           <img
             x-show="selectedRecipe && selectedRecipe.photo"
             :src="selectedRecipe && selectedRecipe.photo"
             :alt="selectedRecipe ? displayTitle(selectedRecipe) : ''"
-            class="mb-6 max-h-80 w-full rounded-xl object-cover"
+            class="mb-6 max-h-[28rem] w-full rounded-xl object-cover"
           >
           <div class="mb-6">
             <span
@@ -250,8 +235,8 @@
             <p class="whitespace-pre-line text-sm leading-relaxed text-amber-900/80" x-text="selectedRecipe ? selectedRecipe.notes : ''"></p>
           </section>
         </div>
-      </section>
-    </div>
+      </article>
+    </main>
 
     <div
       x-show="showForm"
