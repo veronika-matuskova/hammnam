@@ -53,6 +53,51 @@ test('new recipes initialize with empty detail fields', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.ingredients)), []);
   assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.steps)), []);
   assert.equal(app.newRecipe.notes, '');
+  assert.equal(app.newRecipe.servings, null);
+  assert.equal(app.newRecipe.fiber, null);
+  assert.equal(app.newRecipe.glycemic_load, null);
+});
+
+test('saving a recipe posts all nutritional metrics', async () => {
+  let requestBody;
+  const app = createRecipeApp(async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      status: 201,
+      json: async () => [{ id: 1, ...requestBody }]
+    };
+  });
+  app.newRecipe = {
+    ...app.newRecipe,
+    servings: '4',
+    sj: '2.5',
+    carbs: '30',
+    fiber: '8',
+    calories: '420',
+    proteins: '22',
+    fats: '12',
+    salt: '1.2',
+    glycemic_load: '15',
+    gi: '55',
+    ingredients: [{ name: ' Mrkev ', amount: ' 2 ', unit: ' ks ' }],
+    steps: ['Nakrájet.'],
+    notes: ' Dobré. '
+  };
+
+  await app.addRecipe();
+
+  assert.equal(requestBody.servings, 4);
+  assert.equal(requestBody.sj, 2.5);
+  assert.equal(requestBody.carbs, 30);
+  assert.equal(requestBody.fiber, 8);
+  assert.equal(requestBody.calories, 420);
+  assert.equal(requestBody.proteins, 22);
+  assert.equal(requestBody.fats, 12);
+  assert.equal(requestBody.salt, 1.2);
+  assert.equal(requestBody.glycemic_load, 15);
+  assert.equal(requestBody.gi, '55');
+  assert.equal(requestBody.notes, 'Dobré.');
 });
 
 test('recipe details open, follow the selected language, and close', () => {

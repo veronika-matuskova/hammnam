@@ -35,6 +35,13 @@ const translations = {
     categorySk: 'Kategória (SK)',
     sj: 'Sacharidové jednotky (SJ)',
     carbs: 'Sacharidy (g)',
+    fiber: 'Vláknina (g)',
+    calories: 'Kalorie (kcal)',
+    proteins: 'Bílkoviny (g)',
+    fats: 'Tuky (g)',
+    salt: 'Sůl (g)',
+    glycemicLoad: 'Glykemická zátěž (GL)',
+    servings: 'Porce',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografii (volitelné)',
     ingredients: 'Suroviny',
@@ -94,6 +101,13 @@ const translations = {
     categorySk: 'Kategória (SK)',
     sj: 'Sacharidové jednotky (SJ)',
     carbs: 'Sacharidy (g)',
+    fiber: 'Vláknina (g)',
+    calories: 'Kalorie (kcal)',
+    proteins: 'Bielkoviny (g)',
+    fats: 'Tuky (g)',
+    salt: 'Soľ (g)',
+    glycemicLoad: 'Glykemická záťaž (GL)',
+    servings: 'Porcie',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografiu (voliteľné)',
     ingredients: 'Suroviny',
@@ -135,8 +149,15 @@ function emptyRecipe() {
     category_cs: '',
     category_sk: '',
     photo: '',
+    servings: null,
     sj: null,
     carbs: null,
+    fiber: null,
+    calories: null,
+    proteins: null,
+    fats: null,
+    salt: null,
+    glycemic_load: null,
     gi: '',
     ingredients: [],
     steps: [],
@@ -199,6 +220,11 @@ function recipeApp() {
 
     displayValue(value) {
       return value === null || value === undefined || value === '' ? '—' : value;
+    },
+
+    displayMetric(value, unit = '') {
+      const normalized = this.displayValue(value);
+      return normalized === '—' ? '—' : unit ? `${normalized} ${unit}` : normalized;
     },
 
     recipeIngredients(recipe) {
@@ -331,10 +357,15 @@ function recipeApp() {
     async addRecipe() {
       this.saving = true;
       this.formError = '';
+      const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load'];
       const payload = {
         ...this.newRecipe,
-        sj: this.newRecipe.sj === '' || this.newRecipe.sj === null ? null : Number(this.newRecipe.sj),
-        carbs: this.newRecipe.carbs === '' || this.newRecipe.carbs === null ? null : Number(this.newRecipe.carbs),
+        ...Object.fromEntries(numericFields.map((field) => {
+          const raw = this.newRecipe[field];
+          const value = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+          return [field, Number.isFinite(value) ? value : null];
+        })),
+        gi: this.newRecipe.gi.trim(),
         ingredients: this.newRecipe.ingredients
           .filter((ingredient) => ingredient.name.trim() || ingredient.amount.trim() || ingredient.unit.trim())
           .map((ingredient) => ({
