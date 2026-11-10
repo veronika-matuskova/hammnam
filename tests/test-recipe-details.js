@@ -73,6 +73,15 @@ test('GI badges use numeric and localized low/medium/high ranges', () => {
   assert.equal(app.giClass('vysoký'), 'bg-red-50 text-red-800');
 });
 
+test('the app script URL bypasses stale service worker cache entries', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  const serviceWorker = fs.readFileSync('sw.js', 'utf8');
+
+  assert.match(html, /src="\.\/js\/app\.js\?v=2"/);
+  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v2'/);
+  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=2'/);
+});
+
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {
   let requestUrl;
   let requestOptions;
