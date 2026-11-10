@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "hamMňam — recepty s přehledem",
+  "short_name": "hamMňam",
+  "description": "Spravujte recepty a jejich nutriční hodnoty.",
+  "lang": "cs",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

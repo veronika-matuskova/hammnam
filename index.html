@@ -1,190 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>hamMňam</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="config.js"></script>
-  <script src="translations.js"></script>
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-amber-50 min-h-screen font-sans text-gray-800" x-data="recipeApp()" x-effect="document.documentElement.lang = language">
-
-  <header class="bg-amber-600 text-white p-4 shadow-md flex justify-between items-center">
-    <h1 class="text-2xl font-bold tracking-wide">🍲 <span x-text="translations[language].title"></span></h1>
-    <div class="flex gap-2">
-      <button @click="language = language === 'cs' ? 'sk' : 'cs'" :aria-label="translations[language].switchLanguage" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-1 rounded-lg text-sm font-semibold transition">
-        <span x-text="language.toUpperCase()"></span>
-      </button>
-      <button @click="showForm = !showForm" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-1 rounded-lg text-sm font-semibold transition">
-        <span x-text="showForm ? translations[language].closeForm : translations[language].newRecipe"></span>
-      </button>
-    </div>
-  </header>
-
-  <main class="max-w-3xl mx-auto p-4 space-y-6">
-
-    <div x-show="showForm" x-transition class="bg-white p-4 rounded-xl shadow-md border border-amber-200">
-      <h2 class="text-xl font-bold mb-4 text-amber-900" x-text="translations[language].addRecipeTitle"></h2>
-      <form @submit.prevent="addRecipe" class="space-y-3">
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" x-model="newRecipe.title_cs" :placeholder="translations[language].recipeNameCs" required class="border p-2 rounded">
-          <input type="text" x-model="newRecipe.title_sk" :placeholder="translations[language].recipeNameSk" class="border p-2 rounded">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Spravujte recepty a jejich nutriční hodnoty.">
+    <title>hamMňam — recepty s přehledem</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="./config.js"></script>
+    <script defer src="./js/app.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  </head>
+  <body
+    class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased"
+    x-data="recipeApp"
+    x-effect="document.documentElement.lang = language"
+  >
+    <header class="border-b border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domů">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
+          <span>
+            <span class="block text-lg font-bold tracking-tight">hamMňam</span>
+            <span class="hidden text-xs text-slate-500 sm:block" x-text="t('tagline')"></span>
+          </span>
+        </a>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="toggleLanguage()"
+            class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            :aria-label="t('switchLanguage')"
+            x-text="language.toUpperCase()"
+          ></button>
+          <button
+            type="button"
+            @click="openForm()"
+            class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+            x-text="t('newRecipe')"
+          ></button>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" x-model="newRecipe.category_cs" :placeholder="translations[language].categoryCs" required class="border p-2 rounded">
-          <input type="text" x-model="newRecipe.category_sk" :placeholder="translations[language].categorySk" class="border p-2 rounded">
-        </div>
-        <div class="grid grid-cols-3 gap-2">
-          <input type="number" step="0.1" x-model="newRecipe.sj" :placeholder="translations[language].sj" class="border p-2 rounded">
-          <input type="number" step="0.1" x-model="newRecipe.carbs" :placeholder="translations[language].carbs" class="border p-2 rounded">
-          <input type="text" x-model="newRecipe.gi" :placeholder="translations[language].gi" class="border p-2 rounded">
-        </div>
-        <input type="url" x-model="newRecipe.photo" :placeholder="translations[language].photoUrl" class="border p-2 rounded w-full">
-        <button type="submit" :disabled="saving" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold transition">
-          <span x-text="saving ? translations[language].saving : translations[language].saveRecipe"></span>
-        </button>
-      </form>
-    </div>
+      </div>
+    </header>
 
-    <div x-show="loading" class="text-center py-8 text-gray-500" x-text="translations[language].loading"></div>
-
-    <div x-show="dbError" class="bg-red-100 border border-red-300 text-red-700 rounded-lg p-3 text-sm" x-text="dbError ? translations[language][dbError] : ''"></div>
-
-    <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <template x-for="recipe in recipes" :key="recipe.id">
-        <div class="bg-white rounded-xl shadow border border-amber-100 overflow-hidden flex flex-col justify-between">
-          <div class="p-4">
-            <div class="flex justify-between items-start">
-              <h3 class="font-bold text-lg text-amber-950" x-text="(language === 'sk' && recipe.title_sk) || recipe.title_cs"></h3>
-              <button @click="toggleFavorite(recipe)" class="text-xl">
-                <span x-text="recipe.favorite ? '⭐' : '☆'"></span>
-              </button>
-            </div>
-            <p class="text-xs text-amber-700 font-medium mb-2" x-text="(language === 'sk' && recipe.category_sk) || recipe.category_cs"></p>
-            
-            <div class="flex gap-2 text-xs bg-amber-50 p-2 rounded-lg text-gray-600 mt-2">
-              <span><strong>SJ:</strong> <span x-text="recipe.sj || '-'"></span></span>
-              <span>•</span>
-              <span><strong x-text="translations[language].carbsLabel"></strong> <span x-text="recipe.carbs ? recipe.carbs + 'g' : '-'"></span></span>
-              <span>•</span>
-              <span><strong>GI:</strong> <span x-text="recipe.gi || '-'"></span></span>
-            </div>
+    <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <section class="mb-8">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500" x-text="t('eyebrow')"></p>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl" x-text="t('heading')"></h1>
+            <p class="mt-2 max-w-2xl text-slate-600" x-text="t('intro')"></p>
           </div>
+          <p class="text-sm text-slate-500" aria-live="polite">
+            <span x-text="filteredRecipes.length"></span>
+            <span x-text="t('recipeCount')"></span>
+          </p>
         </div>
-      </template>
+      </section>
+
+      <section class="mb-6 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto_auto]">
+        <label class="relative block">
+          <span class="sr-only" x-text="t('search')"></span>
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>
+          </svg>
+          <input
+            type="search"
+            x-model="search"
+            :placeholder="t('search')"
+            class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+          >
+        </label>
+        <label>
+          <span class="sr-only" x-text="t('category')"></span>
+          <select x-model="selectedCategory" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:min-w-40">
+            <option value="" x-text="t('allCategories')"></option>
+            <template x-for="category in categories" :key="category">
+              <option :value="category" x-text="category"></option>
+            </template>
+          </select>
+        </label>
+        <button
+          type="button"
+          @click="favoritesOnly = !favoritesOnly"
+          :aria-pressed="favoritesOnly"
+          class="rounded-lg border px-3 py-2.5 text-sm font-medium transition"
+          :class="favoritesOnly ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'"
+        >
+          <span aria-hidden="true">★</span>
+          <span x-text="t('favorites')"></span>
+        </button>
+      </section>
+
+      <div x-show="loading" class="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500" role="status" x-text="t('loading')"></div>
+      <div x-show="errorMessage" x-cloak class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+        <p class="font-semibold" x-text="t('errorTitle')"></p>
+        <p class="mt-1" x-text="errorMessage"></p>
+        <button type="button" @click="fetchRecipes()" class="mt-3 font-semibold underline underline-offset-2" x-text="t('retry')"></button>
+      </div>
+
+      <section x-show="!loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <template x-for="recipe in filteredRecipes" :key="recipe.id">
+          <article class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div x-show="recipe.photo" class="aspect-[16/9] overflow-hidden bg-slate-100">
+              <img :src="recipe.photo" :alt="displayTitle(recipe)" loading="lazy" class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]">
+            </div>
+            <div class="p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500" x-text="displayCategory(recipe)"></p>
+                  <h2 class="text-lg font-semibold leading-snug text-slate-900" x-text="displayTitle(recipe)"></h2>
+                </div>
+                <button
+                  type="button"
+                  @click="toggleFavorite(recipe)"
+                  :aria-label="recipe.favorite ? t('removeFavorite') : t('addFavorite')"
+                  :aria-pressed="Boolean(recipe.favorite)"
+                  class="rounded-lg p-2 text-xl leading-none transition hover:bg-amber-50"
+                  :class="recipe.favorite ? 'text-amber-500' : 'text-slate-300 hover:text-amber-500'"
+                >★</button>
+              </div>
+              <div class="mt-5 flex flex-wrap gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800">
+                  <span class="text-emerald-600">SJ</span><span x-text="displayValue(recipe.sj)"></span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                  <span x-text="t('carbsShort')"></span><span x-text="recipe.carbs != null && recipe.carbs !== '' ? `${recipe.carbs} g` : '—'"></span>
+                </span>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                  :class="giClass(recipe.gi)"
+                >
+                  <span>GI</span><span x-text="displayValue(recipe.gi)"></span>
+                </span>
+              </div>
+            </div>
+          </article>
+        </template>
+      </section>
+
+      <div x-show="!loading && !errorMessage && filteredRecipes.length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+        <p class="text-lg font-semibold text-slate-800" x-text="recipes.length ? t('noMatches') : t('emptyTitle')"></p>
+        <p class="mt-2 text-sm text-slate-500" x-text="recipes.length ? t('changeFilters') : t('emptyDescription')"></p>
+        <button x-show="recipes.length === 0" type="button" @click="openForm()" class="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700" x-text="t('newRecipe')"></button>
+      </div>
+    </main>
+
+    <div
+      x-show="showForm"
+      x-cloak
+      x-transition.opacity
+      @keydown.escape.window="closeForm()"
+      @click.self="closeForm()"
+      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+    >
+      <section x-transition class="max-h-[95vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-2xl sm:p-7">
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-slate-500" x-text="t('dialogEyebrow')"></p>
+            <h2 id="dialog-title" class="mt-1 text-2xl font-bold tracking-tight" x-text="t('addRecipeTitle')"></h2>
+          </div>
+          <button type="button" @click="closeForm()" :aria-label="t('close')" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900">✕</button>
+        </div>
+        <form @submit.prevent="addRecipe()" class="space-y-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('recipeNameCs')"></span>
+              <input type="text" x-model.trim="newRecipe.title_cs" required maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('recipeNameSk')"></span>
+              <input type="text" x-model.trim="newRecipe.title_sk" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('categoryCs')"></span>
+              <input type="text" x-model.trim="newRecipe.category_cs" required maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('categorySk')"></span>
+              <input type="text" x-model.trim="newRecipe.category_sk" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('sj')"></span>
+              <input type="number" x-model="newRecipe.sj" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('carbs')"></span>
+              <input type="number" x-model="newRecipe.carbs" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+            <label class="block text-sm font-medium text-slate-700">
+              <span x-text="t('gi')"></span>
+              <input type="text" x-model.trim="newRecipe.gi" maxlength="40" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            </label>
+          </div>
+          <label class="block text-sm font-medium text-slate-700">
+            <span x-text="t('photoUrl')"></span>
+            <input type="url" x-model.trim="newRecipe.photo" maxlength="2048" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+          </label>
+          <p x-show="formError" x-cloak class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="formError"></p>
+          <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <button type="button" @click="closeForm()" class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" x-text="t('cancel')"></button>
+            <button type="submit" :disabled="saving" class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60" x-text="saving ? t('saving') : t('saveRecipe')"></button>
+          </div>
+        </form>
+      </section>
     </div>
 
-  </main>
-
-  <script>
-    const SUPABASE_URL = window.SUPABASE_CONFIG.url.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
-    const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG.anonKey.trim();
-    const hasSupabaseConfig = !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
-
-    let db = null;
-
-    if (window.supabase && hasSupabaseConfig) {
-      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
-    function recipeApp() {
-      return {
-        language: 'cs',
-        recipes: [],
-        loading: true,
-        saving: false,
-        showForm: false,
-        dbError: '',
-        newRecipe: {
-          title_cs: '', title_sk: '',
-          category_cs: '', category_sk: '',
-          photo: '', sj: null, carbs: null, gi: ''
-        },
-
-        async init() {
-          if (!db) {
-            this.loading = false;
-            return;
-          }
-          await this.fetchRecipes();
-        },
-
-        async fetchRecipes() {
-          this.loading = true;
-
-          if (!db) {
-            this.loading = false;
-            return;
-          }
-
-          const { data, error } = await db
-            .from('recipes')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-          if (error) {
-            console.error('Chyba při načítání:', error);
-            this.dbError = 'connectionError';
-          } else {
-            this.recipes = data || [];
-            this.dbError = '';
-          }
-          this.loading = false;
-        },
-
-        async addRecipe() {
-          if (!db) {
-            alert(translations[this.language].databaseUnavailable);
-            return;
-          }
-
-          this.saving = true;
-          const { data, error } = await db
-            .from('recipes')
-            .insert([this.newRecipe])
-            .select();
-
-          if (error) {
-            alert(translations[this.language].saveError);
-            console.error(error);
-          } else {
-            if (data && data.length > 0) {
-              this.recipes.unshift(data[0]);
-            }
-            this.newRecipe = { title_cs: '', title_sk: '', category_cs: '', category_sk: '', photo: '', sj: null, carbs: null, gi: '' };
-            this.showForm = false;
-          }
-          this.saving = false;
-        },
-
-        async toggleFavorite(recipe) {
-          if (!db) {
-            alert(translations[this.language].databaseUnavailable);
-            return;
-          }
-
-          const updatedState = !recipe.favorite;
-          recipe.favorite = updatedState;
-
-          const { error } = await db
-            .from('recipes')
-            .update({ favorite: updatedState })
-            .eq('id', recipe.id);
-
-          if (error) {
-            console.error('Chyba při aktualizaci oblíbeného:', error);
-            recipe.favorite = !updatedState;
-          }
-        }
-      }
-    }
-  </script>
-</body>
+    <footer class="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
+      hamMňam <span aria-hidden="true">·</span> <span x-text="t('footer')"></span>
+    </footer>
+    <style>[x-cloak] { display: none !important; }</style>
+  </body>
 </html>
