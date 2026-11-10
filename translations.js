@@ -2,6 +2,8 @@ const translations = {
   cs: {
     title: "hamMňam",
     newRecipe: "+ Nový recept",
+    closeForm: "✕ Zavřít",
+    switchLanguage: "Přepnout jazyk na slovenštinu",
     loading: "Načítám recepty z cloudu...",
     addRecipeTitle: "Přidat nový recept",
     recipeNameCs: "Název (CZ)",
@@ -13,11 +15,18 @@ const translations = {
     gi: "GI (Nízký/Střední)",
     photoUrl: "URL obrázku (volitelné)",
     saving: "Ukládám...",
-    saveRecipe: "Uložit recept"
+    saveRecipe: "Uložit recept",
+    carbsLabel: "Sacharidy:",
+    configError: "Supabase není nakonfigurován. Přidejte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znovu nasaďte aplikaci.",
+    connectionError: "Nelze se připojit k Supabase. Zkontrolujte URL databáze, anon key a nastavení Row Level Security.",
+    saveError: "Při ukládání receptu došlo k chybě!",
+    databaseUnavailable: "Databáze není nakonfigurována. Přidejte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znovu nasaďte aplikaci."
   },
   sk: {
     title: "hamMňam",
     newRecipe: "+ Nový recept",
+    closeForm: "✕ Zavrieť",
+    switchLanguage: "Prepnúť jazyk na češtinu",
     loading: "Načítam recepty z cloudu...",
     addRecipeTitle: "Pridať nový recept",
     recipeNameCs: "Názov (CZ)",
@@ -29,6 +38,11 @@ const translations = {
     gi: "GI (Nízky/Stredný)",
     photoUrl: "URL obrázka (voliteľné)",
     saving: "Ukladám...",
-    saveRecipe: "Uložiť recept"
+    saveRecipe: "Uložiť recept",
+    carbsLabel: "Sacharidy:",
+    configError: "Supabase nie je nakonfigurovaný. Pridajte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znova nasaďte aplikáciu.",
+    connectionError: "Nedá sa pripojiť k Supabase. Skontrolujte URL databázy, anon key a nastavenia Row Level Security.",
+    saveError: "Pri ukladaní receptu došlo k chybe!",
+    databaseUnavailable: "Databáza nie je nakonfigurovaná. Pridajte SUPABASE_URL a SUPABASE_ANON_KEY do GitHub Secrets a znova nasaďte aplikáciu."
   }
 };
