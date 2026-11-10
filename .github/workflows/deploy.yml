@@ -9,11 +9,14 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  predeploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Run recipe detail tests
+        run: node --test tests/test-recipe-details.js
 
       - name: Test Supabase connection
         run: node tests/test-connection.js

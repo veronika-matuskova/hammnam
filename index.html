@@ -201,6 +201,72 @@
               <input type="text" x-model.trim="newRecipe.gi" maxlength="40" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
           </div>
+          <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="ingredients-heading">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h3 id="ingredients-heading" class="text-sm font-semibold text-slate-800" x-text="t('ingredients')"></h3>
+              <button
+                type="button"
+                @click="newRecipe.ingredients.push({ name: '', amount: '', unit: '' })"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                x-text="t('addIngredient')"
+              ></button>
+            </div>
+            <div class="space-y-3">
+              <template x-for="(ingredient, index) in newRecipe.ingredients" :key="index">
+                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.65fr)_minmax(0,0.65fr)_auto] sm:items-end">
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('ingredientName')"></span>
+                    <input type="text" x-model.trim="ingredient.name" maxlength="120" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('amount')"></span>
+                    <input type="text" x-model.trim="ingredient.amount" maxlength="40" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('unit')"></span>
+                    <input type="text" x-model.trim="ingredient.unit" maxlength="40" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <button
+                    type="button"
+                    @click="newRecipe.ingredients.splice(index, 1)"
+                    :aria-label="t('removeIngredient')"
+                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                  >×</button>
+                </div>
+              </template>
+            </div>
+          </section>
+          <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="steps-heading">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h3 id="steps-heading" class="text-sm font-semibold text-slate-800" x-text="t('steps')"></h3>
+              <button
+                type="button"
+                @click="newRecipe.steps.push('')"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                x-text="t('addStep')"
+              ></button>
+            </div>
+            <div class="space-y-2">
+              <template x-for="(step, index) in newRecipe.steps" :key="index">
+                <div class="flex items-start gap-2">
+                  <label class="min-w-0 flex-1 text-xs font-medium text-slate-600">
+                    <span><span x-text="t('step')"></span> <span x-text="index + 1"></span></span>
+                    <textarea x-model.trim="newRecipe.steps[index]" rows="2" maxlength="1000" class="mt-1 w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"></textarea>
+                  </label>
+                  <button
+                    type="button"
+                    @click="newRecipe.steps.splice(index, 1)"
+                    :aria-label="t('removeStep')"
+                    class="mt-5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                  >×</button>
+                </div>
+              </template>
+            </div>
+          </section>
+          <label class="block text-sm font-medium text-slate-700">
+            <span x-text="t('notes')"></span>
+            <textarea x-model.trim="newRecipe.notes" rows="3" maxlength="2000" :placeholder="t('notesPlaceholder')" class="mt-1.5 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"></textarea>
+          </label>
           <label class="block text-sm font-medium text-slate-700">
             <span x-text="t('photoUrl')"></span>
             <input type="url" x-model.trim="newRecipe.photo" maxlength="2048" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">

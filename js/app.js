@@ -32,6 +32,18 @@ const translations = {
     carbs: 'Sacharidy (g)',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografii (volitelné)',
+    ingredients: 'Suroviny',
+    ingredientName: 'Název suroviny',
+    amount: 'Množství',
+    unit: 'Jednotka',
+    addIngredient: 'Přidat surovinu',
+    removeIngredient: 'Odebrat surovinu',
+    steps: 'Postup přípravy',
+    step: 'Krok',
+    addStep: 'Přidat krok',
+    removeStep: 'Odebrat krok',
+    notes: 'Poznámky a tipy',
+    notesPlaceholder: 'Volitelné poznámky k receptu…',
     cancel: 'Zrušit',
     saving: 'Ukládám…',
     saveRecipe: 'Uložit recept',
@@ -74,6 +86,18 @@ const translations = {
     carbs: 'Sacharidy (g)',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografiu (voliteľné)',
+    ingredients: 'Suroviny',
+    ingredientName: 'Názov suroviny',
+    amount: 'Množstvo',
+    unit: 'Jednotka',
+    addIngredient: 'Pridať surovinu',
+    removeIngredient: 'Odobrať surovinu',
+    steps: 'Postup prípravy',
+    step: 'Krok',
+    addStep: 'Pridať krok',
+    removeStep: 'Odobrať krok',
+    notes: 'Poznámky a tipy',
+    notesPlaceholder: 'Voliteľné poznámky k receptu…',
     cancel: 'Zrušiť',
     saving: 'Ukladám…',
     saveRecipe: 'Uložiť recept',
@@ -103,7 +127,10 @@ function emptyRecipe() {
     photo: '',
     sj: null,
     carbs: null,
-    gi: ''
+    gi: '',
+    ingredients: [],
+    steps: [],
+    notes: ''
   };
 }
 
@@ -240,7 +267,16 @@ function recipeApp() {
       const payload = {
         ...this.newRecipe,
         sj: this.newRecipe.sj === '' || this.newRecipe.sj === null ? null : Number(this.newRecipe.sj),
-        carbs: this.newRecipe.carbs === '' || this.newRecipe.carbs === null ? null : Number(this.newRecipe.carbs)
+        carbs: this.newRecipe.carbs === '' || this.newRecipe.carbs === null ? null : Number(this.newRecipe.carbs),
+        ingredients: this.newRecipe.ingredients
+          .filter((ingredient) => ingredient.name.trim() || ingredient.amount.trim() || ingredient.unit.trim())
+          .map((ingredient) => ({
+            name: ingredient.name.trim(),
+            amount: ingredient.amount.trim(),
+            unit: ingredient.unit.trim()
+          })),
+        steps: this.newRecipe.steps.map((step) => step.trim()).filter(Boolean),
+        notes: this.newRecipe.notes.trim()
       };
       try {
         const created = await this.request('', {
