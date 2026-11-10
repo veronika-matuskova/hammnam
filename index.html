@@ -7,6 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="config.js"></script>
   <script src="translations.js"></script>
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -83,9 +84,9 @@
   </main>
 
   <script>
-    const SUPABASE_URL = (window.SUPABASE_URL || 'https://bjeboxfypkkhvdqxviip.supabase.co/rest/v1/').trim();
-    const SUPABASE_ANON_KEY = (window.SUPABASE_ANON_KEY || 'sb_publishable_rMQTYZsuyY-RpCbUvzRvYQ_bjh8i70S').trim();
-    const hasSupabaseConfig = !!SUPABASE_URL && SUPABASE_URL !== 'https://bjeboxfypkkhvdqxviip.supabase.co/rest/v1/' && !!SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'sb_publishable_rMQTYZsuyY-RpCbUvzRvYQ_bjh8i70S';
+    const SUPABASE_URL = window.SUPABASE_CONFIG.url.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+    const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG.anonKey.trim();
+    const hasSupabaseConfig = !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
 
     let db = null;
 
@@ -100,7 +101,7 @@
         loading: true,
         saving: false,
         showForm: false,
-        dbError: hasSupabaseConfig ? '' : 'configError',
+        dbError: '',
         newRecipe: {
           title_cs: '', title_sk: '',
           category_cs: '', category_sk: '',
@@ -120,7 +121,6 @@
 
           if (!db) {
             this.loading = false;
-            this.dbError = 'configError';
             return;
           }
 
