@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hamMňam - Family Recipe & Pantry</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen" x-data="hamMnamApp()">
+
+    <!-- HEADER -->
+    <header class="bg-teal-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+                🍲 hamMňam
+            </h1>
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher -->
+                <select x-model="lang" class="bg-teal-700 text-white text-xs px-2 py-1.5 rounded-lg font-medium focus:outline-none cursor-pointer">
+                    <option value="cs">🇨🇿 Čeština</option>
+                    <option value="sk">🇸🇰 Slovenčina</option>
+                </select>
+
+                <button @click="activeView = 'list'" :class="activeView === 'list' ? 'bg-teal-700' : ''" class="px-3 py-1.5 rounded-lg text-sm font-medium transition" x-text="t('recipes')"></button>
+                <button @click="activeView = 'history'" :class="activeView === 'history' ? 'bg-teal-700' : ''" class="px-3 py-1.5 rounded-lg text-sm font-medium transition" x-text="t('history')"></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-2xl mx-auto p-4 pb-24">
+
+        <!-- VIEW 1: RECIPE LIST -->
+        <template x-if="activeView === 'list'">
+            <div>
+                <!-- Search -->
+                <div class="mb-4">
+                    <input type="text" x-model="searchQuery" :placeholder="t('searchPlaceholder')" class="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+
+                <!-- Categories (Filters) -->
+                <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+                    <button @click="selectedCategory = ''" :class="selectedCategory === '' ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 border border-slate-200'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition" x-text="t('all')"></button>
+                    <template x-for="cat in categoryList" :key="cat">
+                        <button @click="selectedCategory = cat" :class="selectedCategory === cat ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 border border-slate-200'" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition" x-text="cat"></button>
+                    </template>
+                </div>
+
+                <!-- Recipe Cards -->
+                <div class="space-y-3">
+                    <template x-for="recipe in filteredRecipes" :key="recipe.id">
+                        <div @click="openDetail(recipe)" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 cursor-pointer hover:border-teal-300 transition">
+                            <img :src="recipe.photo" alt="Photo" class="w-16 h-16 rounded-xl object-cover">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-slate-800" x-text="recipe.title[lang] || recipe.title['cs']"></h3>
+                                <p class="text-xs text-slate-500" x-text="recipe.category[lang] || recipe.category['cs']"></p>
+                                <div class="flex gap-2 mt-1">
+                                    <span class="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded-md font-medium" x-text="recipe.sj + ' SJ'"></span>
+                                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md" x-text="recipe.carbs + 'g ' + t('carbsLabel')"></span>
+                                </div>
+                            </div>
+                            <button @click.stop="recipe.favorite = !recipe.favorite" class="p-2 text-xl">
+                                <span x-text="recipe.favorite ? '❤️' : '🤍'"></span>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- VIEW 2: RECIPE DETAIL -->
+        <template x-if="activeView === 'detail' && selectedRecipe">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <img :src="selectedRecipe.photo" class="w-full h-56 object-cover">
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h2 class="text-2xl font-bold text-slate-800" x-text="selectedRecipe.title[lang] || selectedRecipe.title['cs']"></h2>
+                        <button @click="activeView = 'list'" class="text-sm bg-slate-100 px-3 py-1 rounded-lg text-slate-600" x-text="t('back')"></button>
+                    </div>
+                    <p class="text-sm text-teal-600 font-semibold mb-4" x-text="selectedRecipe.category[lang] || selectedRecipe.category['cs']"></p>
+
+                    <!-- Diabetic Panel -->
+                    <div class="bg-teal-50 p-4 rounded-xl grid grid-cols-3 gap-2 text-center mb-6">
+                        <div>
+                            <div class="text-xs font-bold text-teal-800" x-text="t('sjHeader')"></div>
+                            <div class="text-lg font-extrabold text-teal-600" x-text="selectedRecipe.sj + ' SJ'"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-teal-800" x-text="t('carbsHeader')"></div>
+                            <div class="text-lg font-bold text-slate-700" x-text="selectedRecipe.carbs + ' g'"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-teal-800" x-text="t('giHeader')"></div>
+                            <div class="text-base font-bold text-slate-700" x-text="selectedRecipe.gi"></div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-slate-700 mb-2" x-text="t('ingredients')"></h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600 mb-6 text-sm">
+                        <template x-for="ing in (selectedRecipe.ingredients[lang] || selectedRecipe.ingredients['cs'])">
+                            <li x-text="ing"></li>
+                        </template>
+                    </ul>
+
+                    <h4 class="font-bold text-slate-700 mb-2" x-text="t('instructions')"></h4>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6" x-text="selectedRecipe.instructions[lang] || selectedRecipe.instructions['cs']"></p>
+
+                    <!-- Cooked Today Button -->
+                    <button @click="prepareCookingLog(selectedRecipe)" class="w-full bg-teal-600 text-white font-bold py-3 rounded-xl shadow hover:bg-teal-700 transition" x-text="t('cookedTodayBtn')">
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- VIEW 3: COOKING LOG FORM -->
+        <template x-if="activeView === 'cooking_form'">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold text-slate-800 mb-2" x-text="t('cookingLogHeader')"></h2>
+                <p class="text-xs text-slate-500 mb-4" x-text="t('cookingLogDesc')"></p>
+                
+                <div class="space-y-3 mb-4">
+                    <template x-for="(ing, index) in modifiedIngredients" :key="index">
+                        <input type="text" x-model="modifiedIngredients[index]" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </template>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('noteLabel')"></label>
+                    <textarea x-model="newNote" rows="3" :placeholder="t('notePlaceholder')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+                </div>
+
+                <div class="flex gap-2">
+                    <button @click="saveCookingLog()" class="flex-1 bg-teal-600 text-white font-bold py-2.5 rounded-xl shadow" x-text="t('saveToHistoryBtn')"></button>
+                    <button @click="activeView = 'detail'" class="px-4 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl" x-text="t('cancelBtn')"></button>
+                </div>
+            </div>
+        </template>
+
+        <!-- VIEW 4: HISTORY -->
+        <template x-if="activeView === 'history'">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 mb-4" x-text="t('historyHeader')"></h2>
+                <template x-if="history.length === 0">
+                    <p class="text-sm text-slate-500 text-center py-8" x-text="t('emptyHistory')"></p>
+                </template>
+                <div class="space-y-3">
+                    <template x-for="item in history" :key="item.id">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-slate-800" x-text="item.recipeTitle"></h4>
+                                <span class="text-xs text-slate-400" x-text="item.date"></span>
+                            </div>
+                            <div class="text-xs text-slate-500 font-medium mb-2" x-text="t('usedIngredients')"></div>
+                            <ul class="list-disc list-inside text-xs text-slate-600 space-y-0.5 mb-2">
+                                <template x-for="ing in item.usedIngredients">
+                                    <li x-text="ing"></li>
+                                </template>
+                            </ul>
+                            <template x-if="item.note">
+                                <p class="text-xs italic bg-slate-50 p-2 rounded-lg text-slate-600 mt-2" x-text="t('notePrefix') + ': ' + item.note"></p>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+    </main>
+
+    <!-- SCRIPT (English logic, CZ/SK content) -->
+    <script>
+        function hamMnamApp() {
+            return {
+                lang: 'cs', // Default language
+                activeView: 'list',
+                searchQuery: '',
+                selectedCategory: '',
+                selectedRecipe: null,
+                modifiedIngredients: [],
+                newNote: '',
+                history: [],
+                
+                // UI Translations (CZ/SK)
+                translations: {
+                    cs: {
+                        recipes: 'Recepty',
+                        history: 'Historie',
+                        all: 'Vše',
+                        searchPlaceholder: 'Vyhledat recept...',
+                        carbsLabel: 'sacharidů',
+                        back: 'Zpět',
+                        sjHeader: 'Sacharidové j.',
+                        carbsHeader: 'Sacharidy',
+                        giHeader: 'Glykemický i.',
+                        ingredients: 'Ingredience:',
+                        instructions: 'Postup:',
+                        cookedTodayBtn: 'Uvařeno dnes (Upravit suroviny)',
+                        cookingLogHeader: 'Záznam vaření',
+                        cookingLogDesc: 'Upravte suroviny podle toho, co jste skutečně doma měli:',
+                        noteLabel: 'Poznámka / Úpravy:',
+                        notePlaceholder: 'Např. méně soli, nahradili jsme smetanu...',
+                        saveToHistoryBtn: 'Uložit do historie',
+                        cancelBtn: 'Zrušit',
+                        historyHeader: 'Historie vaření',
+                        emptyHistory: 'Zatím žádné uvařené recepty v historii.',
+                        usedIngredients: 'Použité suroviny:',
+                        notePrefix: 'Poznámka'
+                    },
+                    sk: {
+                        recipes: 'Recepty',
+                        history: 'História',
+                        all: 'Všetky',
+                        searchPlaceholder: 'Vyhľadať recept...',
+                        carbsLabel: 'sacharidov',
+                        back: 'Späť',
+                        sjHeader: 'Sacharidové j.',
+                        carbsHeader: 'Sacharidy',
+                        giHeader: 'Glykemický i.',
+                        ingredients: 'Ingrediencie:',
+                        instructions: 'Postup:',
+                        cookedTodayBtn: 'Uvarené dnes (Upraviť suroviny)',
+                        cookingLogHeader: 'Záznam varenia',
+                        cookingLogDesc: 'Upravte suroviny podľa toho, čo ste skutočne doma mali:',
+                        noteLabel: 'Poznámka / Úpravy:',
+                        notePlaceholder: 'Napr. menej soli, nahradili sme smotanu...',
+                        saveToHistoryBtn: 'Uložiť do histórie',
+                        cancelBtn: 'Zrušiť',
+                        historyHeader: 'História varenia',
+                        emptyHistory: 'Zatiaľ žiadne uvarené recepty v histórii.',
+                        usedIngredients: 'Použité suroviny:',
+                        notePrefix: 'Poznámka'
+                    }
+                },
+
+                t(key) {
+                    return this.translations[this.lang][key] || key;
+                },
+
+                // Sample recipes
+                recipes: [
+                    {
+                        id: 1,
+                        title: { cs: 'Cuketové zelí s kuřecím', sk: 'Cuketová kapusta s kuracím' },
+                        category: { cs: 'Hlavní jídla', sk: 'Hlavné jedlá' },
+                        photo: 'https://images.unsplash.com/photo-1540420773420-3366772f4999',
+                        sj: 1.0,
+                        carbs: 12.5,
+                        gi: 'Nízký',
+                        favorite: true,
+                        ingredients: {
+                            cs: ['Cuketa 500g', 'Kuřecí prsa 300g', 'Cibule 1ks', 'Česnek 2 stroužky', 'olej'],
+                            sk: ['Cuketa 500g', 'Kuracie prsia 300g', 'Cibuľa 1ks', 'Cesnak 2 strúčiky', 'olej']
+                        },
+                        instructions: {
+                            cs: 'Cuketu nastrouháme, podusíme s cibulkou a česnekem. Kuřecí maso orestujeme zvlášť a smícháme dohromady.',
+                            sk: 'Cuketu nastrúhame, podusíme s cibulkou a cesnakom. Kuracie mäso orestujeme zvlášť a zmiešame dohromady.'
+                        }
+                    },
+                    {
+                        id: 2,
+                        title: { cs: 'Avokádová pomazánka s tvarohem', sk: 'Avokádová nátierka s tvarohom' },
+                        category: { cs: 'Snídaně a svačiny', sk: 'Raňajky a olovranty' },
+                        photo: 'https://images.unsplash.com/photo-1588137378633-dea1336ce1e2',
+                        sj: 0.5,
+                        carbs: 6.0,
+                        gi: 'Nízký',
+                        favorite: false,
+                        ingredients: {
+                            cs: ['Zralé avokádo 1ks', 'Nízkotučný tvaroh 150g', 'Citronová šťáva', 'Sůl, pepř'],
+                            sk: ['Zrelé avokádo 1ks', 'Nízkotučný tvaroh 150g', 'Citrónová šťava', 'Soľ, korenie']
+                        },
+                        instructions: {
+                            cs: 'Avokádo rozmačkáme vidličkou, smícháme s tvarohem, dochutíme citronem, solí a pepřem.',
+                            sk: 'Avokádo roztlačíme vidličkou, zmiešame s tvarohom, dochutíme citrónom, soľou a korením.'
+                        }
+                    }
+                ],
+
+                get categoryList() {
+                    let cats = this.recipes.map(r => r.category[this.lang] || r.category['cs']);
+                    return [...new Set(cats)];
+                },
+
+                get filteredRecipes() {
+                    return this.recipes.filter(r => {
+                        let currentTitle = (r.title[this.lang] || r.title['cs']).toLowerCase();
+                        let currentCat = (r.category[this.lang] || r.category['cs']);
+                        
+                        let matchesQuery = currentTitle.includes(this.searchQuery.toLowerCase());
+                        let matchesCat = this.selectedCategory === '' || currentCat === this.selectedCategory;
+                        return matchesQuery && matchesCat;
+                    });
+                },
+
+                openDetail(recipe) {
+                    this.selectedRecipe = recipe;
+                    this.activeView = 'detail';
+                },
+
+                prepareCookingLog(recipe) {
+                    let ingLang = recipe.ingredients[this.lang] || recipe.ingredients['cs'];
+                    this.modifiedIngredients = [...ingLang];
+                    this.newNote = '';
+                    this.activeView = 'cooking_form';
+                },
+
+                saveCookingLog() {
+                    let d = new Date();
+                    let dateStr = d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear();
+                    let currentTitle = this.selectedRecipe.title[this.lang] || this.selectedRecipe.title['cs'];
+                    
+                    this.history.unshift({
+                        id: Date.now(),
+                        recipeTitle: currentTitle,
+                        usedIngredients: [...this.modifiedIngredients],
+                        note: this.newNote,
+                        date: dateStr
+                    });
+                    this.activeView = 'detail';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
