@@ -229,6 +229,21 @@ test('language fallbacks keep nutrition labels translated when switching routes'
   assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
 });
 
+test('total nutrition labels stay distinct from the base values', () => {
+  const app = createRecipeApp();
+
+  assert.equal(app.t('totalCalories'), 'Kalorie celkem (kcal)');
+  assert.equal(app.t('totalProteins'), 'Bílkoviny celkem (g)');
+  assert.equal(app.t('totalFats'), 'Tuky celkem (g)');
+  assert.equal(app.t('totalCarbs'), 'Sacharidy celkem (g)');
+
+  app.language = 'sk';
+  assert.equal(app.t('totalCalories'), 'Kalórie celkom (kcal)');
+  assert.equal(app.t('totalProteins'), 'Bielkoviny celkom (g)');
+  assert.equal(app.t('totalFats'), 'Tuky celkom (g)');
+  assert.equal(app.t('totalCarbs'), 'Sacharidy celkom (g)');
+});
+
 test('GI badges use numeric and localized low/medium/high ranges', () => {
   const app = createRecipeApp();
 
