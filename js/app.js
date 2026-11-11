@@ -28,6 +28,9 @@ const translations = {
     emptyDescription: 'Přidejte svůj první recept a začněte si tvořit kuchařku.',
     formEyebrow: 'Nový přírůstek do kuchařky',
     addRecipeTitle: 'Přidat recept',
+    editRecipeTitle: 'Upravit recept',
+    editRecipe: 'Upravit recept',
+    updateRecipe: 'Uložit změny',
     close: 'Zavřít',
     recipeNameCs: 'Název (CZ)',
     recipeNameSk: 'Názov (SK)',
@@ -99,6 +102,9 @@ const translations = {
     emptyDescription: 'Pridajte svoj prvý recept a začnite si tvoriť kuchárku.',
     formEyebrow: 'Nový prírastok do kuchárky',
     addRecipeTitle: 'Pridať recept',
+    editRecipeTitle: 'Upraviť recept',
+    editRecipe: 'Upraviť recept',
+    updateRecipe: 'Uložiť zmeny',
     close: 'Zavrieť',
     recipeNameCs: 'Název (CZ)',
     recipeNameSk: 'Názov (SK)',
@@ -187,6 +193,7 @@ function recipeApp() {
     loading: true,
     saving: false,
     showForm: false,
+    editingRecipeId: null,
     selectedRecipe: null,
     errorMessage: '',
     formError: '',
@@ -317,11 +324,23 @@ function recipeApp() {
 
     syncRoute() {
       const hash = window.location.hash;
+      const editRoute = hash.match(/^#edit-recipe\/(.+)$/);
+      const wasFormOpen = this.showForm;
       const route = hash.match(/^#recipe\/(.+)$/);
       this.selectedRecipe = route
         ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === route[1]) || null
         : null;
-      this.showForm = hash === '#new-recipe';
+      const recipeToEdit = editRoute
+        ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === editRoute[1]) || null
+        : null;
+      this.showForm = hash === '#new-recipe' || Boolean(recipeToEdit);
+      if (recipeToEdit) {
+        if (!wasFormOpen || String(this.editingRecipeId) !== String(recipeToEdit.id)) {
+          this.loadRecipeForEditing(recipeToEdit);
+        }
+      } else {
+        this.editingRecipeId = null;
+      }
     },
 
     async fetchRecipes() {
@@ -345,6 +364,7 @@ function recipeApp() {
     openForm() {
       this.formError = '';
       this.selectedRecipe = null;
+      this.editingRecipeId = null;
       if (window.location.hash !== '#new-recipe') {
         window.history.pushState(
           { ...(window.history.state || {}), hamMnamNewRecipe: true },
@@ -352,6 +372,39 @@ function recipeApp() {
           `${window.location.pathname}${window.location.search}#new-recipe`
         );
       }
+      this.syncRoute();
+    },
+
+    loadRecipeForEditing(recipe) {
+      const form = emptyRecipe();
+      for (const field of Object.keys(form)) {
+        if (recipe[field] !== undefined) form[field] = recipe[field];
+      }
+      form.gi = String(form.gi || '');
+      form.ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+          .filter((ingredient) => ingredient && typeof ingredient === 'object')
+          .map((ingredient) => ({
+            name: String(ingredient.name || ''),
+            amount: String(ingredient.amount || ''),
+            unit: String(ingredient.unit || '')
+          }))
+        : [];
+      form.steps = Array.isArray(recipe.steps) ? recipe.steps.map((step) => String(step)) : [];
+      this.newRecipe = form;
+      this.editingRecipeId = recipe.id;
+      this.formError = '';
+    },
+
+    editRecipe(recipe) {
+      this.formError = '';
+      this.selectedRecipe = null;
+      this.editingRecipeId = null;
+      window.history.pushState(
+        { ...(window.history.state || {}), hamMnamEditRecipe: true },
+        '',
+        `${window.location.pathname}${window.location.search}#edit-recipe/${encodeURIComponent(String(recipe.id))}`
+      );
       this.syncRoute();
     },
 
@@ -379,6 +432,23 @@ function recipeApp() {
     closeForm() {
       if (this.saving) return;
       this.showForm = false;
+      if (window.location.hash.startsWith('#edit-recipe/')) {
+        const recipe = this.recipes.find((item) => String(item.id) === String(this.editingRecipeId)) || null;
+        this.editingRecipeId = null;
+        this.selectedRecipe = recipe;
+        if (window.history.state && window.history.state.hamMnamEditRecipe) {
+          window.history.back();
+        } else if (recipe) {
+          window.history.replaceState(
+            { ...(window.history.state || {}), hamMnamRecipeDetail: true },
+            '',
+            `${window.location.pathname}${window.location.search}#recipe/${encodeURIComponent(String(recipe.id))}`
+          );
+        } else {
+          window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+        }
+        return;
+      }
       if (window.location.hash !== '#new-recipe') return;
 
       if (window.history.state && window.history.state.hamMnamNewRecipe) {
@@ -393,7 +463,7 @@ function recipeApp() {
       this.formError = '';
       const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
       const payload = {
-        ...this.newRecipe,
+        ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
         ...Object.fromEntries(numericFields.map((field) => {
           const raw = this.newRecipe[field];
           const value = raw === '' || raw === null || raw === undefined ? null : Number(raw);
@@ -411,18 +481,42 @@ function recipeApp() {
         notes: this.newRecipe.notes.trim()
       };
       try {
-        const created = await this.request('', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify(payload)
-        });
-        if (!Array.isArray(created) || !created[0]) {
-          throw new Error('Supabase did not return the saved recipe.');
+        if (this.editingRecipeId !== null) {
+          const updated = await this.request(`?id=eq.${encodeURIComponent(this.editingRecipeId)}`, {
+            method: 'PATCH',
+            headers: { Prefer: 'return=representation' },
+            body: JSON.stringify(payload)
+          });
+          if (!Array.isArray(updated) || !updated[0]) {
+            throw new Error('Supabase did not return the updated recipe.');
+          }
+          const index = this.recipes.findIndex((recipe) => String(recipe.id) === String(this.editingRecipeId));
+          if (index === -1) throw new Error('The updated recipe is no longer available.');
+          const updatedRecipe = updated[0];
+          this.recipes.splice(index, 1, updatedRecipe);
+          this.selectedRecipe = updatedRecipe;
+          this.newRecipe = emptyRecipe();
+          this.editingRecipeId = null;
+          this.showForm = false;
+          window.history.replaceState(
+            { ...(window.history.state || {}), hamMnamRecipeDetail: true },
+            '',
+            `${window.location.pathname}${window.location.search}#recipe/${encodeURIComponent(String(updatedRecipe.id))}`
+          );
+        } else {
+          const created = await this.request('', {
+            method: 'POST',
+            headers: { Prefer: 'return=representation' },
+            body: JSON.stringify(payload)
+          });
+          if (!Array.isArray(created) || !created[0]) {
+            throw new Error('Supabase did not return the saved recipe.');
+          }
+          this.recipes.unshift(created[0]);
+          this.newRecipe = emptyRecipe();
+          this.saving = false;
+          this.closeForm();
         }
-        this.recipes.unshift(created[0]);
-        this.newRecipe = emptyRecipe();
-        this.saving = false;
-        this.closeForm();
       } catch (error) {
         console.error('Could not save recipe:', error);
         this.formError = `${this.t('saveError')} (${error.message})`;

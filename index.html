@@ -171,6 +171,12 @@
           >
             <span aria-hidden="true">←</span><span x-text="t('backToRecipes')"></span>
           </button>
+          <button
+            type="button"
+            @click="editRecipe(selectedRecipe)"
+            class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+            x-text="t('editRecipe')"
+          ></button>
         </div>
         <div class="p-5 sm:p-7">
           <img
@@ -300,7 +306,7 @@
         <div class="mb-6">
           <div>
             <p class="text-sm font-medium text-slate-500" x-text="t('formEyebrow')"></p>
-            <h1 id="form-title" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" x-text="t('addRecipeTitle')"></h1>
+            <h1 id="form-title" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" x-text="t(editingRecipeId !== null ? 'editRecipeTitle' : 'addRecipeTitle')"></h1>
           </div>
         </div>
         <form @submit.prevent="addRecipe()" class="space-y-4">
@@ -462,7 +468,7 @@
           <p x-show="formError" x-cloak class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="formError"></p>
           <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button type="button" @click="closeForm()" class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" x-text="t('cancel')"></button>
-            <button type="submit" :disabled="saving" class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60" x-text="saving ? t('saving') : t('saveRecipe')"></button>
+            <button type="submit" :disabled="saving" class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60" x-text="saving ? t('saving') : t(editingRecipeId !== null ? 'updateRecipe' : 'saveRecipe')"></button>
           </div>
         </form>
       </section>

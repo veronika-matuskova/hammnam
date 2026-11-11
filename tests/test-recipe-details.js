@@ -159,6 +159,60 @@ test('new recipe page opens, closes, and supports direct links', () => {
   assert.equal(directLinkApp.location.hash, '');
 });
 
+test('editing a recipe loads its values and patches the existing row', async () => {
+  let requestUrl;
+  let requestOptions;
+  const recipe = {
+    id: 42,
+    title_cs: 'Koláč',
+    category_cs: 'Dezert',
+    servings: 4,
+    ingredients: [{ name: 'Jablka', amount: '3', unit: 'ks' }],
+    steps: ['Upéct.'],
+    notes: 'Podávat teplé.',
+    favorite: true,
+    created_at: '2026-01-01'
+  };
+  const app = createRecipeApp(async (url, options) => {
+    requestUrl = url;
+    requestOptions = options;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [{ ...recipe, ...JSON.parse(options.body), title_cs: 'Upravený koláč' }]
+    };
+  });
+  app.recipes = [recipe];
+
+  app.editRecipe(recipe);
+
+  assert.equal(app.showForm, true);
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.editingRecipeId, 42);
+  assert.equal(app.newRecipe.title_cs, 'Koláč');
+  assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.ingredients)), [
+    { name: 'Jablka', amount: '3', unit: 'ks' }
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.steps)), ['Upéct.']);
+  assert.equal(app.newRecipe.notes, 'Podávat teplé.');
+
+  app.newRecipe.title_cs = 'Upravený koláč';
+  await app.addRecipe();
+
+  assert.match(requestUrl, /\/rest\/v1\/recipes\?id=eq\.42$/);
+  assert.equal(requestOptions.method, 'PATCH');
+  const payload = JSON.parse(requestOptions.body);
+  assert.equal(payload.title_cs, 'Upravený koláč');
+  assert.equal('id' in payload, false);
+  assert.equal('favorite' in payload, false);
+  assert.equal('created_at' in payload, false);
+  assert.equal(app.recipes.length, 1);
+  assert.equal(app.recipes[0].title_cs, 'Upravený koláč');
+  assert.equal(app.selectedRecipe, app.recipes[0]);
+  assert.equal(app.showForm, false);
+  assert.equal(app.location.hash, '#recipe/42');
+});
+
 test('language fallbacks keep nutrition labels translated when switching routes', () => {
   const app = createRecipeApp();
   app.language = 'sk';
@@ -209,6 +263,7 @@ test('recipe details render as a dedicated page rather than a modal', () => {
 
   assert.match(html, /<main x-show="selectedRecipe" x-cloak/);
   assert.match(html, /<button\s+type="button"\s+@click="closeRecipe\(\)"/);
+  assert.match(html, /@click="editRecipe\(selectedRecipe\)"/);
   assert.doesNotMatch(html, /aria-modal="true"[^]*recipe-detail-title/);
 });
 
