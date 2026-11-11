@@ -214,7 +214,8 @@ function recipeApp() {
     },
 
     t(key) {
-      return translations[this.language][key] || key;
+      const locale = translations[this.language] || translations.cs;
+      return locale[key] || translations.cs[key] || key;
     },
 
     toggleLanguage() {

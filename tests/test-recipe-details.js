@@ -139,6 +139,22 @@ test('recipe detail routes work when opening a direct link', () => {
   assert.equal(app.selectedRecipe, recipe);
 });
 
+test('language fallbacks keep nutrition labels translated when switching routes', () => {
+  const app = createRecipeApp();
+  app.language = 'sk';
+
+  assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
+  assert.equal(app.t('totalWeight'), 'Celková hmotnosť upečeného pokrmu');
+
+  app.showForm = true;
+  const recipe = { id: 1, title_cs: 'Polévka', title_sk: 'Polievka', servings: 2 };
+  app.openRecipe(recipe);
+  assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
+
+  app.closeRecipe();
+  assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
+});
+
 test('GI badges use numeric and localized low/medium/high ranges', () => {
   const app = createRecipeApp();
 
