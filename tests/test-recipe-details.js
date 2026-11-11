@@ -169,9 +169,9 @@ test('the app script URL bypasses stale service worker cache entries', () => {
   const html = fs.readFileSync('index.html', 'utf8');
   const serviceWorker = fs.readFileSync('sw.js', 'utf8');
 
-  assert.match(html, /src="\.\/js\/app\.js\?v=2"/);
-  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v2'/);
-  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=2'/);
+  assert.match(html, /src="\.\/js\/app\.js\?v=3"/);
+  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v3'/);
+  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=3'/);
 });
 
 test('recipe details render as a dedicated page rather than a modal', () => {
