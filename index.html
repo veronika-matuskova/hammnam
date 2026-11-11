@@ -230,32 +230,32 @@
 
           <section class="mb-8" aria-labelledby="detail-nutrition-heading">
             <div class="mb-3 flex items-center justify-between">
-              <h3 id="detail-nutrition-heading" class="text-lg font-semibold text-slate-900">Nutriční tabulka</h3>
-              <span class="text-xs font-medium uppercase tracking-wide text-slate-500" x-text="selectedRecipe && selectedRecipe.servings ? `${selectedRecipe.servings} porcí` : 'Per porce'"></span>
+              <h3 id="detail-nutrition-heading" class="text-lg font-semibold text-slate-900" x-text="t('nutritionTable')"></h3>
+              <span class="text-xs font-medium uppercase tracking-wide text-slate-500" x-text="selectedRecipe && selectedRecipe.servings ? `${selectedRecipe.servings} ${t('servings')}` : t('perServing')"></span>
             </div>
             <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/50">
               <table class="min-w-[40rem] border-collapse text-left text-sm">
                 <thead class="bg-slate-100 text-slate-700">
                   <tr>
-                    <th class="px-3 py-2 font-semibold">SJ</th>
-                    <th class="px-3 py-2 font-semibold" x-text="t('carbs')"></th>
-                    <th class="px-3 py-2 font-semibold" x-text="t('fiber')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('calories')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('proteins')"></th>
+                    <th class="px-3 py-2 font-semibold" x-text="t('carbs')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('fats')"></th>
+                    <th class="px-3 py-2 font-semibold" x-text="t('fiber')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('salt')"></th>
-                    <th class="px-3 py-2 font-semibold">GL</th>
+                    <th class="px-3 py-2 font-semibold" x-text="t('sj')"></th>
+                    <th class="px-3 py-2 font-semibold" x-text="t('glycemicLoad')"></th>
                   </tr>
                 </thead>
                 <tbody class="bg-white text-slate-700">
                   <tr>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></td>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.carbs, 'g') : '—'"></td>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fiber, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.calories, 'kcal') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.proteins, 'g') : '—'"></td>
+                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.carbs, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fats, 'g') : '—'"></td>
+                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fiber, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.salt, 'g') : '—'"></td>
+                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.glycemic_load) : '—'"></td>
                   </tr>
                 </tbody>
@@ -432,7 +432,7 @@
             <input type="url" x-model.trim="newRecipe.photo" maxlength="2048" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
           </label>
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="nutrition-heading">
-            <h3 id="nutrition-heading" class="mb-3 text-sm font-semibold text-slate-800">Nutriční hodnoty</h3>
+            <h3 id="nutrition-heading" class="mb-3 text-sm font-semibold text-slate-800" x-text="t('nutritionValues')"></h3>
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <label class="block text-xs font-medium text-slate-600">
                 <span x-text="t('fiber')"></span>
