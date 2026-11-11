@@ -182,11 +182,13 @@ test('recipe details render as a dedicated page rather than a modal', () => {
   assert.doesNotMatch(html, /aria-modal="true"[^]*recipe-detail-title/);
 });
 
-test('nutrition tables can scroll horizontally when they exceed mobile width', () => {
+test('recipe cards use nutrition tags and keep the full table on the detail page', () => {
   const html = fs.readFileSync('index.html', 'utf8');
+  const recipeCards = html.slice(html.indexOf('<template x-for="recipe in filteredRecipes"'), html.indexOf('id="detail-nutrition-heading"'));
 
-  assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 2);
-  assert.match(html, /min-w-\[36rem\] divide-y/);
+  assert.match(recipeCards, /displayMetric\(recipe\.calories, 'kcal'\)/);
+  assert.doesNotMatch(recipeCards, /<table/);
+  assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 1);
   assert.match(html, /min-w-\[40rem\] border-collapse/);
 });
 

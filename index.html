@@ -130,40 +130,15 @@
                   <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
                     <span x-text="t('carbsShort')"></span><span x-text="displayMetric(recipe.carbs, 'g')"></span>
                   </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+                    <span x-text="displayMetric(recipe.calories, 'kcal')"></span>
+                  </span>
                   <span
                     class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
                     :class="giClass(recipe.gi)"
                   >
                     <span>GI</span><span x-text="displayValue(recipe.gi)"></span>
                   </span>
-                </div>
-                <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-                  <table class="min-w-[36rem] divide-y divide-slate-200 text-left text-[11px]">
-                    <thead class="bg-slate-50">
-                      <tr>
-                        <th class="px-2 py-2 font-semibold text-slate-600">SJ</th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('carbsShort')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('fiber')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('calories')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('proteins')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('fats')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600" x-text="t('salt')"></th>
-                        <th class="px-2 py-2 font-semibold text-slate-600">GL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr class="bg-white text-slate-700">
-                        <td class="px-2 py-2" x-text="displayValue(recipe.sj)"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.carbs, 'g')"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.fiber, 'g')"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.calories, 'kcal')"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.proteins, 'g')"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.fats, 'g')"></td>
-                        <td class="px-2 py-2" x-text="displayMetric(recipe.salt, 'g')"></td>
-                        <td class="px-2 py-2" x-text="displayValue(recipe.glycemic_load)"></td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
