@@ -213,41 +213,28 @@
             <h2 id="recipe-detail-title" class="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl" x-text="selectedRecipe ? displayTitle(selectedRecipe) : ''"></h2>
           </div>
 
-          <div class="mb-8 grid grid-cols-3 gap-2 sm:gap-3">
-            <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3 sm:p-4">
-              <p class="text-xs font-medium text-emerald-700" x-text="t('sj')"></p>
-              <p class="mt-1 text-lg font-bold text-emerald-900" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></p>
+          <div x-show="selectedRecipe && (selectedRecipe.total_weight != null || selectedRecipe.total_calories != null || selectedRecipe.total_proteins != null || selectedRecipe.total_fats != null || selectedRecipe.total_carbs != null)" class="mb-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <div x-show="selectedRecipe && selectedRecipe.total_weight != null">
+              <p class="text-sm font-semibold text-slate-900" x-text="t('totalWeight')"></p>
+              <p class="mt-1 text-base font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_weight, 'g') : '—'"></p>
+              <p class="mt-2 text-xs text-slate-500" x-text="t('totalWeightNote')"></p>
             </div>
-            <div class="rounded-xl border border-blue-100 bg-blue-50 p-3 sm:p-4">
-              <p class="text-xs font-medium text-blue-700" x-text="t('carbs')"></p>
-              <p class="mt-1 text-lg font-bold text-blue-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.carbs, 'g') : '—'"></p>
-            </div>
-            <div class="rounded-xl border p-3 sm:p-4" :class="selectedRecipe ? giClass(selectedRecipe.gi) : 'border-violet-100 bg-violet-50 text-violet-800'">
-              <p class="text-xs font-medium opacity-80" x-text="t('gi')"></p>
-              <p class="mt-1 text-lg font-bold" x-text="selectedRecipe ? displayValue(selectedRecipe.gi) : '—'"></p>
-            </div>
-          </div>
-
-          <div x-show="selectedRecipe && (selectedRecipe.total_weight !== null || selectedRecipe.total_weight !== undefined || selectedRecipe.total_calories !== null || selectedRecipe.total_calories !== undefined || selectedRecipe.total_proteins !== null || selectedRecipe.total_proteins !== undefined || selectedRecipe.total_fats !== null || selectedRecipe.total_fats !== undefined || selectedRecipe.total_carbs !== null || selectedRecipe.total_carbs !== undefined)" class="mb-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-            <p class="text-sm font-semibold text-slate-900" x-text="t('totalWeight')"></p>
-            <p class="mt-1 text-base font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_weight, 'g') : '—'"></p>
-            <p class="mt-2 text-xs text-slate-500" x-text="t('totalWeightNote')"></p>
-            <div class="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+            <div x-show="selectedRecipe && (selectedRecipe.total_calories != null || selectedRecipe.total_proteins != null || selectedRecipe.total_fats != null || selectedRecipe.total_carbs != null)" class="mt-4 rounded-xl border border-slate-200 bg-white p-3">
               <p class="text-sm font-semibold text-slate-900" x-text="t('totalRecipeValues')"></p>
               <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div>
+                <div x-show="selectedRecipe && selectedRecipe.total_calories != null">
                   <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('calories')"></p>
                   <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_calories, 'kcal') : '—'"></p>
                 </div>
-                <div>
+                <div x-show="selectedRecipe && selectedRecipe.total_proteins != null">
                   <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('proteins')"></p>
                   <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_proteins, 'g') : '—'"></p>
                 </div>
-                <div>
+                <div x-show="selectedRecipe && selectedRecipe.total_fats != null">
                   <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('fats')"></p>
                   <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_fats, 'g') : '—'"></p>
                 </div>
-                <div>
+                <div x-show="selectedRecipe && selectedRecipe.total_carbs != null">
                   <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('carbs')"></p>
                   <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_carbs, 'g') : '—'"></p>
                 </div>
@@ -256,9 +243,8 @@
           </div>
 
           <section class="mb-8" aria-labelledby="detail-nutrition-heading">
-            <div class="mb-3 flex items-center justify-between">
+            <div class="mb-3">
               <h3 id="detail-nutrition-heading" class="text-lg font-semibold text-slate-900" x-text="t('nutritionTable')"></h3>
-              <span class="text-xs font-medium uppercase tracking-wide text-slate-500" x-text="selectedRecipe && selectedRecipe.servings ? `${selectedRecipe.servings} ${t('servings')}` : t('perServing')"></span>
             </div>
             <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/50">
               <table class="min-w-[40rem] border-collapse text-left text-sm">
@@ -271,6 +257,7 @@
                     <th class="px-3 py-2 font-semibold" x-text="t('fiber')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('salt')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('sj')"></th>
+                    <th class="px-3 py-2 font-semibold" x-text="t('gi')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('glycemicLoad')"></th>
                   </tr>
                 </thead>
@@ -283,6 +270,7 @@
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fiber, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.salt, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></td>
+                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.gi) : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.glycemic_load) : '—'"></td>
                   </tr>
                 </tbody>

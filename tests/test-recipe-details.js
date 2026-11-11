@@ -190,6 +190,20 @@ test('nutrition tables can scroll horizontally when they exceed mobile width', (
   assert.match(html, /min-w-\[40rem\] border-collapse/);
 });
 
+test('recipe nutrition details avoid duplicate highlights and hide empty totals', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  const nutritionSection = html.slice(html.indexOf('id="detail-nutrition-heading"'), html.indexOf('id="detail-ingredients-heading"'));
+  const totalNutritionSection = html.slice(html.indexOf('selectedRecipe.total_weight != null'), html.indexOf('id="detail-nutrition-heading"'));
+
+  assert.doesNotMatch(html, /grid grid-cols-3 gap-2 sm:gap-3/);
+  assert.match(nutritionSection, /x-text="t\('gi'\)"/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_calories != null/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_proteins != null/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_fats != null/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_carbs != null/);
+  assert.match(totalNutritionSection, /selectedRecipe\.total_weight != null/);
+});
+
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {
   let requestUrl;
   let requestOptions;
