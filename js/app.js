@@ -44,6 +44,9 @@ const translations = {
     servings: 'Porce',
     nutritionTable: 'Nutriční tabulka',
     nutritionValues: 'Nutriční hodnoty',
+    totalWeight: 'Celková hmotnost upečeného pokrmu',
+    totalRecipeValues: 'Celkové hodnoty za celý recept',
+    totalWeightNote: 'podle toho, kolik vody se odpění',
     perServing: 'Per porce',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografii (volitelné)',
@@ -113,6 +116,9 @@ const translations = {
     servings: 'Porcie',
     nutritionTable: 'Nutričná tabuľka',
     nutritionValues: 'Nutričné hodnoty',
+    totalWeight: 'Celková hmotnosť upečeného pokrmu',
+    totalRecipeValues: 'Celkové hodnoty za celý recept',
+    totalWeightNote: 'podľa toho, koľko vody sa odpaľuje',
     perServing: 'Na porciu',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografiu (voliteľné)',
@@ -164,6 +170,11 @@ function emptyRecipe() {
     fats: null,
     salt: null,
     glycemic_load: null,
+    total_weight: null,
+    total_calories: null,
+    total_proteins: null,
+    total_fats: null,
+    total_carbs: null,
     gi: '',
     ingredients: [],
     steps: [],
@@ -363,7 +374,7 @@ function recipeApp() {
     async addRecipe() {
       this.saving = true;
       this.formError = '';
-      const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load'];
+      const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
       const payload = {
         ...this.newRecipe,
         ...Object.fromEntries(numericFields.map((field) => {
