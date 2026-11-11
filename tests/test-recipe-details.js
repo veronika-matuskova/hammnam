@@ -44,7 +44,7 @@ function createRecipeApp(fetch, initialHash = '') {
     console
   };
   vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return factory();
+  return Object.assign(factory(), { location, history });
 }
 
 test('new recipes initialize with empty detail fields', () => {
@@ -134,9 +134,29 @@ test('recipe detail routes work when opening a direct link', () => {
   const recipe = { id: 42, title_cs: 'Koláč' };
   app.recipes = [recipe];
 
-  app.syncRecipeRoute();
+  app.syncRoute();
 
   assert.equal(app.selectedRecipe, recipe);
+});
+
+test('new recipe page opens, closes, and supports direct links', () => {
+  const app = createRecipeApp();
+
+  app.openForm();
+  assert.equal(app.showForm, true);
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.location.hash, '#new-recipe');
+
+  app.closeForm();
+  assert.equal(app.showForm, false);
+  assert.equal(app.location.hash, '');
+
+  const directLinkApp = createRecipeApp(undefined, '#new-recipe');
+  directLinkApp.syncRoute();
+  assert.equal(directLinkApp.showForm, true);
+  directLinkApp.closeForm();
+  assert.equal(directLinkApp.showForm, false);
+  assert.equal(directLinkApp.location.hash, '');
 });
 
 test('language fallbacks keep nutrition labels translated when switching routes', () => {
@@ -169,9 +189,19 @@ test('the app script URL bypasses stale service worker cache entries', () => {
   const html = fs.readFileSync('index.html', 'utf8');
   const serviceWorker = fs.readFileSync('sw.js', 'utf8');
 
-  assert.match(html, /src="\.\/js\/app\.js\?v=3"/);
-  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v3'/);
-  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=3'/);
+  assert.match(html, /src="\.\/js\/app\.js\?v=4"/);
+  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v4'/);
+  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=4'/);
+});
+
+test('new recipe form renders as a dedicated page rather than a modal', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  const formPage = html.slice(html.indexOf('<main x-show="showForm"'), html.indexOf('<footer'));
+
+  assert.match(formPage, /aria-labelledby="form-title"/);
+  assert.match(formPage, /@click="closeForm\(\)"/);
+  assert.match(formPage, /@submit\.prevent="addRecipe\(\)"/);
+  assert.doesNotMatch(formPage, /role="dialog"|aria-modal="true"|fixed inset-0/);
 });
 
 test('recipe details render as a dedicated page rather than a modal', () => {

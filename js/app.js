@@ -26,7 +26,7 @@ const translations = {
     changeFilters: 'Zkuste změnit hledání nebo filtry.',
     emptyTitle: 'Zatím tu nejsou žádné recepty',
     emptyDescription: 'Přidejte svůj první recept a začněte si tvořit kuchařku.',
-    dialogEyebrow: 'Nový přírůstek do kuchařky',
+    formEyebrow: 'Nový přírůstek do kuchařky',
     addRecipeTitle: 'Přidat recept',
     close: 'Zavřít',
     recipeNameCs: 'Název (CZ)',
@@ -97,7 +97,7 @@ const translations = {
     changeFilters: 'Skúste zmeniť hľadanie alebo filtre.',
     emptyTitle: 'Zatiaľ tu nie sú žiadne recepty',
     emptyDescription: 'Pridajte svoj prvý recept a začnite si tvoriť kuchárku.',
-    dialogEyebrow: 'Nový prírastok do kuchárky',
+    formEyebrow: 'Nový prírastok do kuchárky',
     addRecipeTitle: 'Pridať recept',
     close: 'Zavrieť',
     recipeNameCs: 'Název (CZ)',
@@ -310,15 +310,18 @@ function recipeApp() {
           console.error('Service worker registration failed:', error);
         });
       }
-      window.addEventListener('popstate', () => this.syncRecipeRoute());
+      window.addEventListener('popstate', () => this.syncRoute());
+      this.syncRoute();
       await this.fetchRecipes();
     },
 
-    syncRecipeRoute() {
-      const route = window.location.hash.match(/^#recipe\/(.+)$/);
+    syncRoute() {
+      const hash = window.location.hash;
+      const route = hash.match(/^#recipe\/(.+)$/);
       this.selectedRecipe = route
         ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === route[1]) || null
         : null;
+      this.showForm = hash === '#new-recipe';
     },
 
     async fetchRecipes() {
@@ -328,7 +331,7 @@ function recipeApp() {
         const data = await this.request('?select=*&order=created_at.desc');
         if (!Array.isArray(data)) throw new Error('Supabase returned an unexpected recipes response.');
         this.recipes = data;
-        this.syncRecipeRoute();
+        this.syncRoute();
       } catch (error) {
         console.error('Could not load recipes:', error);
         this.errorMessage = error.message === this.t('databaseUnavailable')
@@ -342,7 +345,14 @@ function recipeApp() {
     openForm() {
       this.formError = '';
       this.selectedRecipe = null;
-      this.showForm = true;
+      if (window.location.hash !== '#new-recipe') {
+        window.history.pushState(
+          { ...(window.history.state || {}), hamMnamNewRecipe: true },
+          '',
+          `${window.location.pathname}${window.location.search}#new-recipe`
+        );
+      }
+      this.syncRoute();
     },
 
     openRecipe(recipe) {
@@ -367,7 +377,15 @@ function recipeApp() {
     },
 
     closeForm() {
-      if (!this.saving) this.showForm = false;
+      if (this.saving) return;
+      this.showForm = false;
+      if (window.location.hash !== '#new-recipe') return;
+
+      if (window.history.state && window.history.state.hamMnamNewRecipe) {
+        window.history.back();
+      } else {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
     },
 
     async addRecipe() {
@@ -403,7 +421,8 @@ function recipeApp() {
         }
         this.recipes.unshift(created[0]);
         this.newRecipe = emptyRecipe();
-        this.showForm = false;
+        this.saving = false;
+        this.closeForm();
       } catch (error) {
         console.error('Could not save recipe:', error);
         this.formError = `${this.t('saveError')} (${error.message})`;

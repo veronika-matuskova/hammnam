@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=3"></script>
+    <script defer src="./js/app.js?v=4"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -37,7 +37,7 @@
             x-text="language.toUpperCase()"
           ></button>
           <button
-            x-show="!selectedRecipe"
+            x-show="!selectedRecipe && !showForm"
             type="button"
             @click="openForm()"
             class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
@@ -47,7 +47,7 @@
       </div>
     </header>
 
-    <main x-show="!selectedRecipe" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main x-show="!selectedRecipe && !showForm" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <section class="mb-8">
         <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500" x-text="t('eyebrow')"></p>
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -291,24 +291,17 @@
       </article>
     </main>
 
-    <div
-      x-show="showForm"
-      x-cloak
-      x-transition.opacity
-      @keydown.escape.window="closeForm()"
-      @click.self="closeForm()"
-      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-    >
-      <section x-transition class="max-h-[95vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-2xl sm:p-7">
-        <div class="mb-6 flex items-start justify-between gap-4">
+    <main x-show="showForm" x-cloak class="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10" aria-labelledby="form-title">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <button type="button" @click="closeForm()" class="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950">
+          <span aria-hidden="true">←</span>
+          <span x-text="t('backToRecipes')"></span>
+        </button>
+        <div class="mb-6">
           <div>
-            <p class="text-sm font-medium text-slate-500" x-text="t('dialogEyebrow')"></p>
-            <h2 id="dialog-title" class="mt-1 text-2xl font-bold tracking-tight" x-text="t('addRecipeTitle')"></h2>
+            <p class="text-sm font-medium text-slate-500" x-text="t('formEyebrow')"></p>
+            <h1 id="form-title" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" x-text="t('addRecipeTitle')"></h1>
           </div>
-          <button type="button" @click="closeForm()" :aria-label="t('close')" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900">✕</button>
         </div>
         <form @submit.prevent="addRecipe()" class="space-y-4">
           <div class="grid gap-4 sm:grid-cols-2">
@@ -473,7 +466,7 @@
           </div>
         </form>
       </section>
-    </div>
+    </main>
 
     <footer class="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
       hamMňam <span aria-hidden="true">·</span> <span x-text="t('footer')"></span>
