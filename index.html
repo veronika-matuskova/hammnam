@@ -328,28 +328,60 @@
               <input type="text" x-model.trim="newRecipe.category_sk" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
           </div>
-          <div class="grid gap-4 sm:grid-cols-3">
-            <label class="block text-sm font-medium text-slate-700">
-              <span x-text="t('servings')"></span>
-              <input type="number" x-model.number="newRecipe.servings" min="1" step="1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            </label>
-            <label class="block text-sm font-medium text-slate-700">
-              <span x-text="t('sj')"></span>
-              <input type="number" x-model.number="newRecipe.sj" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            </label>
-            <label class="block text-sm font-medium text-slate-700">
-              <span x-text="t('carbs')"></span>
-              <input type="number" x-model.number="newRecipe.carbs" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            </label>
-            <label class="block text-sm font-medium text-slate-700">
-              <span x-text="t('gi')"></span>
-              <input type="text" x-model.trim="newRecipe.gi" maxlength="40" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            </label>
-            <label class="block text-sm font-medium text-slate-700">
-              <span x-text="t('glycemicLoad')"></span>
-              <input type="number" x-model.number="newRecipe.glycemic_load" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            </label>
-          </div>
+          <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <div class="grid gap-5 lg:grid-cols-[1.5fr_0.9fr]">
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-slate-800" x-text="t('nutritionTable100g')"></h3>
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('calories')"></span>
+                    <input type="number" x-model.number="newRecipe.calories" min="0" step="1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('carbs')"></span>
+                    <input type="number" x-model.number="newRecipe.carbs" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('proteins')"></span>
+                    <input type="number" x-model.number="newRecipe.proteins" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('fats')"></span>
+                    <input type="number" x-model.number="newRecipe.fats" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('fiber')"></span>
+                    <input type="number" x-model.number="newRecipe.fiber" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('salt')"></span>
+                    <input type="number" x-model.number="newRecipe.salt" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-slate-800" x-text="t('extraValues')"></h3>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('servings')"></span>
+                    <input type="number" x-model.number="newRecipe.servings" min="1" step="1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('sj')"></span>
+                    <input type="number" x-model.number="newRecipe.sj" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('gi')"></span>
+                    <input type="text" x-model.trim="newRecipe.gi" maxlength="40" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-sm font-medium text-slate-700">
+                    <span x-text="t('glycemicLoad')"></span>
+                    <input type="number" x-model.number="newRecipe.glycemic_load" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="ingredients-heading">
             <div class="mb-3 flex items-center justify-between gap-3">
               <h3 id="ingredients-heading" class="text-sm font-semibold text-slate-800" x-text="t('ingredients')"></h3>
@@ -421,48 +453,58 @@
             <input type="url" x-model.trim="newRecipe.photo" maxlength="2048" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
           </label>
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="nutrition-heading">
-            <h3 id="nutrition-heading" class="mb-3 text-sm font-semibold text-slate-800" x-text="t('nutritionValues')"></h3>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('fiber')"></span>
-                <input type="number" x-model.number="newRecipe.fiber" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('calories')"></span>
-                <input type="number" x-model.number="newRecipe.calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('proteins')"></span>
-                <input type="number" x-model.number="newRecipe.proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('fats')"></span>
-                <input type="number" x-model.number="newRecipe.fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('salt')"></span>
-                <input type="number" x-model.number="newRecipe.salt" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('totalWeight')"></span>
-                <input type="number" x-model.number="newRecipe.total_weight" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('totalCalories')"></span>
-                <input type="number" x-model.number="newRecipe.total_calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('totalProteins')"></span>
-                <input type="number" x-model.number="newRecipe.total_proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('totalFats')"></span>
-                <input type="number" x-model.number="newRecipe.total_fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-xs font-medium text-slate-600">
-                <span x-text="t('totalCarbs')"></span>
-                <input type="number" x-model.number="newRecipe.total_carbs" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
+            <h3 id="nutrition-heading" class="mb-4 text-sm font-semibold text-slate-800" x-text="t('nutritionValues')"></h3>
+            <div class="space-y-5">
+              <div>
+                <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500" x-text="t('perPortion')"></p>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('fiber')"></span>
+                    <input type="number" x-model.number="newRecipe.fiber" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('calories')"></span>
+                    <input type="number" x-model.number="newRecipe.calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('proteins')"></span>
+                    <input type="number" x-model.number="newRecipe.proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('fats')"></span>
+                    <input type="number" x-model.number="newRecipe.fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('salt')"></span>
+                    <input type="number" x-model.number="newRecipe.salt" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                </div>
+              </div>
+              <div class="border-t border-slate-200 pt-4">
+                <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500" x-text="t('totalValues')"></p>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('totalWeight')"></span>
+                    <input type="number" x-model.number="newRecipe.total_weight" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('totalCalories')"></span>
+                    <input type="number" x-model.number="newRecipe.total_calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('totalProteins')"></span>
+                    <input type="number" x-model.number="newRecipe.total_proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('totalFats')"></span>
+                    <input type="number" x-model.number="newRecipe.total_fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600">
+                    <span x-text="t('totalCarbs')"></span>
+                    <input type="number" x-model.number="newRecipe.total_carbs" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  </label>
+                </div>
+              </div>
             </div>
           </section>
           <p x-show="formError" x-cloak class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="formError"></p>
