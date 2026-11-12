@@ -291,6 +291,7 @@ test('recipe cards use nutrition tags and keep the full table on the detail page
   const recipeCards = html.slice(html.indexOf('<template x-for="recipe in filteredRecipes"'), html.indexOf('id="detail-nutrition-heading"'));
 
   assert.match(recipeCards, /displayMetric\(recipe\.calories, 'kcal'\)/);
+  assert.equal((recipeCards.match(/t\('per100gSuffix'\)/g) || []).length, 3);
   assert.doesNotMatch(recipeCards, /<table/);
   assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 1);
   assert.match(html, /min-w-\[40rem\] border-collapse/);
@@ -303,6 +304,8 @@ test('recipe nutrition details avoid duplicate highlights and hide empty totals'
 
   assert.doesNotMatch(html, /grid grid-cols-3 gap-2 sm:gap-3/);
   assert.match(nutritionSection, /x-text="t\('gi'\)"/);
+  assert.match(nutritionSection, /t\('per100g'\)/);
+  assert.match(totalNutritionSection, /x-text="t\('totalRecipeValues'\)"/);
   assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_calories != null/);
   assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_proteins != null/);
   assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_fats != null/);
