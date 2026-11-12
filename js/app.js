@@ -208,6 +208,13 @@ function emptyRecipe() {
   };
 }
 
+// Older rows can hold NULL in text columns; treat missing values as empty strings.
+function textValue(value) {
+  return value === null || value === undefined ? '' : String(value).trim();
+}
+
+const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'gi', 'notes'];
+
 function recipeApp() {
   return {
     language: getSavedLanguage(),
@@ -399,6 +406,7 @@ function recipeApp() {
       this.formError = '';
       this.selectedRecipe = null;
       this.editingRecipeId = null;
+      this.newRecipe = emptyRecipe();
       if (window.location.hash !== '#new-recipe') {
         window.history.pushState(
           { ...(window.history.state || {}), hamMnamNewRecipe: true },
@@ -414,17 +422,19 @@ function recipeApp() {
       for (const field of Object.keys(form)) {
         if (recipe[field] !== undefined) form[field] = recipe[field];
       }
-      form.gi = String(form.gi || '');
+      for (const field of TEXT_FIELDS) form[field] = textValue(form[field]);
       form.ingredients = Array.isArray(recipe.ingredients)
         ? recipe.ingredients
           .filter((ingredient) => ingredient && typeof ingredient === 'object')
           .map((ingredient) => ({
-            name: String(ingredient.name || ''),
-            amount: String(ingredient.amount || ''),
-            unit: String(ingredient.unit || '')
+            name: textValue(ingredient.name),
+            amount: textValue(ingredient.amount),
+            unit: textValue(ingredient.unit)
           }))
         : [];
-      form.steps = Array.isArray(recipe.steps) ? recipe.steps.map((step) => String(step)) : [];
+      form.steps = Array.isArray(recipe.steps)
+        ? recipe.steps.filter((step) => step !== null && step !== undefined).map((step) => String(step))
+        : [];
       if (!this.isLanguageEnabled('cs')) {
         // Older recipes may only have Czech names; prefill the Slovak fields so they can be saved.
         if (!form.title_sk) form.title_sk = form.title_cs || '';
@@ -471,6 +481,7 @@ function recipeApp() {
     closeForm() {
       if (this.saving) return;
       this.showForm = false;
+      this.newRecipe = emptyRecipe();
       if (window.location.hash.startsWith('#edit-recipe/')) {
         const recipe = this.recipes.find((item) => String(item.id) === String(this.editingRecipeId)) || null;
         this.editingRecipeId = null;
@@ -501,25 +512,25 @@ function recipeApp() {
       this.saving = true;
       this.formError = '';
       const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
-      const payload = {
-        ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
-        ...Object.fromEntries(numericFields.map((field) => {
-          const raw = this.newRecipe[field];
-          const value = raw === '' || raw === null || raw === undefined ? null : Number(raw);
-          return [field, Number.isFinite(value) ? value : null];
-        })),
-        gi: this.newRecipe.gi.trim(),
-        ingredients: this.newRecipe.ingredients
-          .filter((ingredient) => ingredient.name.trim() || ingredient.amount.trim() || ingredient.unit.trim())
-          .map((ingredient) => ({
-            name: ingredient.name.trim(),
-            amount: ingredient.amount.trim(),
-            unit: ingredient.unit.trim()
-          })),
-        steps: this.newRecipe.steps.map((step) => step.trim()).filter(Boolean),
-        notes: this.newRecipe.notes.trim()
-      };
       try {
+        const payload = {
+          ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
+          ...Object.fromEntries(TEXT_FIELDS.map((field) => [field, textValue(this.newRecipe[field])])),
+          ...Object.fromEntries(numericFields.map((field) => {
+            const raw = this.newRecipe[field];
+            const value = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+            return [field, Number.isFinite(value) ? value : null];
+          })),
+          ingredients: (Array.isArray(this.newRecipe.ingredients) ? this.newRecipe.ingredients : [])
+            .filter((ingredient) => ingredient && typeof ingredient === 'object')
+            .map((ingredient) => ({
+              name: textValue(ingredient.name),
+              amount: textValue(ingredient.amount),
+              unit: textValue(ingredient.unit)
+            }))
+            .filter((ingredient) => ingredient.name || ingredient.amount || ingredient.unit),
+          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean)
+        };
         if (this.editingRecipeId !== null) {
           const updated = await this.request(`?id=eq.${encodeURIComponent(this.editingRecipeId)}`, {
             method: 'PATCH',
