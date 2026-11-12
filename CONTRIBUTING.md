@@ -62,11 +62,31 @@ Migrations applied through the Supabase dashboard or the Supabase connector are 
 
 Anyone can read recipes. Creating, editing and starring recipes needs a signed-in user whose e-mail is in the `public.allowed_users` table; RLS enforces this, and the app hides the write controls when signed out or not allowed.
 
-- Sign-in uses magic links (`POST /auth/v1/otp` with `create_user: false`), so every family member needs an account in **Authentication → Users** (*Add user → Send invitation* or *Create new user*) and a row in the allow-list:
+### How sign-in works
 
-  ```sql
-  insert into public.allowed_users (email) values ('name@example.com');
-  ```
+Sign-in uses Supabase Auth magic links over plain REST (no Supabase JS client):
+
+1. **Request a link.** `requestMagicLink()` sends `POST /auth/v1/otp` with `{ email, create_user: false }` and `redirect_to` set to the app's URL. With `create_user: false` Supabase only e-mails existing accounts; an unknown address gets HTTP 422, shown as "this e-mail has no access".
+2. **Open the link.** Supabase verifies the one-time token (single use, expires after the project's e-mail OTP expiry, 1 hour by default) and redirects to the *Site URL* / allowed *Redirect URL* with `access_token`, `refresh_token` and `expires_at` in the URL hash. `consumeAuthRedirect()` stores them and removes them from the address bar.
+3. **Stay signed in.** The access token (a JWT, about 1 hour) is refreshed via `POST /auth/v1/token?grant_type=refresh_token` before a write when it expires within 60 s (`SESSION_REFRESH_MARGIN_SECONDS`), or when a write gets HTTP 401. If the refresh token is rejected, the user is signed out and asked to sign in again; a 5xx keeps the session.
+4. **Write.** Reads use the publishable key. Writes (`POST`/`PATCH`/`DELETE` on `recipes`) send `Authorization: Bearer <access token>`. RLS policies call `public.is_family_member()`, which checks `auth.jwt() ->> 'email'` (lower-cased) against `public.allowed_users`.
+5. **Show controls.** After sign-in the app calls `POST /rest/v1/rpc/is_family_member` and hides new/edit/star when it returns `false`. This is only UX: RLS is the real protection, so a modified client still cannot write.
+6. **Sign out.** `POST /auth/v1/logout` ends the session on the server, then the stored session is cleared.
+
+`public.allowed_users` has RLS enabled and no policies, so it cannot be read or changed through the API; `is_family_member()` is `SECURITY DEFINER` so it can read the list, and only ever returns `true`/`false`.
+
+### Adding a family member
+
+1. **Authentication → Users → Add user**: *Send invitation*, or *Create new user* with **Auto Confirm User** on. The dashboard requires a password there; use any long random one, it is never used.
+2. Add the e-mail (lower case) to the allow-list in the SQL editor:
+
+   ```sql
+   insert into public.allowed_users (email) values ('name@example.com');
+   ```
+
+To remove someone, delete their row from `allowed_users` (writes stop immediately) and optionally the user in **Authentication → Users**.
+
+### Configuration
 
 - In **Authentication → URL Configuration** set the *Site URL* to `https://hammnam.app` (see `CNAME`) and add `https://hammnam.app/` (and `http://localhost:*` for local testing) to the *Redirect URLs*.
 - The session (access and refresh token) is stored in `localStorage` under `hamMnam-session`. Writes send the access token in the `Authorization` header; reads use the publishable key.
