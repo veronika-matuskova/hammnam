@@ -127,7 +127,8 @@ test('number inputs use text with a decimal keyboard so commas are not mangled',
   const html = readRepoFile('index.html');
   assert.equal((html.match(/type="number"/g) || []).length, 0);
   assert.equal((html.match(/x-model\.number/g) || []).length, 0);
-  assert.equal((html.match(/inputmode="decimal"/g) || []).length, 10);
+  // 10 nutrition/total fields + GI (validated as 0-100 in js/app.js).
+  assert.equal((html.match(/inputmode="decimal"/g) || []).length, 11);
 });
 
 test('every numeric field is parsed on save and has a translated error label', async () => {

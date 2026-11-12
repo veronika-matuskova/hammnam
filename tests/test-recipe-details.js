@@ -41,6 +41,7 @@ test('saving a recipe posts all nutritional metrics', async () => {
     salt: '1.2',
     glycemic_load: '15',
     gi: '55',
+    title_sk: 'Polievka',
     ingredients: [{ name: ' Mrkev ', amount: ' 2 ', unit: ' ks ' }],
     steps: ['Nakrájet.'],
     notes: ' Dobré. '
@@ -57,7 +58,7 @@ test('saving a recipe posts all nutritional metrics', async () => {
   assert.equal(requestBody.fats, 12);
   assert.equal(requestBody.salt, 1.2);
   assert.equal(requestBody.glycemic_load, 15);
-  assert.equal(requestBody.gi, '55');
+  assert.equal(requestBody.gi, 55);
   assert.equal(requestBody.notes, 'Dobré.');
 });
 
@@ -209,14 +210,15 @@ test('whole-recipe section keeps only servings and total weight', () => {
   assert.equal(app.t('totalRecipeNote'), 'Počet porcií a hmotnosť celého hotového jedla.');
 });
 
-test('GI badges use numeric and localized low/medium/high ranges', () => {
+test('GI badges are coloured from the number (low/medium/high), not from text', () => {
   const app = createRecipeApp();
 
   assert.equal(app.giClass('55'), 'bg-emerald-50 text-emerald-800');
-  assert.equal(app.giClass('56'), 'bg-amber-50 text-amber-800');
+  assert.equal(app.giClass(56), 'bg-amber-50 text-amber-800');
   assert.equal(app.giClass('70'), 'bg-red-50 text-red-800');
-  assert.equal(app.giClass('nízký'), 'bg-emerald-50 text-emerald-800');
-  assert.equal(app.giClass('vysoký'), 'bg-red-50 text-red-800');
+  // Legacy free-text values get a neutral colour.
+  assert.equal(app.giClass('nízký'), 'bg-slate-100 text-slate-700');
+  assert.equal(app.giClass('vysoký'), 'bg-slate-100 text-slate-700');
 });
 
 test('new recipe form renders as a dedicated page rather than a modal', () => {
@@ -246,7 +248,7 @@ test('recipe cards use nutrition tags and keep the full table on the detail page
   assert.equal((recipeCards.match(/t\('per100gSuffix'\)/g) || []).length, 3);
   assert.doesNotMatch(recipeCards, /<table/);
   assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 1);
-  assert.match(html, /min-w-\[40rem\] border-collapse/);
+  assert.match(html, /min-w-\[34rem\] border-collapse/);
 });
 
 test('recipe nutrition details avoid duplicate highlights and hide empty totals', () => {
@@ -256,6 +258,7 @@ test('recipe nutrition details avoid duplicate highlights and hide empty totals'
 
   assert.doesNotMatch(html, /grid grid-cols-3 gap-2 sm:gap-3/);
   assert.match(nutritionSection, /x-text="t\('gi'\)"/);
+  assert.match(nutritionSection, /id="detail-glycemic-heading"/);
   assert.match(nutritionSection, /t\('per100g'\)/);
   assert.match(totalNutritionSection, /x-text="t\('totalRecipeValues'\)"/);
   assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.servings != null/);
@@ -325,8 +328,10 @@ test('the language switch is hidden and Slovak names are required in the form', 
   const html = readRepoFile('index.html');
   assert.match(html, /<html lang="sk">/);
   assert.match(html, /x-show="canSwitchLanguage"\s+type="button"\s+@click="toggleLanguage\(\)"/);
-  assert.match(html, /x-model\.trim="newRecipe\.title_sk" :required="!isLanguageEnabled\('cs'\)"/);
-  assert.match(html, /x-model\.trim="newRecipe\.category_sk" :required="!isLanguageEnabled\('cs'\)"/);
+  // At least one title/category is needed, Slovak or Czech.
+  assert.match(html, /x-model\.trim="newRecipe\.title_sk" :required="!newRecipe\.title_cs"/);
+  assert.match(html, /x-model\.trim="newRecipe\.title_cs" :required="isLanguageEnabled\('cs'\) && !newRecipe\.title_sk"/);
+  assert.match(html, /x-model\.trim="newRecipe\.category_sk" :required="!newRecipe\.category_cs"/);
   assert.doesNotMatch(html, /x-model\.trim="newRecipe\.title_cs" required/);
 });
 

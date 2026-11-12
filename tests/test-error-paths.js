@@ -10,6 +10,16 @@ const FAILURES = {
   'network error': async () => { throw networkError(); }
 };
 
+// The user-facing reason for each failure (#15); technical details go to console.error.
+const REASONS = { 'HTTP 500': 'serverError', 'HTTP 401': 'permissionError', 'network error': 'connectionError' };
+
+// Records console.error calls made by js/app.js inside the vm context.
+function captureConsoleErrors(app) {
+  const logged = [];
+  app.context.console.error = (...args) => logged.push(args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(' '));
+  return logged;
+}
+
 const recipe = { id: 42, title_sk: 'Koláč', category_sk: 'Dezert', ingredients: [], steps: [], notes: '', favorite: false };
 
 // A fetch stub that serves the recipe list, then answers every write with `failure`.
@@ -26,30 +36,36 @@ function failingWrites(failure, calls = []) {
 // --- loading the list ----------------------------------------------------------
 
 for (const [name, failure] of Object.entries(FAILURES)) {
-  test(`loading recipes: ${name} shows the connection error and stops loading`, async () => {
+  test(`loading recipes: ${name} shows a translated error and stops loading`, async () => {
     const app = loadApp({ fetch: failure });
     await app.init();
 
     assert.equal(app.loading, false);
     assert.equal(app.recipesLoaded, false);
     assert.deepEqual(plain(app.recipes), []);
-    assert.ok(app.errorMessage.startsWith(app.t('connectionError')), app.errorMessage);
+    assert.equal(app.errorMessage, app.t(REASONS[name]));
   });
 }
 
-test('loading recipes: the HTTP status is part of the (technical) message', async () => {
+test('loading recipes: the HTTP status goes to the console, not to the user', async () => {
   const app = loadApp({ fetch: FAILURES['HTTP 401'] });
+  const logged = captureConsoleErrors(app);
   await app.fetchRecipes();
-  assert.match(app.errorMessage, /HTTP 401/);
+  assert.equal(logged.length, 1);
+  assert.match(logged[0], /HTTP 401.*Invalid API key/);
+  assert.doesNotMatch(app.errorMessage, /HTTP|401/);
 });
 
 test('loading recipes: an unexpected response shape is an error, not an empty list', async () => {
   const app = loadApp({ fetch: async () => jsonResponse(200, { message: 'not a list' }) });
+  const logged = captureConsoleErrors(app);
   await app.fetchRecipes();
 
   assert.equal(app.loading, false);
   assert.equal(app.recipesLoaded, false);
-  assert.ok(app.errorMessage.startsWith(app.t('connectionError')), app.errorMessage);
+  assert.deepEqual(plain(app.recipes), []);
+  assert.equal(app.errorMessage, app.t('unexpectedError'));
+  assert.match(logged[0], /unexpected recipes response/);
 });
 
 test('loading recipes: a missing Supabase config shows the config message only', async () => {
@@ -263,10 +279,10 @@ for (const [name, failure] of Object.entries(FAILURES)) {
 // --- user-facing messages (bug #15) ---------------------------------------------
 
 // #15: "Users see translated messages; technical details go to the console only."
-// Today every message appends the raw error, e.g. "(Supabase HTTP 401: {"message":"Invalid API key",...})".
+// Regression tests: messages used to append the raw error, e.g. "(Supabase HTTP 401: {"message":"Invalid API key",...})".
 const RAW_DETAILS = /Supabase HTTP|Failed to fetch|Invalid API key|\{"/;
 
-test('loading recipes: users do not see raw Supabase error text', { todo: 'bug #15: raw Supabase error text is shown to users' }, async () => {
+test('loading recipes: users do not see raw Supabase error text', async () => {
   for (const failure of Object.values(FAILURES)) {
     const app = loadApp({ fetch: failure });
     await app.fetchRecipes();
@@ -274,7 +290,7 @@ test('loading recipes: users do not see raw Supabase error text', { todo: 'bug #
   }
 });
 
-test('saving: users do not see raw Supabase error text', { todo: 'bug #15: raw Supabase error text is shown to users' }, async () => {
+test('saving: users do not see raw Supabase error text', async () => {
   for (const failure of Object.values(FAILURES)) {
     const app = loadApp({ fetch: failure });
     app.openForm();
@@ -285,7 +301,7 @@ test('saving: users do not see raw Supabase error text', { todo: 'bug #15: raw S
   }
 });
 
-test('favourite: users do not see raw Supabase error text', { todo: 'bug #15: raw Supabase error text is shown to users' }, async () => {
+test('favourite: users do not see raw Supabase error text', async () => {
   for (const failure of Object.values(FAILURES)) {
     const app = loadApp({ fetch: failure });
     await app.toggleFavorite({ id: 1, favorite: false });
