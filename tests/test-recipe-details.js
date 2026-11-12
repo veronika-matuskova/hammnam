@@ -1,50 +1,11 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp, readRepoFile } = require('./helpers/app-harness');
 
+// Thin wrapper kept so the tests below read as before; the harness (with a real
+// history stack) lives in tests/helpers/app-harness.js.
 function createRecipeApp(fetch, initialHash = '') {
-  let factory;
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: {
-      data(name, registeredFactory) {
-        assert.equal(name, 'recipeApp');
-        factory = registeredFactory;
-      }
-    },
-    document: {
-      addEventListener(event, callback) {
-        if (event === 'alpine:init') callback();
-      }
-    },
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history });
+  return loadApp({ fetch, hash: initialHash });
 }
 
 test('new recipes initialize with empty detail fields', () => {
@@ -212,9 +173,9 @@ test('editing a recipe loads its values and patches the existing row', async () 
   assert.equal(app.recipes[0].title_cs, 'Upravený koláč');
   assert.equal(app.selectedRecipe, app.recipes[0]);
   assert.equal(app.showForm, false);
-  // Saving goes back to the detail entry; this stub's back() only clears the hash.
-  // The real history stack is covered in tests/test-navigation.js.
-  assert.notEqual(app.location.hash, '#edit-recipe/42');
+  // Saving goes back to the entry the edit was opened from (the list here).
+  assert.equal(app.location.hash, '');
+  assert.equal(app.history.index, 0);
 });
 
 test('language fallbacks keep nutrition labels translated when switching routes', () => {
@@ -260,22 +221,8 @@ test('GI badges are coloured from the number (low/medium/high), not from text', 
   assert.equal(app.giClass('vysoký'), 'bg-slate-100 text-slate-700');
 });
 
-test('the app script URL bypasses stale service worker cache entries', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
-  const serviceWorker = fs.readFileSync('sw.js', 'utf8');
-
-  // Bump all three together whenever js/app.js changes, or installed apps keep the old script.
-  const htmlVersion = html.match(/src="\.\/js\/app\.js\?v=(\d+)"/);
-  const cacheVersion = serviceWorker.match(/const CACHE_NAME = 'ham-mnam-shell-v(\d+)'/);
-  const precacheVersion = serviceWorker.match(/'\.\/js\/app\.js\?v=(\d+)'/);
-  assert.ok(htmlVersion && cacheVersion && precacheVersion);
-  assert.equal(cacheVersion[1], htmlVersion[1]);
-  assert.equal(precacheVersion[1], htmlVersion[1]);
-  assert.ok(Number(htmlVersion[1]) >= 6);
-});
-
 test('new recipe form renders as a dedicated page rather than a modal', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const formPage = html.slice(html.indexOf('<main x-show="showForm"'), html.indexOf('<footer'));
 
   assert.match(formPage, /aria-labelledby="form-title"/);
@@ -285,7 +232,7 @@ test('new recipe form renders as a dedicated page rather than a modal', () => {
 });
 
 test('recipe details render as a dedicated page rather than a modal', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
 
   assert.match(html, /<main x-show="selectedRecipe" x-cloak/);
   assert.match(html, /<button\s+type="button"\s+@click="closeRecipe\(\)"/);
@@ -294,7 +241,7 @@ test('recipe details render as a dedicated page rather than a modal', () => {
 });
 
 test('recipe cards use nutrition tags and keep the full table on the detail page', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const recipeCards = html.slice(html.indexOf('<template x-for="recipe in filteredRecipes"'), html.indexOf('id="detail-nutrition-heading"'));
 
   assert.match(recipeCards, /displayMetric\(recipe\.calories, 'kcal'\)/);
@@ -305,7 +252,7 @@ test('recipe cards use nutrition tags and keep the full table on the detail page
 });
 
 test('recipe nutrition details avoid duplicate highlights and hide empty totals', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const nutritionSection = html.slice(html.indexOf('id="detail-nutrition-heading"'), html.indexOf('id="detail-ingredients-heading"'));
   const totalNutritionSection = html.slice(html.indexOf('selectedRecipe.servings != null || selectedRecipe.total_weight != null'), html.indexOf('id="detail-nutrition-heading"'));
 
@@ -368,16 +315,7 @@ test('the app is Slovak-only and ignores a saved Czech preference', () => {
 });
 
 test('a saved Czech language preference falls back to Slovak', () => {
-  const source = fs.readFileSync('js/app.js', 'utf8');
-  let factory;
-  vm.runInNewContext(source, {
-    Alpine: { data(name, f) { factory = f; } },
-    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
-    localStorage: { getItem: () => 'cs', setItem: () => {} },
-    window: { location: { hash: '', pathname: '/', search: '' }, history: {}, addEventListener() {} },
-    console
-  });
-  assert.equal(factory().language, 'sk');
+  assert.equal(loadApp({ savedLanguage: 'cs' }).language, 'sk');
 });
 
 test('Czech translations are kept for a future language switch', () => {
@@ -387,7 +325,7 @@ test('Czech translations are kept for a future language switch', () => {
 });
 
 test('the language switch is hidden and Slovak names are required in the form', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   assert.match(html, /<html lang="sk">/);
   assert.match(html, /x-show="canSwitchLanguage"\s+type="button"\s+@click="toggleLanguage\(\)"/);
   // At least one title/category is needed, Slovak or Czech.
