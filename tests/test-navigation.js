@@ -1,63 +1,12 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp, supabaseStub, deferred } = require('./helpers/app-harness');
 
-// A history stub that keeps a real stack of entries. back() moves one entry back
-// (or leaves the app when there is none) and dispatches popstate to the listener
-// the app registered in init(), like a browser does.
+// Uses the real history stack from tests/helpers/app-harness.js: back() moves one
+// entry back (or leaves the app when there is none) and dispatches popstate to
+// the listener the app registered in init(), like a browser does.
 function createNavigationApp(fetch, initialHash = '') {
-  let factory;
-  const listeners = {};
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const hashOf = (url) => (url.includes('#') ? url.slice(url.indexOf('#')) : '');
-  const history = {
-    entries: [{ state: null, hash: initialHash }],
-    index: 0,
-    leftApp: false,
-    get state() {
-      return this.entries[this.index].state;
-    },
-    pushState(state, title, url) {
-      this.entries.splice(this.index + 1);
-      this.entries.push({ state: structuredClone(state), hash: hashOf(url) });
-      this.index += 1;
-      location.hash = hashOf(url);
-    },
-    replaceState(state, title, url) {
-      this.entries[this.index] = { state: structuredClone(state), hash: hashOf(url) };
-      location.hash = hashOf(url);
-    },
-    back() {
-      if (this.index === 0) {
-        this.leftApp = true;
-        return;
-      }
-      this.index -= 1;
-      location.hash = this.entries[this.index].hash;
-      (listeners.popstate || []).forEach((listener) => listener({ state: this.state }));
-    }
-  };
-  const window = {
-    SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-    location,
-    history,
-    isSecureContext: false,
-    addEventListener(event, listener) {
-      (listeners[event] = listeners[event] || []).push(listener);
-    }
-  };
-  const context = {
-    Alpine: { data(name, registeredFactory) { factory = registeredFactory; } },
-    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
-    navigator: {},
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window,
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history });
+  return loadApp({ fetch, hash: initialHash });
 }
 
 const recipe = { id: 42, title_sk: 'Koláč', category_sk: 'Dezert', ingredients: [], steps: [], notes: '' };
@@ -165,3 +114,173 @@ test('a known id is not cleared before recipes have loaded', () => {
   app.syncRoute();
   assert.equal(app.location.hash, '#recipe/42');
 });
+
+// --- browser Back/Forward buttons and typed URLs ------------------------------------
+// These go through history.back()/forward()/navigate() on the stub, which fire
+// popstate like the browser buttons and the address bar do.
+
+test('browser Back and Forward walk list -> detail -> edit and restore each page', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+  app.openRecipe(app.recipes[0]);
+  app.editRecipe(app.selectedRecipe);
+  assert.deepEqual(app.history.hashes, ['', '#recipe/42', '#edit-recipe/42']);
+
+  app.history.back();
+  assert.equal(app.showForm, false);
+  assert.equal(app.editingRecipeId, null);
+  assert.equal(app.selectedRecipe.id, 42);
+
+  app.history.back();
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.showForm, false);
+
+  app.history.forward();
+  assert.equal(app.selectedRecipe.id, 42);
+  assert.equal(app.showForm, false);
+
+  app.history.forward();
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.showForm, true);
+  assert.equal(app.editingRecipeId, 42);
+  assert.equal(app.newRecipe.title_sk, 'Koláč');
+  assert.equal(app.history.leftApp, false);
+});
+
+test('browser Back closes the new-recipe form and Forward reopens it', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+  app.openForm();
+  assert.equal(app.location.hash, '#new-recipe');
+
+  app.history.back();
+  assert.equal(app.showForm, false);
+  assert.equal(app.location.hash, '');
+
+  app.history.forward();
+  assert.equal(app.showForm, true);
+  assert.equal(app.editingRecipeId, null);
+});
+
+test('after saving a new recipe, browser Forward shows an empty form, not the saved one', async () => {
+  const app = createNavigationApp(supabaseStub([]));
+  await app.init();
+  app.openForm();
+  app.newRecipe.title_sk = 'Polievka';
+  app.newRecipe.category_sk = 'Obed';
+  await app.addRecipe();
+  assert.equal(app.location.hash, '');
+  assert.equal(app.showForm, false);
+
+  app.history.forward();
+  assert.equal(app.showForm, true);
+  assert.equal(app.newRecipe.title_sk, '');
+  assert.equal(app.editingRecipeId, null);
+});
+
+test('after saving an edit, browser Forward reopens the edit form with the saved values', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+  app.openRecipe(app.recipes[0]);
+  app.editRecipe(app.selectedRecipe);
+  app.newRecipe.title_sk = 'Upravený koláč';
+  await app.addRecipe();
+  assert.equal(app.location.hash, '#recipe/42');
+
+  app.history.forward();
+  assert.equal(app.showForm, true);
+  assert.equal(app.editingRecipeId, 42);
+  assert.equal(app.newRecipe.title_sk, 'Upravený koláč');
+});
+
+test('typing a detail URL into the address bar opens it and Back returns to the list', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+
+  app.history.navigate('#recipe/42');
+  assert.equal(app.selectedRecipe.id, 42);
+
+  app.history.back();
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.location.hash, '');
+  assert.equal(app.history.leftApp, false);
+});
+
+test('typing an unknown recipe URL after loading clears the hash', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+
+  app.history.navigate('#recipe/999');
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.location.hash, '');
+});
+
+test('a typed edit URL, cancelled, then the detail Back stays in the app', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+
+  app.history.navigate('#edit-recipe/42');
+  assert.equal(app.showForm, true);
+  assert.equal(app.editingRecipeId, 42);
+
+  app.closeForm();
+  assert.equal(app.selectedRecipe.id, 42);
+  app.closeRecipe();
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.location.hash, '');
+  assert.equal(app.history.leftApp, false);
+});
+
+test('a deep-linked list page: Back leaves the app (nothing to go back to)', async () => {
+  const app = createNavigationApp(stubFetch());
+  await app.init();
+  app.history.back();
+  assert.equal(app.history.leftApp, true);
+});
+
+test('edit -> browser Back -> typed #new-recipe shows an empty form and POSTs',
+  { todo: 'bug #8 follow-up (new): browser Back from the edit form keeps the edited recipe in newRecipe, and #new-recipe reached via popstate shows it' },
+  async () => {
+    const calls = [];
+    const base = stubFetch();
+    const app = createNavigationApp(async (url, options = {}) => {
+      calls.push(options.method || 'GET');
+      return base(url, options);
+    });
+    await app.init();
+    app.openRecipe(app.recipes[0]);
+    app.editRecipe(app.selectedRecipe);
+    app.history.back();
+
+    app.history.navigate('#new-recipe');
+    assert.equal(app.showForm, true);
+    assert.equal(app.newRecipe.title_sk, '', 'the form still holds the recipe from the edit');
+
+    app.newRecipe.title_sk = 'Nový';
+    app.newRecipe.category_sk = 'Obed';
+    await app.addRecipe();
+    assert.deepEqual(calls.filter((method) => method !== 'GET'), ['POST']);
+  });
+
+test('browser Back while an edit is saving still updates the list',
+  { todo: 'new bug: popstate during an in-flight PATCH clears editingRecipeId, so the saved row is reported as "no longer available" and the list keeps the old values' },
+  async () => {
+    const gate = deferred();
+    const base = stubFetch();
+    const app = createNavigationApp(async (url, options = {}) => {
+      if (options.method === 'PATCH') await gate.promise;
+      return base(url, options);
+    });
+    await app.init();
+    app.openRecipe(app.recipes[0]);
+    app.editRecipe(app.selectedRecipe);
+    app.newRecipe.title_sk = 'Upravený koláč';
+
+    const saving = app.addRecipe();
+    app.history.back();
+    gate.resolve();
+    await saving;
+
+    assert.equal(app.recipes[0].title_sk, 'Upravený koláč');
+    assert.equal(app.formError, '');
+  });
