@@ -15,6 +15,8 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ├── tests/
 │   ├── test-recipe-details.js # Recipe detail state and Supabase payload tests
 │   └── test-connection.js     # Supabase connection check
+├── supabase/
+│   └── migrations/     # Database schema changes, one SQL file each
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
 └── icons/
@@ -32,6 +34,14 @@ The GitHub Actions pre-deploy check runs the recipe detail tests before checking
 ```sh
 node --test tests/test-recipe-details.js
 ```
+
+## Database migrations
+
+Every change to the Supabase schema goes in a new file in `supabase/migrations/`, named `YYYYMMDDHHMMSS_short_description.sql` (UTC timestamp). Never edit a migration that has already been applied; add a new one instead.
+
+`20261112000000_baseline.sql` records the schema as it was before migrations were tracked.
+
+Apply a migration with the Supabase CLI (`supabase link --project-ref bjeboxfypkkhvdqxviip`, then `supabase db push`) or by running the file in the dashboard's SQL editor. Ship the matching `js/app.js` change in the same PR.
 
 ## Pull requests
 
