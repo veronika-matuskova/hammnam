@@ -219,6 +219,8 @@ function recipeApp() {
     selectedRecipe: null,
     errorMessage: '',
     formError: '',
+    favoriteErrorMessage: '',
+    favoriteSavingIds: {},
     search: '',
     selectedCategory: '',
     favoritesOnly: false,
@@ -562,18 +564,33 @@ function recipeApp() {
       }
     },
 
+    isFavoriteSaving(recipe) {
+      return Boolean(this.favoriteSavingIds[recipe.id]);
+    },
+
     async toggleFavorite(recipe) {
-      const updatedFavorite = !recipe.favorite;
+      if (this.isFavoriteSaving(recipe)) return;
+      const previousFavorite = recipe.favorite;
+      const updatedFavorite = !previousFavorite;
+      this.favoriteSavingIds[recipe.id] = true;
+      this.favoriteErrorMessage = '';
+      recipe.favorite = updatedFavorite;
       try {
-        await this.request(`?id=eq.${encodeURIComponent(recipe.id)}`, {
+        const updated = await this.request(`?id=eq.${encodeURIComponent(recipe.id)}`, {
           method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
+          headers: { Prefer: 'return=representation' },
           body: JSON.stringify({ favorite: updatedFavorite })
         });
-        recipe.favorite = updatedFavorite;
+        // An update blocked by row-level security succeeds with zero rows changed.
+        if (!Array.isArray(updated) || updated.length === 0) {
+          throw new Error('Supabase did not update the recipe.');
+        }
       } catch (error) {
         console.error('Could not update favorite:', error);
-        this.errorMessage = `${this.t('favoriteError')} (${error.message})`;
+        recipe.favorite = previousFavorite;
+        this.favoriteErrorMessage = `${this.t('favoriteError')} (${error.message})`;
+      } finally {
+        delete this.favoriteSavingIds[recipe.id];
       }
     }
   };
