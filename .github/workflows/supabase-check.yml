@@ -1,0 +1,32 @@
+name: Supabase connection check
+
+# Live ping of the Supabase REST API. Runs nightly and on demand only, so a
+# network blip or paused project never blocks PRs or deploys.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-check
+  cancel-in-progress: true
+
+jobs:
+  supabase-check:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test Supabase connection
+        run: node tests/test-connection.js
