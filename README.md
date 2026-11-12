@@ -1,48 +1,69 @@
 # hamMňam
 
-A lightweight static recipe manager focused on nutritional values (carbohydrate units / SJ, carbohydrates, and glycemic index). It uses Alpine.js and Tailwind CSS from CDNs, with Supabase's REST API for recipe storage.
+hamMňam is a recipe book that keeps the nutritional values of every recipe at hand: carbohydrate units (SJ), carbohydrates, calories, the glycemic index and more. The app is in Slovak.
 
-## Language
+Open it at **[hammnam.app](https://hammnam.app)**.
 
-The UI is currently Slovak only. Czech texts are still kept in `js/app.js`; to bring back the language switch, add `'cs'` to `ENABLED_LANGUAGES` there. With Czech enabled, the switch button and the Czech name/category fields in the recipe form reappear automatically.
+## Install it on your phone
 
-## Project layout
+hamMňam works in the browser, and you can also add it to your home screen so it opens like an app:
 
-```text
-.
-├── index.html          # App layout and CDN references
-├── manifest.json       # PWA install metadata
-├── sw.js               # Offline app-shell cache
-├── config.js           # Supabase URL and publishable/anon key
-├── js/
-│   └── app.js          # Alpine component, REST calls, filters, translations
-├── tests/
-│   └── test-recipe-details.js # Recipe detail state and Supabase payload tests
-└── icons/
-    └── app-icon.svg    # PWA and browser icon
-```
+- **iPhone (Safari):** tap Share, then **Add to Home Screen**.
+- **Android (Chrome):** open the menu (⋮), then **Install app** or **Add to Home screen**.
 
-## Tests
+Once you've opened the app, it starts even without a connection. Recipes are loaded from and saved to the internet, so viewing the latest recipes and saving changes need a connection.
 
-The GitHub Actions pre-deploy check runs the recipe detail tests before checking the Supabase connection. Run the recipe detail tests locally with Node.js:
+## Browse recipes
 
-```sh
-node --test tests/test-recipe-details.js
-```
+The home screen lists all recipes, newest first. Each card shows the category, name, photo, SJ, carbohydrates, calories and the glycemic index.
 
-## Pull requests
+- **Search** – type in the search box to find recipes by name or category.
+- **Category** – pick a category to see only those recipes.
+- **Obľúbené (Favorites)** – shows only your favorite recipes. Tap the star on a card to add a recipe to favorites or remove it.
 
-PR titles start with the type of change: `fix`, `feat`, `ui`, `i18n`, `refactor` or `chore` (for example `fix: Correct SJ calculation`). From a feature branch, `scripts/create-pr.sh` runs the tests, pushes the branch and opens a PR with the right title and the PR template. It needs the [GitHub CLI](https://cli.github.com) (`gh auth login`).
+### Glycemic index colors
 
-```sh
-scripts/create-pr.sh                              # asks for type and description
-scripts/create-pr.sh fix "Correct SJ calculation" # or pass them directly; add --draft or --skip-tests
-```
+The GI label is colored so you can read it at a glance:
 
-## GitHub Pages setup
+| Color | Meaning |
+| --- | --- |
+| Green | Low GI (55 or less, or text such as "nízky") |
+| Amber | Medium GI (56–69) |
+| Red | High GI (70 or more, or text such as "vysoký") |
 
-1. Set the Supabase project URL and publishable/anon key in `config.js`. A browser-visible anon/publishable key is expected; protect data with appropriate Supabase Row Level Security policies.
-2. Publish the repository root (or configure Pages to publish the folder containing `index.html`). Keep the relative `./` asset paths if deploying under a project subpath. The Actions workflow runs pre-deploy checks but does not perform or gate a GitHub Pages deployment; Pages deployment is configured separately.
-3. Serve the site over HTTPS. The service worker caches the static app shell for repeat visits and offline navigation; Supabase data operations still require a network connection.
+## Recipe detail
 
-No Node.js build step is required. Tailwind CSS and Alpine.js are loaded from their CDNs.
+Tap a recipe to open it. The detail shows:
+
+- the photo and category,
+- the weight of the finished dish and the totals for the whole recipe (calories, proteins, fats, carbohydrates), if they are filled in,
+- the nutrition table: calories, proteins, carbohydrates, fats, fiber, salt, SJ, GI and glycemic load (GL),
+- the ingredients with amounts,
+- the preparation steps,
+- notes and tips.
+
+Use **Späť na recepty** to go back to the list, or **Upraviť recept** to edit the recipe. Each recipe has its own link, so you can bookmark it or send it to someone.
+
+## Add or edit a recipe
+
+Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detail to change it. Only the name and the category are required; everything else is optional.
+
+- **Name and category** – you filter by category later, so keep category names consistent (for example always "Polievky").
+- **Calorie table (per 100 g)** – calories, carbohydrates, proteins, fats, fiber and salt.
+- **Extra values** – number of servings, carbohydrate units (SJ), glycemic index (a number or a word such as "nízky") and glycemic load (GL).
+- **Ingredients** – add a row for each ingredient with its name, amount and unit. Remove a row with ×.
+- **Preparation steps** – add one step at a time; they are numbered automatically.
+- **Notes and tips** and a **photo link** (the web address of an image).
+- **Totals for the whole recipe** – the weight of the finished dish (it depends on how much water evaporates while cooking) and the total calories, proteins, fats and carbohydrates.
+
+Tap **Uložiť recept** (or **Uložiť zmeny** when editing) to save, or **Zrušiť** to leave without saving.
+
+## Troubleshooting
+
+- **"Recepty sa nepodarilo načítať."** – check your internet connection and tap **Skúsiť znova**.
+- **"Recept sa nepodarilo uložiť."** – your changes are still in the form; check the connection and save again.
+- **The app looks out of date** – close it and open it again (sometimes twice); the new version loads in the background.
+
+---
+
+Want to work on the app itself? See [CONTRIBUTING.md](CONTRIBUTING.md).

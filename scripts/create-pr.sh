@@ -5,25 +5,28 @@
 #   scripts/create-pr.sh                          # asks for type and description
 #   scripts/create-pr.sh <type> "<description>"   # e.g. scripts/create-pr.sh fix "Correct SJ calculation"
 #
-# Options (after the arguments):
+# Options:
 #   --draft       open the PR as a draft
 #   --skip-tests  don't run the recipe detail tests first
 #
+# The allowed types are read from the comment at the top of the PR template.
 # Requires git, Node.js and the GitHub CLI (gh), logged in with `gh auth login`.
 
 set -euo pipefail
 
-TYPES=(fix feat ui i18n refactor chore)
-TYPE_HELP="  fix       bug fix
-  feat      new feature
-  ui        UI / styling
-  i18n      translations
-  refactor  refactor / cleanup
-  chore     docs / config / CI"
 BASE_BRANCH="main"
 TEMPLATE=".github/pull_request_template.md"
 
 die() { echo "Error: $*" >&2; exit 1; }
+
+cd "$(git rev-parse --show-toplevel)"
+
+# The allowed types are defined once, in the comment at the top of the PR template
+# (lines like "  fix:      bug fix").
+[[ -f "$TEMPLATE" ]] || die "$TEMPLATE not found"
+TYPE_HELP="$(sed -n 's/^  \([a-z0-9-]*\):[[:space:]]*\(.*\)$/  \1\t\2/p' "$TEMPLATE" | expand -t 12)"
+read -r -a TYPES <<< "$(sed -n 's/^  \([a-z0-9-]*\):.*/\1/p' "$TEMPLATE" | tr '\n' ' ')"
+[[ ${#TYPES[@]} -gt 0 ]] || die "no PR types found in $TEMPLATE"
 
 is_valid_type() {
   local t
@@ -41,7 +44,7 @@ for arg in "$@"; do
   case "$arg" in
     --draft) draft=(--draft) ;;
     --skip-tests) run_tests=false ;;
-    -h|--help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; echo; echo "Types:"; echo "$TYPE_HELP"; exit 0 ;;
+    -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; echo; echo "Types:"; echo "$TYPE_HELP"; exit 0 ;;
     -*) die "unknown option: $arg" ;;
     *) positional+=("$arg") ;;
   esac
@@ -52,8 +55,6 @@ done
 # --- Checks ------------------------------------------------------------------
 command -v gh >/dev/null || die "GitHub CLI (gh) is not installed. See https://cli.github.com"
 gh auth status >/dev/null 2>&1 || die "not logged in to GitHub. Run: gh auth login"
-
-cd "$(git rev-parse --show-toplevel)"
 
 branch="$(git branch --show-current)"
 [[ -n "$branch" ]] || die "not on a branch (detached HEAD)"
@@ -95,11 +96,8 @@ fi
 echo "Pushing '$branch'..."
 git push -u origin "$branch"
 
-body_args=()
-[[ -f "$TEMPLATE" ]] && body_args=(--body-file "$TEMPLATE")
-
 echo "Creating PR: $title"
-gh pr create --base "$BASE_BRANCH" --head "$branch" --title "$title" "${body_args[@]}" "${draft[@]}"
+gh pr create --base "$BASE_BRANCH" --head "$branch" --title "$title" --body-file "$TEMPLATE" "${draft[@]}"
 
 echo
 echo "Fill in the summary and checklist in the PR description on GitHub:"
