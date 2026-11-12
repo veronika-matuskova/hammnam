@@ -62,6 +62,13 @@ Everyone can browse recipes. Adding, editing and starring recipes is only for th
 
 Your e-mail must first be added to the family list by the app owner; otherwise no link is sent.
 
+Good to know:
+
+- There is no password. The link works once and expires after about an hour; request a new one if it has expired.
+- Open the link in the same browser where you asked for it. If you installed the app on your home screen, it may keep its own sign-in, separate from the browser.
+- You stay signed in on that device until you tap **Odhlásiť sa**; the app renews the sign-in automatically when needed.
+- Reading recipes never needs sign-in.
+
 ## Add or edit a recipe
 
 Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detail to change it. Only the name and the category are required; everything else is optional.
