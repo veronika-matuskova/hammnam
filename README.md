@@ -44,6 +44,14 @@ Tap a recipe to open it. The detail shows:
 
 Use **Späť na recepty** to go back to the list, or **Upraviť recept** to edit the recipe. Each recipe has its own link, so you can bookmark it or send it to someone.
 
+### Values per portion
+
+The **Na jednu porciu** block works out one portion from the values per 100 g: portion weight = weight of the finished dish / number of servings. It shows SJ per portion on its own, and calories, proteins, carbohydrates, fats, fiber and salt per portion below it. Type a weight into **Vlastná porcia (g)** to calculate a different portion; leave it empty to go back to weight / servings. Without servings and weight (or your own portion), the block says what is missing.
+
+SJ are calculated from carbohydrates. Pick **1 SJ = 10 g** (default) or **12 g** of carbohydrates in the block; the choice is remembered on the device. If the SJ you entered per 100 g do not match the carbohydrates, a warning appears in the recipe detail and in the form, and it tells you when the value matches the other factor.
+
+Recipe cards also show **SJ per portion** when servings and weight are filled in.
+
 ## Add or edit a recipe
 
 Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detail to change it. Only the name and the category are required; everything else is optional.
