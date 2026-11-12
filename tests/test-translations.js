@@ -1,48 +1,28 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
+const { appSource, loadApp, objectLiteralSource, readRepoFile } = require('./helpers/app-harness');
 
-const source = fs.readFileSync('js/app.js', 'utf8');
+const source = appSource();
+const translationsText = objectLiteralSource(source, 'translations');
 
-// Source text of the `translations` object literal, from `{` to its matching `}`.
-function translationsSource() {
-  const start = source.indexOf('{', source.indexOf('const translations'));
-  let depth = 0;
-  for (let i = start; i < source.length; i += 1) {
-    if (source[i] === '{') depth += 1;
-    if (source[i] === '}') depth -= 1;
-    if (depth === 0) return source.slice(start, i + 1);
-  }
-  throw new Error('translations object not found');
-}
-
-// Source text of one locale block inside the translations literal.
-function localeSource(locale) {
-  const text = translationsSource();
-  const match = text.match(new RegExp(`\\n  ${locale}: \\{\\n([\\s\\S]*?)\\n  \\}`));
+// Keys of one locale block exactly as written in the source. A JS object literal
+// silently keeps only the last of two duplicate keys, so duplicates are only
+// visible in the source text, not in the evaluated object.
+function localeKeysInSource(text, locale) {
+  const match = text.match(new RegExp(`\\n(\\s*)${locale}: \\{\\n([\\s\\S]*?)\\n\\1\\}`));
   assert.ok(match, `locale ${locale} not found`);
-  return match[1];
+  const keyIndent = match[2].match(/^(\s*)/)[1];
+  return [...match[2].matchAll(new RegExp(`^${keyIndent}([A-Za-z0-9_]+|'[^']+'):`, 'gm'))]
+    .map((m) => m[1].replace(/^'|'$/g, ''));
 }
 
-function localeKeysInSource(locale) {
-  return [...localeSource(locale).matchAll(/^ {4}([A-Za-z0-9_]+):/gm)].map((m) => m[1]);
-}
+const duplicatesOf = (keys) => [...new Set(keys.filter((key, index) => keys.indexOf(key) !== index))];
 
-const translations = vm.runInNewContext(`(${translationsSource()})`);
+const translations = vm.runInNewContext(`(${translationsText})`);
 
 function createRecipeApp() {
-  let factory;
-  const context = {
-    Alpine: { data(name, registeredFactory) { factory = registeredFactory; } },
-    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: { location: { hash: '', pathname: '/', search: '' }, history: {}, addEventListener() {} },
-    Intl,
-    console
-  };
-  vm.runInNewContext(source, context);
-  return factory();
+  return loadApp();
 }
 
 test('sk and cs translations have the same keys', () => {
@@ -53,10 +33,34 @@ test('sk and cs translations have the same keys', () => {
 
 test('no locale defines a key twice', () => {
   for (const locale of ['cs', 'sk']) {
-    const keys = localeKeysInSource(locale);
-    assert.equal(keys.length, Object.keys(translations[locale]).length, `${locale}: key scan mismatch`);
-    const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
-    assert.deepEqual(duplicates, [], `${locale} has duplicate keys`);
+    const keys = localeKeysInSource(translationsText, locale);
+    assert.equal(keys.length >= Object.keys(translations[locale]).length, true, `${locale}: key scan missed keys`);
+    assert.deepEqual(duplicatesOf(keys), [], `${locale} has duplicate keys`);
+  }
+});
+
+test('the duplicate-key scan catches a duplicated key', () => {
+  // Guards the scanner itself: backToRecipes used to be defined twice in both locales (#33).
+  const sample = "{\n  cs: {\n    a: 'x',\n    backToRecipes: 'Zpět',\n    backToRecipes: 'Zpět na recepty'\n  },\n  sk: {\n    a: 'y'\n  }\n}";
+  assert.deepEqual(duplicatesOf(localeKeysInSource(sample, 'cs')), ['backToRecipes']);
+  assert.deepEqual(duplicatesOf(localeKeysInSource(sample, 'sk')), []);
+});
+
+test('every translation key used by index.html and js/app.js exists in sk and cs', () => {
+  // t() falls back to the key itself, so a missing key would show up as raw text in the UI.
+  const used = new Set();
+  for (const text of [readRepoFile('index.html'), source]) {
+    for (const call of text.matchAll(/\bt\(([^()]*)\)/g)) {
+      for (const literal of call[1].matchAll(/'([A-Za-z0-9_]+)'/g)) used.add(literal[1]);
+    }
+  }
+  // Keys built at runtime: numeric field labels in addRecipe() and recipe count plurals.
+  for (const field of ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemicLoad', 'totalWeight']) used.add(field);
+  for (const key of ['recipeCount', 'recipeCountOne', 'recipeCountFew']) used.add(key);
+  assert.ok(used.size > 40, `only found ${used.size} keys; the scan is probably broken`);
+  for (const locale of ['sk', 'cs']) {
+    const missing = [...used].filter((key) => !(key in translations[locale]));
+    assert.deepEqual(missing, [], `${locale} is missing keys`);
   }
 });
 
