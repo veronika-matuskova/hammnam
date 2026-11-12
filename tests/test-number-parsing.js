@@ -119,7 +119,7 @@ test('invalid numbers show a translated form error and nothing is sent', async (
   for (const bad of ['abc', '0x10', '-1']) {
     const requests = [];
     const app = createRecipeApp(recordingFetch(requests));
-    app.newRecipe = { ...app.newRecipe, title_sk: 'Test', category_sk: 'Test', salt: bad, total_carbs: '1,5' };
+    app.newRecipe = { ...app.newRecipe, title_sk: 'Test', category_sk: 'Test', salt: bad, total_weight: '1,5' };
 
     await app.addRecipe();
 
@@ -127,7 +127,7 @@ test('invalid numbers show a translated form error and nothing is sent', async (
     assert.equal(app.saving, false);
     assert.ok(app.formError.startsWith(app.t('invalidNumber')), app.formError);
     assert.ok(app.formError.includes(app.t('salt')), app.formError);
-    assert.ok(!app.formError.includes(app.t('totalCarbs')), app.formError);
+    assert.ok(!app.formError.includes(app.t('totalWeight')), app.formError);
   }
 });
 
@@ -163,5 +163,5 @@ test('number inputs use text with a decimal keyboard so commas are not mangled',
   const html = fs.readFileSync('index.html', 'utf8');
   assert.equal((html.match(/type="number"/g) || []).length, 0);
   assert.equal((html.match(/x-model\.number/g) || []).length, 0);
-  assert.ok((html.match(/inputmode="decimal"/g) || []).length >= 14);
+  assert.equal((html.match(/inputmode="decimal"/g) || []).length, 10);
 });

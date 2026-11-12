@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=5"></script>
+    <script defer src="./js/app.js?v=6"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -200,31 +200,17 @@
             <h2 id="recipe-detail-title" class="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl" x-text="selectedRecipe ? displayTitle(selectedRecipe) : ''"></h2>
           </div>
 
-          <div x-show="selectedRecipe && (selectedRecipe.total_weight != null || selectedRecipe.total_calories != null || selectedRecipe.total_proteins != null || selectedRecipe.total_fats != null || selectedRecipe.total_carbs != null)" class="mb-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-            <div x-show="selectedRecipe && selectedRecipe.total_weight != null">
-              <p class="text-sm font-semibold text-slate-900" x-text="t('totalWeight')"></p>
-              <p class="mt-1 text-base font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_weight, 'g') : '—'"></p>
-              <p class="mt-2 text-xs text-slate-500" x-text="t('totalWeightNote')"></p>
-            </div>
-            <div x-show="selectedRecipe && (selectedRecipe.total_calories != null || selectedRecipe.total_proteins != null || selectedRecipe.total_fats != null || selectedRecipe.total_carbs != null)" class="mt-4 rounded-xl border border-slate-200 bg-white p-3">
-              <p class="text-sm font-semibold text-slate-900" x-text="t('totalRecipeValues')"></p>
-              <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div x-show="selectedRecipe && selectedRecipe.total_calories != null">
-                  <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('calories')"></p>
-                  <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_calories, 'kcal') : '—'"></p>
-                </div>
-                <div x-show="selectedRecipe && selectedRecipe.total_proteins != null">
-                  <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('proteins')"></p>
-                  <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_proteins, 'g') : '—'"></p>
-                </div>
-                <div x-show="selectedRecipe && selectedRecipe.total_fats != null">
-                  <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('fats')"></p>
-                  <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_fats, 'g') : '—'"></p>
-                </div>
-                <div x-show="selectedRecipe && selectedRecipe.total_carbs != null">
-                  <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('carbs')"></p>
-                  <p class="mt-1 text-sm font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_carbs, 'g') : '—'"></p>
-                </div>
+          <div x-show="selectedRecipe && (selectedRecipe.servings != null || selectedRecipe.total_weight != null)" class="mb-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <p class="text-sm font-semibold text-slate-900" x-text="t('totalRecipeValues')"></p>
+            <div class="mt-3 grid grid-cols-2 gap-3">
+              <div x-show="selectedRecipe && selectedRecipe.servings != null">
+                <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('servings')"></p>
+                <p class="mt-1 text-base font-bold text-slate-900" x-text="selectedRecipe ? displayValue(selectedRecipe.servings) : '—'"></p>
+              </div>
+              <div x-show="selectedRecipe && selectedRecipe.total_weight != null">
+                <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500" x-text="t('totalWeight')"></p>
+                <p class="mt-1 text-base font-bold text-slate-900" x-text="selectedRecipe ? displayMetric(selectedRecipe.total_weight, 'g') : '—'"></p>
+                <p class="mt-1 text-xs text-slate-500" x-text="t('totalWeightNote')"></p>
               </div>
             </div>
           </div>
@@ -379,7 +365,7 @@
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="nutrition-total-heading" aria-describedby="nutrition-total-note">
             <h3 id="nutrition-total-heading" class="text-sm font-semibold text-slate-800" x-text="t('totalRecipeValues')"></h3>
             <p id="nutrition-total-note" class="mb-3 mt-1 text-xs text-slate-500" x-text="t('totalRecipeNote')"></p>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid gap-4 sm:grid-cols-2">
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('servings')"></span>
                 <input type="text" inputmode="decimal" x-model.trim="newRecipe.servings" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
@@ -387,22 +373,6 @@
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('totalWeight')"></span>
                 <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_weight" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-sm font-medium text-slate-700">
-                <span x-text="t('totalCalories')"></span>
-                <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_calories" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-sm font-medium text-slate-700">
-                <span x-text="t('totalProteins')"></span>
-                <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_proteins" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-sm font-medium text-slate-700">
-                <span x-text="t('totalFats')"></span>
-                <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_fats" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-sm font-medium text-slate-700">
-                <span x-text="t('totalCarbs')"></span>
-                <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_carbs" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
               </label>
             </div>
           </section>

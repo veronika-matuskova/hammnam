@@ -54,12 +54,8 @@ const translations = {
     per100gSuffix: '/100 g',
     totalWeight: 'Celková hmotnost hotového pokrmu',
     totalRecipeValues: 'Celý recept',
-    totalRecipeNote: 'Hodnoty za celý recept (všechny porce dohromady).',
+    totalRecipeNote: 'Počet porcí a hmotnost celého hotového pokrmu.',
     totalWeightNote: 'podle toho, kolik vody se odpaří',
-    totalCalories: 'Kalorie celkem (kcal)',
-    totalProteins: 'Bílkoviny celkem (g)',
-    totalFats: 'Tuky celkem (g)',
-    totalCarbs: 'Sacharidy celkem (g)',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografii (volitelné)',
     ingredients: 'Suroviny',
@@ -139,12 +135,8 @@ const translations = {
     per100gSuffix: '/100 g',
     totalWeight: 'Celková hmotnosť hotového jedla',
     totalRecipeValues: 'Celý recept',
-    totalRecipeNote: 'Hodnoty za celý recept (všetky porcie spolu).',
+    totalRecipeNote: 'Počet porcií a hmotnosť celého hotového jedla.',
     totalWeightNote: 'podľa toho, koľko vody sa odparí',
-    totalCalories: 'Kalórie celkom (kcal)',
-    totalProteins: 'Bielkoviny celkom (g)',
-    totalFats: 'Tuky celkom (g)',
-    totalCarbs: 'Sacharidy celkom (g)',
     gi: 'Glykemický index (GI)',
     photoUrl: 'Odkaz na fotografiu (voliteľné)',
     ingredients: 'Suroviny',
@@ -224,10 +216,6 @@ function emptyRecipe() {
     salt: null,
     glycemic_load: null,
     total_weight: null,
-    total_calories: null,
-    total_proteins: null,
-    total_fats: null,
-    total_carbs: null,
     gi: '',
     ingredients: [],
     steps: [],
@@ -549,7 +537,7 @@ function recipeApp() {
     async addRecipe() {
       this.saving = true;
       this.formError = '';
-      const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
+      const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight'];
       const numericValues = {};
       const invalidFields = [];
       for (const field of numericFields) {
