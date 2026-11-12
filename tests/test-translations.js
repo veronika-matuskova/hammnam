@@ -107,5 +107,5 @@ test('corrected Slovak copy', () => {
   assert.equal(app.t('calories'), 'Kalórie (kcal)');
   assert.equal(app.t('extraValues'), 'Doplnkové hodnoty');
   assert.equal(app.t('totalWeight'), 'Celková hmotnosť hotového jedla');
-  assert.equal(app.t('close'), 'close', 'unused close key was removed');
+  assert.equal(app.t('close'), 'Zavrieť');
 });
