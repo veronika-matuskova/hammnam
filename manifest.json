@@ -1,9 +1,9 @@
 {
   "id": "./",
-  "name": "hamMňam — recepty s přehledem",
+  "name": "hamMňam — recepty s prehľadom",
   "short_name": "hamMňam",
-  "description": "Spravujte recepty a jejich nutriční hodnoty.",
-  "lang": "cs",
+  "description": "Spravujte recepty a ich nutričné hodnoty.",
+  "lang": "sk",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

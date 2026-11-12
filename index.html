@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="cs">
+<html lang="sk">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="Spravujte recepty a jejich nutriční hodnoty.">
-    <title>hamMňam — recepty s přehledem</title>
+    <meta name="description" content="Spravujte recepty a ich nutričné hodnoty.">
+    <title>hamMňam — recepty s prehľadom</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=4"></script>
+    <script defer src="./js/app.js?v=5"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -21,7 +21,7 @@
   >
     <header class="border-b border-slate-200 bg-white">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domů">
+        <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
           <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
           <span>
             <span class="block text-lg font-bold tracking-tight">hamMňam</span>
@@ -30,6 +30,7 @@
         </a>
         <div class="flex items-center gap-2">
           <button
+            x-show="canSwitchLanguage"
             type="button"
             @click="toggleLanguage()"
             class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
@@ -311,21 +312,21 @@
         </div>
         <form @submit.prevent="addRecipe()" class="space-y-4">
           <div class="grid gap-4 sm:grid-cols-2">
-            <label class="block text-sm font-medium text-slate-700">
+            <label x-show="isLanguageEnabled('cs')" class="block text-sm font-medium text-slate-700">
               <span x-text="t('recipeNameCs')"></span>
-              <input type="text" x-model.trim="newRecipe.title_cs" required maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.title_cs" :required="isLanguageEnabled('cs')" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
             <label class="block text-sm font-medium text-slate-700">
               <span x-text="t('recipeNameSk')"></span>
-              <input type="text" x-model.trim="newRecipe.title_sk" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.title_sk" :required="!isLanguageEnabled('cs')" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
-            <label class="block text-sm font-medium text-slate-700">
+            <label x-show="isLanguageEnabled('cs')" class="block text-sm font-medium text-slate-700">
               <span x-text="t('categoryCs')"></span>
-              <input type="text" x-model.trim="newRecipe.category_cs" required maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.category_cs" :required="isLanguageEnabled('cs')" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
             <label class="block text-sm font-medium text-slate-700">
               <span x-text="t('categorySk')"></span>
-              <input type="text" x-model.trim="newRecipe.category_sk" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.category_sk" :required="!isLanguageEnabled('cs')" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
           </div>
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">

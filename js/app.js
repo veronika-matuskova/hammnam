@@ -165,12 +165,18 @@ const translations = {
   }
 };
 
+// The app is Slovak-only for now. Czech texts are kept in `translations` so the
+// language switch can be brought back later by adding 'cs' to ENABLED_LANGUAGES.
+const DEFAULT_LANGUAGE = 'sk';
+const ENABLED_LANGUAGES = ['sk'];
+
 function getSavedLanguage() {
   try {
-    return localStorage.getItem('hamMnam-language') === 'sk' ? 'sk' : 'cs';
+    const saved = localStorage.getItem('hamMnam-language');
+    return ENABLED_LANGUAGES.includes(saved) ? saved : DEFAULT_LANGUAGE;
   } catch (error) {
     console.warn('Could not read the saved language preference:', error);
-    return 'cs';
+    return DEFAULT_LANGUAGE;
   }
 }
 
@@ -234,13 +240,23 @@ function recipeApp() {
         .sort((a, b) => a.localeCompare(b, this.language));
     },
 
+    get canSwitchLanguage() {
+      return ENABLED_LANGUAGES.length > 1;
+    },
+
+    isLanguageEnabled(language) {
+      return ENABLED_LANGUAGES.includes(language);
+    },
+
     t(key) {
-      const locale = translations[this.language] || translations.cs;
-      return locale[key] || translations.cs[key] || key;
+      const locale = translations[this.language] || translations[DEFAULT_LANGUAGE];
+      return locale[key] || translations[DEFAULT_LANGUAGE][key] || translations.cs[key] || key;
     },
 
     toggleLanguage() {
-      this.language = this.language === 'cs' ? 'sk' : 'cs';
+      if (!this.canSwitchLanguage) return;
+      const index = ENABLED_LANGUAGES.indexOf(this.language);
+      this.language = ENABLED_LANGUAGES[(index + 1) % ENABLED_LANGUAGES.length];
       this.selectedCategory = '';
       try {
         localStorage.setItem('hamMnam-language', this.language);
@@ -407,6 +423,11 @@ function recipeApp() {
           }))
         : [];
       form.steps = Array.isArray(recipe.steps) ? recipe.steps.map((step) => String(step)) : [];
+      if (!this.isLanguageEnabled('cs')) {
+        // Older recipes may only have Czech names; prefill the Slovak fields so they can be saved.
+        if (!form.title_sk) form.title_sk = form.title_cs || '';
+        if (!form.category_sk) form.category_sk = form.category_cs || '';
+      }
       this.newRecipe = form;
       this.editingRecipeId = recipe.id;
       this.formError = '';

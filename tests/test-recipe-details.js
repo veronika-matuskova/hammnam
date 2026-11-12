@@ -116,9 +116,10 @@ test('recipe details open, follow the selected language, and close', () => {
   assert.equal(app.showForm, false);
   assert.equal(app.selectedRecipe, recipe);
   assert.equal(app.selectedRecipe.id, 1);
-  assert.equal(app.displayTitle(app.selectedRecipe), 'Polévka');
-  app.language = 'sk';
   assert.equal(app.displayTitle(app.selectedRecipe), 'Polievka');
+  // Czech is disabled in the UI but kept for the future; it still resolves when selected.
+  app.language = 'cs';
+  assert.equal(app.displayTitle(app.selectedRecipe), 'Polévka');
   assert.deepEqual(JSON.parse(JSON.stringify(app.recipeIngredients(recipe))), [
     { name: 'Mrkev', amount: '2', unit: 'ks' }
   ]);
@@ -231,6 +232,7 @@ test('language fallbacks keep nutrition labels translated when switching routes'
 
 test('total nutrition labels stay distinct from the base values', () => {
   const app = createRecipeApp();
+  app.language = 'cs';
 
   assert.equal(app.t('totalCalories'), 'Kalorie celkem (kcal)');
   assert.equal(app.t('totalProteins'), 'Bílkoviny celkem (g)');
@@ -258,9 +260,9 @@ test('the app script URL bypasses stale service worker cache entries', () => {
   const html = fs.readFileSync('index.html', 'utf8');
   const serviceWorker = fs.readFileSync('sw.js', 'utf8');
 
-  assert.match(html, /src="\.\/js\/app\.js\?v=4"/);
-  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v4'/);
-  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=4'/);
+  assert.match(html, /src="\.\/js\/app\.js\?v=5"/);
+  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v5'/);
+  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=5'/);
 });
 
 test('new recipe form renders as a dedicated page rather than a modal', () => {
@@ -340,4 +342,52 @@ test('saving a recipe posts normalized ingredients, steps, and notes', async () 
   assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.ingredients)), []);
   assert.deepEqual(JSON.parse(JSON.stringify(app.newRecipe.steps)), []);
   assert.equal(app.newRecipe.notes, '');
+});
+
+test('the app is Slovak-only and ignores a saved Czech preference', () => {
+  const app = createRecipeApp();
+  assert.equal(app.language, 'sk');
+  assert.equal(app.canSwitchLanguage, false);
+  assert.equal(app.isLanguageEnabled('cs'), false);
+  assert.equal(app.t('newRecipe'), '+ Nový recept');
+  assert.equal(app.t('heading'), 'Recepty na jednom mieste');
+
+  app.toggleLanguage();
+  assert.equal(app.language, 'sk');
+});
+
+test('a saved Czech language preference falls back to Slovak', () => {
+  const source = fs.readFileSync('js/app.js', 'utf8');
+  let factory;
+  vm.runInNewContext(source, {
+    Alpine: { data(name, f) { factory = f; } },
+    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
+    localStorage: { getItem: () => 'cs', setItem: () => {} },
+    window: { location: { hash: '', pathname: '/', search: '' }, history: {}, addEventListener() {} },
+    console
+  });
+  assert.equal(factory().language, 'sk');
+});
+
+test('Czech translations are kept for a future language switch', () => {
+  const app = createRecipeApp();
+  app.language = 'cs';
+  assert.equal(app.t('heading'), 'Recepty na jednom místě');
+});
+
+test('the language switch is hidden and Slovak names are required in the form', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  assert.match(html, /<html lang="sk">/);
+  assert.match(html, /x-show="canSwitchLanguage"\s+type="button"\s+@click="toggleLanguage\(\)"/);
+  assert.match(html, /x-model\.trim="newRecipe\.title_sk" :required="!isLanguageEnabled\('cs'\)"/);
+  assert.match(html, /x-model\.trim="newRecipe\.category_sk" :required="!isLanguageEnabled\('cs'\)"/);
+  assert.doesNotMatch(html, /x-model\.trim="newRecipe\.title_cs" required/);
+});
+
+test('editing an older Czech-only recipe prefills the Slovak fields', () => {
+  const app = createRecipeApp();
+  app.loadRecipeForEditing({ id: 7, title_cs: 'Koláč', category_cs: 'Dezert', notes: '' });
+  assert.equal(app.newRecipe.title_sk, 'Koláč');
+  assert.equal(app.newRecipe.category_sk, 'Dezert');
+  assert.equal(app.newRecipe.title_cs, 'Koláč');
 });

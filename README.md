@@ -2,6 +2,10 @@
 
 A lightweight static recipe manager focused on nutritional values (carbohydrate units / SJ, carbohydrates, and glycemic index). It uses Alpine.js and Tailwind CSS from CDNs, with Supabase's REST API for recipe storage.
 
+## Language
+
+The UI is currently Slovak only. Czech texts are still kept in `js/app.js`; to bring back the language switch, add `'cs'` to `ENABLED_LANGUAGES` there. With Czech enabled, the switch button and the Czech name/category fields in the recipe form reappear automatically.
+
 ## Project layout
 
 ```text
@@ -11,7 +15,7 @@ A lightweight static recipe manager focused on nutritional values (carbohydrate 
 ├── sw.js               # Offline app-shell cache
 ├── config.js           # Supabase URL and publishable/anon key
 ├── js/
-│   └── app.js          # Alpine component, REST calls, filters, CZ/SK text
+│   └── app.js          # Alpine component, REST calls, filters, translations
 ├── tests/
 │   └── test-recipe-details.js # Recipe detail state and Supabase payload tests
 └── icons/
