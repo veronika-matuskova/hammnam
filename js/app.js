@@ -224,6 +224,13 @@ function emptyRecipe() {
   };
 }
 
+// Older rows can hold NULL in text columns; treat missing values as empty strings.
+function textValue(value) {
+  return value === null || value === undefined ? '' : String(value).trim();
+}
+
+const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'gi', 'notes'];
+
 function recipeApp() {
   return {
     language: getSavedLanguage(),
@@ -235,6 +242,8 @@ function recipeApp() {
     selectedRecipe: null,
     errorMessage: '',
     formError: '',
+    favoriteErrorMessage: '',
+    favoriteSavingIds: {},
     search: '',
     selectedCategory: '',
     favoritesOnly: false,
@@ -413,6 +422,7 @@ function recipeApp() {
       this.formError = '';
       this.selectedRecipe = null;
       this.editingRecipeId = null;
+      this.newRecipe = emptyRecipe();
       if (window.location.hash !== '#new-recipe') {
         window.history.pushState(
           { ...(window.history.state || {}), hamMnamNewRecipe: true },
@@ -428,14 +438,14 @@ function recipeApp() {
       for (const field of Object.keys(form)) {
         if (recipe[field] !== undefined) form[field] = recipe[field];
       }
-      form.gi = String(form.gi || '');
+      for (const field of TEXT_FIELDS) form[field] = textValue(form[field]);
       form.ingredients = Array.isArray(recipe.ingredients)
         ? recipe.ingredients
           .filter((ingredient) => ingredient && typeof ingredient === 'object')
           .map((ingredient) => ({
-            name: String(ingredient.name || ''),
-            amount: ingredient.amount === null || ingredient.amount === undefined ? '' : String(ingredient.amount),
-            unit: String(ingredient.unit || '')
+            name: textValue(ingredient.name),
+            amount: textValue(ingredient.amount),
+            unit: textValue(ingredient.unit)
           }))
         : [];
       form.steps = Array.isArray(recipe.steps)
@@ -487,6 +497,7 @@ function recipeApp() {
     closeForm() {
       if (this.saving) return;
       this.showForm = false;
+      this.newRecipe = emptyRecipe();
       if (window.location.hash.startsWith('#edit-recipe/')) {
         const recipe = this.recipes.find((item) => String(item.id) === String(this.editingRecipeId)) || null;
         this.editingRecipeId = null;
@@ -529,21 +540,21 @@ function recipeApp() {
         this.saving = false;
         return;
       }
-      const payload = {
-        ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
-        ...numericValues,
-        gi: this.newRecipe.gi.trim(),
-        ingredients: this.newRecipe.ingredients
-          .filter((ingredient) => ingredient.name.trim() || ingredient.amount.trim() || ingredient.unit.trim())
-          .map((ingredient) => ({
-            name: ingredient.name.trim(),
-            amount: ingredient.amount.trim(),
-            unit: ingredient.unit.trim()
-          })),
-        steps: this.newRecipe.steps.map((step) => step.trim()).filter(Boolean),
-        notes: this.newRecipe.notes.trim()
-      };
       try {
+        const payload = {
+          ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
+          ...Object.fromEntries(TEXT_FIELDS.map((field) => [field, textValue(this.newRecipe[field])])),
+          ...numericValues,
+          ingredients: (Array.isArray(this.newRecipe.ingredients) ? this.newRecipe.ingredients : [])
+            .filter((ingredient) => ingredient && typeof ingredient === 'object')
+            .map((ingredient) => ({
+              name: textValue(ingredient.name),
+              amount: textValue(ingredient.amount),
+              unit: textValue(ingredient.unit)
+            }))
+            .filter((ingredient) => ingredient.name || ingredient.amount || ingredient.unit),
+          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean)
+        };
         if (this.editingRecipeId !== null) {
           const updated = await this.request(`?id=eq.${encodeURIComponent(this.editingRecipeId)}`, {
             method: 'PATCH',
@@ -588,18 +599,33 @@ function recipeApp() {
       }
     },
 
+    isFavoriteSaving(recipe) {
+      return Boolean(this.favoriteSavingIds[recipe.id]);
+    },
+
     async toggleFavorite(recipe) {
-      const updatedFavorite = !recipe.favorite;
+      if (this.isFavoriteSaving(recipe)) return;
+      const previousFavorite = recipe.favorite;
+      const updatedFavorite = !previousFavorite;
+      this.favoriteSavingIds[recipe.id] = true;
+      this.favoriteErrorMessage = '';
+      recipe.favorite = updatedFavorite;
       try {
-        await this.request(`?id=eq.${encodeURIComponent(recipe.id)}`, {
+        const updated = await this.request(`?id=eq.${encodeURIComponent(recipe.id)}`, {
           method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
+          headers: { Prefer: 'return=representation' },
           body: JSON.stringify({ favorite: updatedFavorite })
         });
-        recipe.favorite = updatedFavorite;
+        // An update blocked by row-level security succeeds with zero rows changed.
+        if (!Array.isArray(updated) || updated.length === 0) {
+          throw new Error('Supabase did not update the recipe.');
+        }
       } catch (error) {
         console.error('Could not update favorite:', error);
-        this.errorMessage = `${this.t('favoriteError')} (${error.message})`;
+        recipe.favorite = previousFavorite;
+        this.favoriteErrorMessage = `${this.t('favoriteError')} (${error.message})`;
+      } finally {
+        delete this.favoriteSavingIds[recipe.id];
       }
     }
   };
