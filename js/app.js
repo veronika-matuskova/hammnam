@@ -483,7 +483,9 @@ function recipeApp() {
     async request(path, options = {}) {
       const { url, key } = this.apiBaseUrl();
       const method = String(options.method || 'GET').toUpperCase();
-      const token = method === 'GET' || method === 'HEAD' ? null : await this.accessToken();
+      const isWrite = method !== 'GET' && method !== 'HEAD';
+      // Only wait for a token when there is a session, so a signed-out request starts in the same tick.
+      const token = isWrite && this.session ? await this.accessToken() : null;
       const send = (bearer) => fetch(`${url}${path}`, {
         ...options,
         headers: {

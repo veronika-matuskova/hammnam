@@ -18,6 +18,7 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 │   ├── test-recipe-details.js # Recipe detail state and Supabase payload tests
 │   ├── test-auth.js           # Magic-link sign-in, session refresh and sign-out
 │   ├── test-*.js              # Other unit tests (node --test, no network)
+│   ├── helpers/app-harness.js # Loads js/app.js in node:vm with stubbed browser globals
 │   └── test-connection.js     # Supabase connection check (needs network)
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
@@ -42,6 +43,8 @@ To run every unit test (all of them stub `fetch`, so nothing reaches Supabase), 
 ```sh
 node --test $(ls tests/test-*.js | grep -v test-connection)
 ```
+
+Tests load the app through `tests/helpers/app-harness.js`. Writes need a signed-in user in the real app; pass `session: signedInSession()` to `loadApp()` to start a test signed in (the session is put in the stubbed `localStorage`, and writes then send its access token).
 
 ## Database migrations
 

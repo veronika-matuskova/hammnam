@@ -1,71 +1,11 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
-
-const SESSION_KEY = 'hamMnam-session';
-
-function createRecipeApp(fetch, { initialHash = '', storage = {} } = {}) {
-  let factory;
-  const store = { ...storage };
-  const location = { hash: initialHash, pathname: '/', search: '', origin: 'https://hammnam.app' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: { data(name, registeredFactory) { factory = registeredFactory; } },
-    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
-    navigator: {},
-    fetch,
-    localStorage: {
-      getItem: (key) => (key in store ? store[key] : null),
-      setItem: (key, value) => { store[key] = String(value); },
-      removeItem: (key) => { delete store[key]; }
-    },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      isSecureContext: false,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history, store });
-}
-
-function jsonResponse(status, body) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body)
-  };
-}
+const { loadApp, jsonResponse, signedInSession, SESSION_KEY } = require('./helpers/app-harness');
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 
-function storedSession(overrides = {}) {
-  return JSON.stringify({
-    access_token: 'user-token',
-    refresh_token: 'refresh-1',
-    expires_at: nowSeconds() + 3600,
-    user: { id: 'u1', email: 'mama@example.com' },
-    ...overrides
-  });
+function createRecipeApp(fetch, { initialHash = '', session = null } = {}) {
+  return loadApp({ fetch, hash: initialHash, session });
 }
 
 // Routes stubbed Supabase calls by URL; records every call. Nothing leaves the process.
@@ -181,7 +121,7 @@ test('an error in the magic-link redirect is shown in the sign-in panel', async 
 
 test('a stored session is restored and writes send the user token', async () => {
   const { fetch, calls } = router([[/\/rest\/v1\/recipes/, () => jsonResponse(200, [{ id: 7, favorite: true }])]]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession() } });
+  const app = createRecipeApp(fetch, { session: signedInSession() });
 
   assert.equal(app.isSignedIn, true);
   assert.equal(app.canEdit, true);
@@ -200,7 +140,7 @@ test('an expiring token is refreshed once before writes', async () => {
     })],
     [/\/rest\/v1\/recipes/, (url, options) => jsonResponse(200, [{ id: 7, ...JSON.parse(options.body) }])]
   ]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession({ expires_at: nowSeconds() + 10 }) } });
+  const app = createRecipeApp(fetch, { session: signedInSession({ expires_at: nowSeconds() + 10 }) });
 
   await Promise.all([
     app.toggleFavorite({ id: 7, favorite: false }),
@@ -223,7 +163,7 @@ test('a rejected refresh token signs out and the write fails with a clear messag
   const { fetch, calls } = router([
     [/\/auth\/v1\/token/, () => jsonResponse(400, { error: 'invalid_grant' })]
   ]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession({ expires_at: nowSeconds() - 5 }) } });
+  const app = createRecipeApp(fetch, { session: signedInSession({ expires_at: nowSeconds() - 5 }) });
   const recipe = { id: 7, favorite: false };
 
   await app.toggleFavorite(recipe);
@@ -239,7 +179,7 @@ test('a rejected refresh token signs out and the write fails with a clear messag
 
 test('a server error during refresh keeps the session', async () => {
   const { fetch } = router([[/\/auth\/v1\/token/, () => jsonResponse(503, {})]]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession({ expires_at: nowSeconds() - 5 }) } });
+  const app = createRecipeApp(fetch, { session: signedInSession({ expires_at: nowSeconds() - 5 }) });
   const recipe = { id: 7, favorite: false };
 
   await app.toggleFavorite(recipe);
@@ -257,7 +197,7 @@ test('a 401 on a write refreshes the token and retries once', async () => {
       return writes === 1 ? jsonResponse(401, { message: 'JWT expired' }) : jsonResponse(200, [{ id: 7, favorite: true }]);
     }]
   ]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession() } });
+  const app = createRecipeApp(fetch, { session: signedInSession() });
   const recipe = { id: 7, favorite: false };
 
   await app.toggleFavorite(recipe);
@@ -273,7 +213,7 @@ test('a signed-in user who is not on the allow-list gets no write controls', asy
     [/\/rest\/v1\/rpc\/is_family_member$/, () => jsonResponse(200, false)],
     [/\/rest\/v1\/recipes/, () => jsonResponse(200, [])]
   ]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession() } });
+  const app = createRecipeApp(fetch, { session: signedInSession() });
 
   await app.init();
 
@@ -287,7 +227,7 @@ test('a missing allow-list function keeps write controls for signed-in users', a
     [/\/rest\/v1\/rpc\/is_family_member$/, () => jsonResponse(404, { message: 'not found' })],
     [/\/rest\/v1\/recipes/, () => jsonResponse(200, [])]
   ]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession() } });
+  const app = createRecipeApp(fetch, { session: signedInSession() });
 
   await app.init();
 
@@ -297,7 +237,7 @@ test('a missing allow-list function keeps write controls for signed-in users', a
 
 test('signing out clears the session and revokes it on the server', async () => {
   const { fetch, calls } = router([[/\/auth\/v1\/logout$/, () => jsonResponse(204, null)]]);
-  const app = createRecipeApp(fetch, { storage: { [SESSION_KEY]: storedSession() } });
+  const app = createRecipeApp(fetch, { session: signedInSession() });
   app.familyMember = true;
 
   await app.signOut();
@@ -312,6 +252,45 @@ test('signing out clears the session and revokes it on the server', async () => 
 });
 
 test('a corrupt stored session is ignored', () => {
-  const app = createRecipeApp(router([]).fetch, { storage: { [SESSION_KEY]: '{not json' } });
+  const app = loadApp({ fetch: router([]).fetch, storage: { [SESSION_KEY]: '{not json' } });
   assert.equal(app.isSignedIn, false);
+});
+
+test('a signed-out save calls fetch synchronously (no extra await before the request)', () => {
+  let called = false;
+  const app = loadApp({ fetch: () => { called = true; return new Promise(() => {}); } });
+  app.openForm();
+  app.newRecipe.title_sk = 'Polievka';
+  app.newRecipe.category_sk = 'Obed';
+
+  app.addRecipe();
+
+  assert.equal(called, true);
+});
+
+test('signed in: a save sends the user token and the form cannot be closed while it is in flight', async () => {
+  let release;
+  const calls = [];
+  const app = loadApp({
+    session: signedInSession(),
+    fetch: (url, options) => new Promise((resolve) => {
+      calls.push({ url, options });
+      release = () => resolve(jsonResponse(201, [{ id: 5, ...JSON.parse(options.body) }]));
+    })
+  });
+  app.openForm();
+  app.newRecipe.title_sk = 'Polievka';
+  app.newRecipe.category_sk = 'Obed';
+
+  const saving = app.addRecipe();
+  assert.equal(app.saving, true);
+  app.closeForm();
+  assert.equal(app.showForm, true);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls[0].options.headers.Authorization, 'Bearer user-token');
+  release();
+  await saving;
+  assert.equal(app.saving, false);
+  assert.equal(app.recipes[0].title_sk, 'Polievka');
 });
