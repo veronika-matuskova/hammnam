@@ -30,6 +30,15 @@ The GitHub Actions pre-deploy check runs the recipe detail tests before checking
 node --test tests/test-recipe-details.js
 ```
 
+## Pull requests
+
+PR titles start with the type of change: `fix`, `feat`, `ui`, `i18n`, `refactor` or `chore` (for example `fix: Correct SJ calculation`). From a feature branch, `scripts/create-pr.sh` runs the tests, pushes the branch and opens a PR with the right title and the PR template. It needs the [GitHub CLI](https://cli.github.com) (`gh auth login`).
+
+```sh
+scripts/create-pr.sh                              # asks for type and description
+scripts/create-pr.sh fix "Correct SJ calculation" # or pass them directly; add --draft or --skip-tests
+```
+
 ## GitHub Pages setup
 
 1. Set the Supabase project URL and publishable/anon key in `config.js`. A browser-visible anon/publishable key is expected; protect data with appropriate Supabase Row Level Security policies.
