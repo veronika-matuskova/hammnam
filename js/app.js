@@ -16,6 +16,8 @@ const translations = {
     signInToEdit: 'Pro přidávání a úpravu receptů se přihlaste.',
     notFamilyMember: 'Tento účet nemá oprávnění upravovat recepty.',
     sessionExpired: 'Přihlášení vypršelo. Přihlaste se prosím znovu.',
+    signInNotAllowed: 'Tento e-mail nemá do aplikace přístup. Požádejte správce o přidání.',
+    signInLinkInvalid: 'Odkaz je neplatný nebo vypršel. Vyžádejte si nový.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Zpět na recepty',
     eyebrow: 'Vaše kuchařka',
@@ -89,10 +91,36 @@ const translations = {
     saveRecipe: 'Uložit recept',
     footer: 'Recepty s přehledem.',
     databaseUnavailable: 'Databáze není nakonfigurována. Zkontrolujte config.js.',
-    connectionError: 'Zkontrolujte připojení k internetu a nastavení Supabase.',
+    connectionError: 'Zkontrolujte připojení k internetu a zkuste to znovu.',
+    permissionError: 'K této akci nemáte oprávnění.',
+    invalidDataError: 'Některé údaje nebylo možné uložit. Zkontrolujte vyplněné hodnoty.',
+    serverError: 'Služba je dočasně nedostupná. Zkuste to za chvíli znovu.',
+    notSavedError: 'Změna se neprojevila – recept už možná neexistuje nebo k němu nemáte oprávnění.',
+    unexpectedError: 'Nastala neočekávaná chyba. Zkuste to znovu.',
     saveError: 'Recept se nepodařilo uložit.',
     favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
-    invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:'
+    invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:',
+    portionHeading: 'Na jednu porci',
+    portionNote: 'Vypočteno z hodnot na 100 g a hmotnosti porce.',
+    portionWeight: 'Hmotnost porce',
+    customPortion: 'Vlastní porce (g)',
+    customPortionHint: 'Prázdné = celková hmotnost / počet porcí.',
+    portionUnavailable: 'Pro výpočet porce zadejte počet porcí a celkovou hmotnost hotového pokrmu, nebo vlastní porci v gramech.',
+    sjPerPortion: 'SJ na porci',
+    perPortionSuffix: '/porce',
+    sjFactor: '1 SJ =',
+    sjFactorOption: 'g sacharidů',
+    conflictTitle: 'Nutriční hodnoty si neodpovídají',
+    conflictSj: 'Zadané SJ na 100 g ({entered}) neodpovídají sacharidům: při 1 SJ = {factor} g vychází {computed} SJ.',
+    conflictSjOtherFactor: 'Zadaná hodnota odpovídá přepočtu 1 SJ = {factor} g.',
+    titleRequired: 'Vyplňte název receptu (slovensky nebo česky).',
+    glycemicValues: 'Sacharidové jednotky a glykemie',
+    glycemicValuesNote: 'SJ zadávejte na 100 g hotového pokrmu. GI je číslo 0–100 (nízký ≤ 55, střední 56–69, vysoký ≥ 70); GI a GL nejsou hodnoty na 100 g.',
+    giHint: 'Číslo od 0 do 100',
+    giInvalid: 'Glykemický index musí být číslo od 0 do 100.',
+    giLow: 'Nízký GI',
+    giMedium: 'Střední GI',
+    giHigh: 'Vysoký GI'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -111,6 +139,8 @@ const translations = {
     signInToEdit: 'Na pridávanie a úpravu receptov sa prihláste.',
     notFamilyMember: 'Tento účet nemá oprávnenie upravovať recepty.',
     sessionExpired: 'Prihlásenie vypršalo. Prihláste sa, prosím, znova.',
+    signInNotAllowed: 'Tento e-mail nemá do aplikácie prístup. Požiadajte správcu o pridanie.',
+    signInLinkInvalid: 'Odkaz je neplatný alebo vypršal. Vyžiadajte si nový.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Späť na recepty',
     eyebrow: 'Vaša kuchárka',
@@ -184,10 +214,36 @@ const translations = {
     saveRecipe: 'Uložiť recept',
     footer: 'Recepty prehľadne.',
     databaseUnavailable: 'Databáza nie je nakonfigurovaná. Skontrolujte config.js.',
-    connectionError: 'Skontrolujte pripojenie k internetu a nastavenie Supabase.',
+    connectionError: 'Skontrolujte pripojenie k internetu a skúste to znova.',
+    permissionError: 'Na túto akciu nemáte oprávnenie.',
+    invalidDataError: 'Niektoré údaje sa nepodarilo uložiť. Skontrolujte vyplnené hodnoty.',
+    serverError: 'Služba je dočasne nedostupná. Skúste to o chvíľu znova.',
+    notSavedError: 'Zmena sa neprejavila – recept už možno neexistuje alebo k nemu nemáte oprávnenie.',
+    unexpectedError: 'Nastala neočakávaná chyba. Skúste to znova.',
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
-    invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:'
+    invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:',
+    portionHeading: 'Na jednu porciu',
+    portionNote: 'Vypočítané z hodnôt na 100 g a hmotnosti porcie.',
+    portionWeight: 'Hmotnosť porcie',
+    customPortion: 'Vlastná porcia (g)',
+    customPortionHint: 'Prázdne = celková hmotnosť / počet porcií.',
+    portionUnavailable: 'Na výpočet porcie zadajte počet porcií a celkovú hmotnosť hotového jedla, alebo vlastnú porciu v gramoch.',
+    sjPerPortion: 'SJ na porciu',
+    perPortionSuffix: '/porcia',
+    sjFactor: '1 SJ =',
+    sjFactorOption: 'g sacharidov',
+    conflictTitle: 'Nutričné hodnoty si nezodpovedajú',
+    conflictSj: 'Zadané SJ na 100 g ({entered}) nezodpovedajú sacharidom: pri 1 SJ = {factor} g vychádza {computed} SJ.',
+    conflictSjOtherFactor: 'Zadaná hodnota zodpovedá prepočtu 1 SJ = {factor} g.',
+    titleRequired: 'Vyplňte názov receptu (po slovensky alebo po česky).',
+    glycemicValues: 'Sacharidové jednotky a glykémia',
+    glycemicValuesNote: 'SJ zadávajte na 100 g hotového jedla. GI je číslo 0–100 (nízky ≤ 55, stredný 56–69, vysoký ≥ 70); GI a GL nie sú hodnoty na 100 g.',
+    giHint: 'Číslo od 0 do 100',
+    giInvalid: 'Glykemický index musí byť číslo od 0 do 100.',
+    giLow: 'Nízky GI',
+    giMedium: 'Stredný GI',
+    giHigh: 'Vysoký GI'
   }
 };
 
@@ -218,6 +274,210 @@ function parseDecimal(raw) {
   if (text === '') return { valid: true, value: null };
   if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return { valid: false, value: null };
   return { valid: true, value: Number(text.replace(',', '.')) };
+}
+
+// --- Per-portion nutrition (issue #14) -------------------------------------
+// Pure helpers: no Alpine state, no DOM. Values may be numbers, numeric strings
+// ("1,5"), null or garbage; anything that is not a finite number >= 0 counts as
+// missing, so a calculation returns null instead of NaN, Infinity or 0.
+
+// 1 SJ (sacharidová jednotka) = 10 g of carbohydrates by default; 12 g is the
+// older convention some patients still use. Users pick one; it is stored locally.
+const SJ_FACTORS = [10, 12];
+const DEFAULT_SJ_FACTOR = 10;
+const SJ_FACTOR_STORAGE_KEY = 'hamMnam-sjFactor';
+// Nutrients that have a per-100 g column. SJ is derived from carbs and handled separately.
+const PORTION_NUTRIENTS = ['calories', 'carbs', 'proteins', 'fats', 'fiber', 'salt'];
+// Entered SJ may differ from carbs / factor by rounding; only flag real mismatches.
+const SJ_TOLERANCE = { absolute: 0.15, relative: 0.1 };
+const TOTAL_TOLERANCE = { absolute: 0.5, relative: 0.05 };
+
+function nonNegativeNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? value : null;
+  if (typeof value !== 'string') return null;
+  const parsed = parseDecimal(value);
+  return parsed.valid ? parsed.value : null;
+}
+
+function positiveNumber(value) {
+  const number = nonNegativeNumber(value);
+  return number !== null && number > 0 ? number : null;
+}
+
+function normalizeSjFactor(value) {
+  const factor = Number(value);
+  return SJ_FACTORS.includes(factor) ? factor : DEFAULT_SJ_FACTOR;
+}
+
+function getSavedSjFactor() {
+  try {
+    return normalizeSjFactor(localStorage.getItem(SJ_FACTOR_STORAGE_KEY));
+  } catch (error) {
+    console.warn('Could not read the saved SJ factor:', error);
+    return DEFAULT_SJ_FACTOR;
+  }
+}
+
+function saveSjFactor(value) {
+  const factor = normalizeSjFactor(value);
+  try {
+    localStorage.setItem(SJ_FACTOR_STORAGE_KEY, String(factor));
+  } catch (error) {
+    console.warn('Could not save the SJ factor:', error);
+  }
+  return factor;
+}
+
+function carbsToSj(carbs, factor = DEFAULT_SJ_FACTOR) {
+  const grams = nonNegativeNumber(carbs);
+  return grams === null ? null : grams / normalizeSjFactor(factor);
+}
+
+// input: {
+//   per100: { calories, carbs, proteins, fats, fiber, salt, sj },  // hand-entered per 100 g
+//   totals: { calories, carbs, ... },                               // whole recipe (optional)
+//   totalWeight, servings,                                          // whole recipe
+//   portionWeight                                                   // optional custom portion in g
+// }
+// Per-100 g values win; totals fill gaps (totals / total weight). Per portion =
+// per-100 g x portion weight, or totals / servings when no weight is known.
+// Returns { servings, totalWeight, portionWeight, per100, perPortion }; every
+// missing value is null.
+function computeNutrition(input = {}, factor = DEFAULT_SJ_FACTOR) {
+  const per100Input = input.per100 || {};
+  const totalsInput = input.totals || {};
+  const servings = positiveNumber(input.servings);
+  const totalWeight = positiveNumber(input.totalWeight);
+  const customPortion = positiveNumber(input.portionWeight);
+  const portionWeight = customPortion !== null
+    ? customPortion
+    : totalWeight !== null && servings !== null ? totalWeight / servings : null;
+  const per100 = {};
+  const perPortion = {};
+  for (const field of PORTION_NUTRIENTS) {
+    const entered = nonNegativeNumber(per100Input[field]);
+    const total = nonNegativeNumber(totalsInput[field]);
+    per100[field] = entered !== null
+      ? entered
+      : total !== null && totalWeight !== null ? (total * 100) / totalWeight : null;
+    if (per100[field] !== null && portionWeight !== null) {
+      perPortion[field] = (per100[field] * portionWeight) / 100;
+    } else if (total !== null && servings !== null && customPortion === null) {
+      perPortion[field] = total / servings;
+    } else {
+      perPortion[field] = null;
+    }
+  }
+  // SJ follows the carbs and the chosen factor. Only without carbs fall back to the entered SJ.
+  const enteredSj = nonNegativeNumber(per100Input.sj);
+  per100.sj = per100.carbs !== null ? carbsToSj(per100.carbs, factor) : enteredSj;
+  perPortion.sj = perPortion.carbs !== null
+    ? carbsToSj(perPortion.carbs, factor)
+    : enteredSj !== null && portionWeight !== null ? (enteredSj * portionWeight) / 100 : null;
+  return { servings, totalWeight, portionWeight, per100, perPortion };
+}
+
+function valuesConflict(entered, computed, tolerance = TOTAL_TOLERANCE) {
+  if (entered === null || computed === null) return false;
+  const allowed = Math.max(tolerance.absolute, tolerance.relative * Math.max(Math.abs(entered), Math.abs(computed)));
+  return Math.abs(entered - computed) > allowed + 1e-9;
+}
+
+// Compares hand-entered per-100 g values with the values computed from other
+// inputs: SJ vs carbs / factor, and (when totals are given) each per-100 g value
+// vs total x 100 / total weight. Returns [{ field, entered, computed, matchingFactor? }].
+function detectNutritionConflicts(input = {}, factor = DEFAULT_SJ_FACTOR) {
+  const per100 = input.per100 || {};
+  const totals = input.totals || {};
+  const totalWeight = positiveNumber(input.totalWeight);
+  const conflicts = [];
+  const enteredSj = nonNegativeNumber(per100.sj);
+  const computedSj = carbsToSj(per100.carbs, factor);
+  if (valuesConflict(enteredSj, computedSj, SJ_TOLERANCE)) {
+    const conflict = { field: 'sj', entered: enteredSj, computed: computedSj };
+    const otherFactor = SJ_FACTORS.find((candidate) => candidate !== normalizeSjFactor(factor)
+      && !valuesConflict(enteredSj, carbsToSj(per100.carbs, candidate), SJ_TOLERANCE));
+    if (otherFactor) conflict.matchingFactor = otherFactor;
+    conflicts.push(conflict);
+  }
+  if (totalWeight !== null) {
+    for (const field of PORTION_NUTRIENTS) {
+      const entered = nonNegativeNumber(per100[field]);
+      const total = nonNegativeNumber(totals[field]);
+      const computed = total === null ? null : (total * 100) / totalWeight;
+      if (valuesConflict(entered, computed)) conflicts.push({ field, entered, computed });
+    }
+  }
+  return conflicts;
+}
+
+// Recipe row (or form model) -> calculation input. Only the per-100 g values,
+// servings and total weight are edited in the app (see #6), so the legacy
+// total_* columns are not used here.
+function recipeNutritionInput(recipe, portionWeight = null) {
+  const source = recipe || {};
+  const per100 = {};
+  for (const field of [...PORTION_NUTRIENTS, 'sj']) per100[field] = source[field];
+  return { per100, servings: source.servings, totalWeight: source.total_weight, portionWeight };
+}
+
+// Glycemic index: an optional number from 0 to 100 (same decimal rules as parseDecimal).
+function parseGi(raw) {
+  const parsed = parseDecimal(raw);
+  if (!parsed.valid || parsed.value === null) return parsed;
+  return parsed.value <= 100 ? parsed : { valid: false, value: null };
+}
+
+// Numeric GI for display, or null. Older rows may still hold free text such as "nízky";
+// those are shown as-is but get no low/medium/high category.
+function giNumber(value) {
+  const parsed = parseGi(value);
+  return parsed.valid ? parsed.value : null;
+}
+
+const GI_LOW_MAX = 55;
+const GI_HIGH_MIN = 70;
+
+function giCategory(value) {
+  const gi = giNumber(value);
+  if (gi === null) return null;
+  if (gi <= GI_LOW_MAX) return 'low';
+  if (gi >= GI_HIGH_MIN) return 'high';
+  return 'medium';
+}
+
+const GI_CLASSES = {
+  low: 'bg-emerald-50 text-emerald-800',
+  medium: 'bg-amber-50 text-amber-800',
+  high: 'bg-red-50 text-red-800'
+};
+const GI_LABEL_KEYS = { low: 'giLow', medium: 'giMedium', high: 'giHigh' };
+
+// A recipe needs at least one title, Slovak or Czech.
+function hasTitle(recipe) {
+  return Boolean(textValue(recipe.title_sk) || textValue(recipe.title_cs));
+}
+
+// Errors raised by request() carry a `code` (config, network, noRows) or an HTTP
+// `status`. Users get a translated reason; the technical message goes to the console.
+function apiError(code, message, status) {
+  const error = new Error(message);
+  error.code = code;
+  if (status !== undefined) error.status = status;
+  return error;
+}
+
+function errorReasonKey(error) {
+  const code = error && error.code;
+  const status = error && error.status;
+  if (code === 'config') return 'databaseUnavailable';
+  if (code === 'network') return 'connectionError';
+  if (code === 'sessionExpired') return 'sessionExpired';
+  if (code === 'noRows') return 'notSavedError';
+  if (status === 401 || status === 403) return 'permissionError';
+  if (status === 400 || status === 409 || status === 422) return 'invalidDataError';
+  if (status === 404 || status === 408 || status === 429 || status >= 500) return 'serverError';
+  return 'unexpectedError';
 }
 
 const RECIPE_COUNT_KEYS = { one: 'recipeCountOne', few: 'recipeCountFew' };
@@ -256,7 +516,7 @@ function textValue(value) {
   return value === null || value === undefined ? '' : String(value).trim();
 }
 
-const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'gi', 'notes'];
+const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'notes'];
 
 // --- Supabase Auth (magic link) over plain REST, without supabase-js. ---
 const AUTH_STORAGE_KEY = 'hamMnam-session';
@@ -374,6 +634,10 @@ function recipeApp() {
       return (this.session && this.session.user && this.session.user.email) || '';
     },
 
+    sjFactor: getSavedSjFactor(),
+    sjFactors: SJ_FACTORS,
+    portionSizeInput: '',
+
     get filteredRecipes() {
       const query = this.search.trim().toLocaleLowerCase(this.language);
       return this.recipes.filter((recipe) => {
@@ -427,6 +691,65 @@ function recipeApp() {
       return (this.language === 'sk' && recipe.category_sk) || recipe.category_cs || recipe.category_sk || '';
     },
 
+    // Like t(), but replaces {name} placeholders with params.name.
+    tf(key, params = {}) {
+      return this.t(key).replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+    },
+
+    setSjFactor(value) {
+      this.sjFactor = saveSjFactor(value);
+    },
+
+    formatNumber(value, maximumFractionDigits = 1) {
+      if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+      return new Intl.NumberFormat(this.language, { maximumFractionDigits }).format(value);
+    },
+
+    formatAmount(value, unit, maximumFractionDigits = 1) {
+      const formatted = this.formatNumber(value, maximumFractionDigits);
+      return formatted === '—' || !unit ? formatted : `${formatted} ${unit}`;
+    },
+
+    // Custom portion from the detail page; anything invalid falls back to total weight / servings.
+    customPortionWeight() {
+      const parsed = parseDecimal(this.portionSizeInput);
+      return parsed.valid && parsed.value > 0 ? parsed.value : null;
+    },
+
+    recipeNutrition(recipe, useCustomPortion = true) {
+      const portion = useCustomPortion ? this.customPortionWeight() : null;
+      return computeNutrition(recipeNutritionInput(recipe, portion), this.sjFactor);
+    },
+
+    recipePortionSj(recipe) {
+      return this.recipeNutrition(recipe, false).perPortion.sj;
+    },
+
+    hasPortionValues(recipe) {
+      const { perPortion } = this.recipeNutrition(recipe);
+      return Object.values(perPortion).some((value) => value !== null);
+    },
+
+    nutritionConflicts(recipe) {
+      return detectNutritionConflicts(recipeNutritionInput(recipe), this.sjFactor);
+    },
+
+    get formNutritionConflicts() {
+      return this.nutritionConflicts(this.newRecipe);
+    },
+
+    conflictMessage(conflict) {
+      if (conflict.field !== 'sj') return '';
+      const message = this.tf('conflictSj', {
+        entered: this.formatNumber(conflict.entered, 2),
+        computed: this.formatNumber(conflict.computed, 2),
+        factor: this.sjFactor
+      });
+      return conflict.matchingFactor
+        ? `${message} ${this.tf('conflictSjOtherFactor', { factor: conflict.matchingFactor })}`
+        : message;
+    },
+
     displayValue(value) {
       return value === null || value === undefined || value === '' ? '—' : value;
     },
@@ -455,22 +778,42 @@ function recipeApp() {
         : [];
     },
 
+    giCategory(value) {
+      return giCategory(value);
+    },
+
     giClass(value) {
-      const gi = String(value || '').toLocaleLowerCase();
-      if (gi.includes('nízk') || gi.includes('nizk') || gi.includes('low')) return 'bg-emerald-50 text-emerald-800';
-      if (gi.includes('vysok') || gi.includes('high')) return 'bg-red-50 text-red-800';
-      if (/^\d+(?:[.,]\d+)?$/.test(gi)) {
-        const numericGi = Number(gi.replace(',', '.'));
-        if (numericGi <= 55) return 'bg-emerald-50 text-emerald-800';
-        if (numericGi >= 70) return 'bg-red-50 text-red-800';
-        return 'bg-amber-50 text-amber-800';
-      }
-      return 'bg-violet-50 text-violet-800';
+      return GI_CLASSES[giCategory(value)] || 'bg-slate-100 text-slate-700';
+    },
+
+    giLabel(value) {
+      const category = giCategory(value);
+      return category ? this.t(GI_LABEL_KEYS[category]) : '';
+    },
+
+    displayGi(value) {
+      const gi = giNumber(value);
+      return gi === null ? this.displayValue(textValue(value)) : gi;
+    },
+
+    isGiInvalid(value) {
+      return !parseGi(value).valid;
+    },
+
+    // Supabase Auth answers 400/422 when the e-mail has no account (create_user is false).
+    signInErrorText(error) {
+      const status = error && error.status;
+      const reason = status === 400 || status === 422 ? 'signInNotAllowed' : errorReasonKey(error);
+      return `${this.t('signInError')} ${this.t(reason)}`;
+    },
+
+    errorText(contextKey, error) {
+      return `${this.t(contextKey)} ${this.t(errorReasonKey(error))}`;
     },
 
     projectConfig() {
       const project = supabaseProject();
-      if (!project) throw new Error(this.t('databaseUnavailable'));
+      if (!project) throw apiError('config', 'Supabase URL or anon key is missing in config.js.');
       return project;
     },
 
@@ -486,15 +829,21 @@ function recipeApp() {
       const isWrite = method !== 'GET' && method !== 'HEAD';
       // Only wait for a token when there is a session, so a signed-out request starts in the same tick.
       const token = isWrite && this.session ? await this.accessToken() : null;
-      const send = (bearer) => fetch(`${url}${path}`, {
-        ...options,
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${bearer || key}`,
-          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-          ...options.headers
+      const send = async (bearer) => {
+        try {
+          return await fetch(`${url}${path}`, {
+            ...options,
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${bearer || key}`,
+              ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+              ...options.headers
+            }
+          });
+        } catch (error) {
+          throw apiError('network', `Network request failed: ${error && error.message}`);
         }
-      });
+      };
       let response = await send(token);
       if (response.status === 401 && token) {
         // The token was rejected (e.g. clock skew or revoked): refresh once and retry.
@@ -502,7 +851,7 @@ function recipeApp() {
       }
       if (!response.ok) {
         const details = (await response.text()).slice(0, 240);
-        throw new Error(`Supabase HTTP ${response.status}${details ? `: ${details}` : ''}`);
+        throw apiError('http', `Supabase HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
       }
       if (response.status === 204) return null;
       return response.json();
@@ -537,7 +886,8 @@ function recipeApp() {
       if (!params) return;
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
       if (params.error || params.error_description) {
-        this.authError = `${this.t('signInError')} (${params.error_description || params.error})`;
+        console.error('Magic link sign-in failed:', params.error, params.error_description);
+        this.authError = `${this.t('signInError')} ${this.t('signInLinkInvalid')}`;
         this.showSignIn = true;
         return;
       }
@@ -613,7 +963,7 @@ function recipeApp() {
       }
       if (response && response.status >= 500) {
         // A server problem is temporary: keep the session and let the caller report the error.
-        throw new Error(`Supabase Auth HTTP ${response.status}`);
+        throw apiError('http', `Supabase Auth HTTP ${response.status}`, response.status);
       }
       const session = response && response.ok
         ? sessionFromTokenResponse(await response.json(), Date.now(), current.user)
@@ -623,7 +973,7 @@ function recipeApp() {
         this.setSession(null);
         this.authError = this.t('sessionExpired');
         this.showSignIn = true;
-        throw new Error(this.t('sessionExpired'));
+        throw apiError('sessionExpired', 'The refresh token was rejected; signed out.');
       }
       this.setSession(session);
     },
@@ -658,12 +1008,12 @@ function recipeApp() {
         });
         if (!response.ok) {
           const details = (await response.text()).slice(0, 240);
-          throw new Error(`HTTP ${response.status}${details ? `: ${details}` : ''}`);
+          throw apiError('http', `Supabase Auth HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
         }
         this.magicLinkSent = true;
       } catch (error) {
         console.error('Could not send the magic link:', error);
-        this.authError = `${this.t('signInError')} (${error.message})`;
+        this.authError = this.signInErrorText(error);
       } finally {
         this.authSending = false;
       }
@@ -720,9 +1070,7 @@ function recipeApp() {
         this.syncRoute();
       } catch (error) {
         console.error('Could not load recipes:', error);
-        this.errorMessage = error.message === this.t('databaseUnavailable')
-          ? error.message
-          : `${this.t('connectionError')} (${error.message})`;
+        this.errorMessage = this.t(errorReasonKey(error));
       } finally {
         this.loading = false;
       }
@@ -749,6 +1097,8 @@ function recipeApp() {
         if (recipe[field] !== undefined) form[field] = recipe[field];
       }
       for (const field of TEXT_FIELDS) form[field] = textValue(form[field]);
+      // GI is edited as text so "55,5" works; legacy text values stay visible and fail validation.
+      form.gi = textValue(form.gi);
       form.ingredients = Array.isArray(recipe.ingredients)
         ? recipe.ingredients
           .filter((ingredient) => ingredient && typeof ingredient === 'object')
@@ -791,10 +1141,12 @@ function recipeApp() {
         `#recipe/${encodeURIComponent(String(recipe.id))}`
       );
       this.selectedRecipe = recipe;
+      this.portionSizeInput = '';
     },
 
     closeRecipe() {
       this.selectedRecipe = null;
+      this.portionSizeInput = '';
       if (!window.location.hash.startsWith('#recipe/')) return;
 
       if (window.history.state && window.history.state.hamMnamRecipeDetail) {
@@ -838,6 +1190,11 @@ function recipeApp() {
     async addRecipe() {
       this.saving = true;
       this.formError = '';
+      if (!hasTitle(this.newRecipe)) {
+        this.formError = this.t('titleRequired');
+        this.saving = false;
+        return;
+      }
       const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight'];
       const numericValues = {};
       const invalidFields = [];
@@ -846,11 +1203,16 @@ function recipeApp() {
         if (parsed.valid) numericValues[field] = parsed.value;
         else invalidFields.push(this.t(field.replace(/_(\w)/g, (_match, letter) => letter.toUpperCase())));
       }
-      if (invalidFields.length) {
-        this.formError = `${this.t('invalidNumber')} ${invalidFields.join(', ')}`;
+      const gi = parseGi(this.newRecipe.gi);
+      if (invalidFields.length || !gi.valid) {
+        this.formError = [
+          invalidFields.length ? `${this.t('invalidNumber')} ${invalidFields.join(', ')}` : '',
+          gi.valid ? '' : this.t('giInvalid')
+        ].filter(Boolean).join(' ');
         this.saving = false;
         return;
       }
+      numericValues.gi = gi.value;
       try {
         const payload = {
           ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
@@ -873,10 +1235,10 @@ function recipeApp() {
             body: JSON.stringify(payload)
           });
           if (!Array.isArray(updated) || !updated[0]) {
-            throw new Error('Supabase did not return the updated recipe.');
+            throw apiError('noRows', 'Supabase did not return the updated recipe.');
           }
           const index = this.recipes.findIndex((recipe) => String(recipe.id) === String(this.editingRecipeId));
-          if (index === -1) throw new Error('The updated recipe is no longer available.');
+          if (index === -1) throw apiError('noRows', 'The updated recipe is no longer available.');
           const updatedRecipe = updated[0];
           this.recipes.splice(index, 1, updatedRecipe);
           this.selectedRecipe = updatedRecipe;
@@ -900,7 +1262,7 @@ function recipeApp() {
             body: JSON.stringify(payload)
           });
           if (!Array.isArray(created) || !created[0]) {
-            throw new Error('Supabase did not return the saved recipe.');
+            throw apiError('noRows', 'Supabase did not return the saved recipe.');
           }
           this.recipes.unshift(created[0]);
           this.newRecipe = emptyRecipe();
@@ -909,7 +1271,7 @@ function recipeApp() {
         }
       } catch (error) {
         console.error('Could not save recipe:', error);
-        this.formError = `${this.t('saveError')} (${error.message})`;
+        this.formError = this.errorText('saveError', error);
       } finally {
         this.saving = false;
       }
@@ -934,12 +1296,12 @@ function recipeApp() {
         });
         // An update blocked by row-level security succeeds with zero rows changed.
         if (!Array.isArray(updated) || updated.length === 0) {
-          throw new Error('Supabase did not update the recipe.');
+          throw apiError('noRows', 'Supabase did not update the recipe.');
         }
       } catch (error) {
         console.error('Could not update favorite:', error);
         recipe.favorite = previousFavorite;
-        this.favoriteErrorMessage = `${this.t('favoriteError')} (${error.message})`;
+        this.favoriteErrorMessage = this.errorText('favoriteError', error);
       } finally {
         delete this.favoriteSavingIds[recipe.id];
       }

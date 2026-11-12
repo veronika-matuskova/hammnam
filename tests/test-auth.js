@@ -72,7 +72,9 @@ test('a failed magic link request shows a Slovak error', async () => {
 
   await app.requestMagicLink();
 
-  assert.match(app.authError, /^Prihlasovací odkaz sa nepodarilo odoslať\. \(HTTP 422/);
+  // Friendly text only (#15); the technical response goes to the console.
+  assert.equal(app.authError, 'Prihlasovací odkaz sa nepodarilo odoslať. Tento e-mail nemá do aplikácie prístup. Požiadajte správcu o pridanie.');
+  assert.doesNotMatch(app.authError, /HTTP|422|Signups/);
   assert.equal(app.magicLinkSent, false);
   assert.equal(app.authSending, false);
 });
@@ -116,7 +118,7 @@ test('an error in the magic-link redirect is shown in the sign-in panel', async 
   assert.equal(app.location.hash, '');
   assert.equal(app.isSignedIn, false);
   assert.equal(app.showSignIn, true);
-  assert.equal(app.authError, 'Prihlasovací odkaz sa nepodarilo odoslať. (Email link is invalid or has expired)');
+  assert.equal(app.authError, 'Prihlasovací odkaz sa nepodarilo odoslať. Odkaz je neplatný alebo vypršal. Vyžiadajte si nový.');
 });
 
 test('a stored session is restored and writes send the user token', async () => {
@@ -184,7 +186,8 @@ test('a server error during refresh keeps the session', async () => {
 
   await app.toggleFavorite(recipe);
 
-  assert.match(app.favoriteErrorMessage, /Supabase Auth HTTP 503/);
+  assert.doesNotMatch(app.favoriteErrorMessage, /HTTP|503/);
+  assert.match(app.favoriteErrorMessage, /^Obľúbený recept sa nepodarilo aktualizovať\. /);
   assert.equal(app.isSignedIn, true);
 });
 

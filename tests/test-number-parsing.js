@@ -127,7 +127,11 @@ test('number inputs use text with a decimal keyboard so commas are not mangled',
   const html = readRepoFile('index.html');
   assert.equal((html.match(/type="number"/g) || []).length, 0);
   assert.equal((html.match(/x-model\.number/g) || []).length, 0);
-  assert.equal((html.match(/inputmode="decimal"/g) || []).length, 10);
+  // 10 nutrition fields + GI (validated as 0-100 in js/app.js), counted in the form only.
+  const formPage = html.slice(html.indexOf('<main x-show="showForm"'), html.indexOf('<footer'));
+  assert.equal((formPage.match(/inputmode="decimal"/g) || []).length, 11);
+  // The detail page's custom portion size (#14) also takes decimals.
+  assert.match(html, /inputmode="decimal" x-model\.trim="portionSizeInput"/);
 });
 
 test('every numeric field is parsed on save and has a translated error label', async () => {

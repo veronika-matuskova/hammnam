@@ -51,7 +51,8 @@ Tests load the app through `tests/helpers/app-harness.js`. Writes need a signed-
 The Supabase schema and its Row Level Security (RLS) policies live in `supabase/migrations/` as plain SQL files, applied in file-name order. Every PR that changes the schema, a payload field or a policy adds a new migration file in the same PR; never edit a migration that has already been applied.
 
 - Name new files `YYYYMMDDHHMMSS_short_description.sql` (UTC timestamp), e.g. `supabase migration new add_recipe_tags` creates one.
-- `20261112000000_recipes_baseline.sql` was **reconstructed from the app code**, not dumped. Verify it against the live project with `supabase db dump --schema public` and replace it with the dump if they differ. It describes tables that already exist in production, so mark it as applied there instead of running it: `supabase migration repair --status applied 20261112000000`.
+- `20261112000000_recipes_baseline.sql` records the `recipes` table and its policies as they were on the live project before any migration here. It was never run there, so mark it as applied: `supabase migration repair --status applied 20261112000000`.
+- Migrations applied through the Supabase dashboard or the Supabase connector are recorded in the project's migration history under their own version; keep the file name in this folder equal to that version (e.g. `20261112214456_recipes_add_total_weight.sql`).
 
 Apply migrations with the [Supabase CLI](https://supabase.com/docs/guides/cli):
 
