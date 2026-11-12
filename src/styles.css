@@ -1,0 +1,9 @@
+/* Tailwind CSS entry point, compiled by scripts/build.mjs (tailwindcss CLI, config in tailwind.config.cjs). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide x-cloak elements until Alpine.js has initialised (Alpine removes the attribute). */
+[x-cloak] {
+  display: none !important;
+}

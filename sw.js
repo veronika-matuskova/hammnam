@@ -1,17 +1,14 @@
-const CACHE_NAME = 'ham-mnam-shell-v6';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.json',
-  './js/app.js?v=6',
-  './config.js',
-  './icons/app-icon.svg'
-];
+// Source template: scripts/build.mjs writes dist/sw.js with CACHE_NAME and APP_SHELL filled in from
+// content hashes of the built files. Do not edit the two generated lines below by hand.
+const CACHE_NAME = 'ham-mnam-shell-dev'; // generated: CACHE_NAME
+const APP_SHELL = []; // generated: APP_SHELL
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      // cache: 'reload' bypasses the HTTP cache, so unhashed files (index.html, manifest, icons)
+      // are fetched fresh and match the hashed assets of this build.
+      .then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -34,22 +31,10 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
-  if (url.origin !== self.location.origin) {
-    if (!['cdn.tailwindcss.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return;
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
-        if (cachedResponse) return cachedResponse;
-        const response = await fetch(request);
-        if (response.ok || response.type === 'opaque') {
-          await cache.put(request, response.clone());
-        }
-        return response;
-      })
-    );
-    return;
-  }
+  // Third-party requests (Supabase REST) always go straight to the network and are never cached.
+  if (url.origin !== self.location.origin) return;
 
+  // Network-first for navigations, falling back to the precached index.html of this build.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() => caches.match('./index.html'))
@@ -57,6 +42,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cache-first for the precached app shell (CSS/JS filenames are content-hashed).
   event.respondWith(
     caches.match(request).then((cachedResponse) => cachedResponse || fetch(request))
   );
