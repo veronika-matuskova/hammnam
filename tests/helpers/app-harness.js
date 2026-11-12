@@ -73,17 +73,38 @@ function createHistory(location, listeners, initialHash) {
   };
 }
 
+// Keys js/app.js uses in localStorage.
+const LANGUAGE_KEY = 'hamMnam-language';
+const SESSION_KEY = 'hamMnam-session';
+
+// A stored Supabase Auth session for a signed-in user (see `session` in loadApp).
+function signedInSession(overrides = {}) {
+  return {
+    access_token: 'user-token',
+    refresh_token: 'refresh-1',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: { id: 'u1', email: 'mama@example.com' },
+    ...overrides
+  };
+}
+
 // Loads js/app.js and returns the Alpine component, with `location`, `history`,
-// `window` and the vm `context` attached for assertions.
+// `window`, the vm `context` and the localStorage contents (`store`) attached for assertions.
+// Pass `session` (e.g. signedInSession()) to start signed in; `storage` seeds other keys.
 function loadApp({
   fetch,
   hash = '',
   savedLanguage = null,
+  session = null,
+  storage = {},
   supabaseConfig = { url: 'https://example.supabase.co', anonKey: 'test-key' }
 } = {}) {
   let factory;
   const listeners = {};
-  const location = { hash, pathname: '/', search: '' };
+  const store = { ...storage };
+  if (savedLanguage !== null) store[LANGUAGE_KEY] = savedLanguage;
+  if (session) store[SESSION_KEY] = JSON.stringify(session);
+  const location = { hash, pathname: '/', search: '', origin: 'https://hammnam.app' };
   const history = createHistory(location, listeners, hash);
   const window = {
     SUPABASE_CONFIG: supabaseConfig,
@@ -104,13 +125,17 @@ function loadApp({
     document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
     navigator: {},
     fetch: fetch || (async () => { throw new Error('unexpected fetch in test'); }),
-    localStorage: { getItem: () => savedLanguage, setItem: () => {} },
+    localStorage: {
+      getItem: (key) => (Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null),
+      setItem: (key, value) => { store[key] = String(value); },
+      removeItem: (key) => { delete store[key]; }
+    },
     window,
     // Keep expected console.error output from error-path tests out of the report.
     console: { ...console, error: () => {}, warn: () => {} }
   };
   vm.runInNewContext(appSource(), context);
-  return Object.assign(factory(), { location, history, window, context });
+  return Object.assign(factory(), { location, history, window, context, store });
 }
 
 // --- fetch stubs -------------------------------------------------------------
@@ -179,6 +204,8 @@ module.exports = {
   appSource,
   createHistory,
   loadApp,
+  signedInSession,
+  SESSION_KEY,
   jsonResponse,
   networkError,
   supabaseStub,
