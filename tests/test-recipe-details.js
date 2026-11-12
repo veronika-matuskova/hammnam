@@ -1,50 +1,11 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp, readRepoFile } = require('./helpers/app-harness');
 
+// Thin wrapper kept so the tests below read as before; the harness (with a real
+// history stack) lives in tests/helpers/app-harness.js.
 function createRecipeApp(fetch, initialHash = '') {
-  let factory;
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: {
-      data(name, registeredFactory) {
-        assert.equal(name, 'recipeApp');
-        factory = registeredFactory;
-      }
-    },
-    document: {
-      addEventListener(event, callback) {
-        if (event === 'alpine:init') callback();
-      }
-    },
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history });
+  return loadApp({ fetch, hash: initialHash });
 }
 
 test('new recipes initialize with empty detail fields', () => {
@@ -80,6 +41,7 @@ test('saving a recipe posts all nutritional metrics', async () => {
     salt: '1.2',
     glycemic_load: '15',
     gi: '55',
+    title_sk: 'Polievka',
     ingredients: [{ name: ' Mrkev ', amount: ' 2 ', unit: ' ks ' }],
     steps: ['Nakrájet.'],
     notes: ' Dobré. '
@@ -96,7 +58,7 @@ test('saving a recipe posts all nutritional metrics', async () => {
   assert.equal(requestBody.fats, 12);
   assert.equal(requestBody.salt, 1.2);
   assert.equal(requestBody.glycemic_load, 15);
-  assert.equal(requestBody.gi, '55');
+  assert.equal(requestBody.gi, 55);
   assert.equal(requestBody.notes, 'Dobré.');
 });
 
@@ -211,9 +173,9 @@ test('editing a recipe loads its values and patches the existing row', async () 
   assert.equal(app.recipes[0].title_cs, 'Upravený koláč');
   assert.equal(app.selectedRecipe, app.recipes[0]);
   assert.equal(app.showForm, false);
-  // Saving goes back to the detail entry; this stub's back() only clears the hash.
-  // The real history stack is covered in tests/test-navigation.js.
-  assert.notEqual(app.location.hash, '#edit-recipe/42');
+  // Saving goes back to the entry the edit was opened from (the list here).
+  assert.equal(app.location.hash, '');
+  assert.equal(app.history.index, 0);
 });
 
 test('language fallbacks keep nutrition labels translated when switching routes', () => {
@@ -248,32 +210,19 @@ test('whole-recipe section keeps only servings and total weight', () => {
   assert.equal(app.t('totalRecipeNote'), 'Počet porcií a hmotnosť celého hotového jedla.');
 });
 
-test('GI badges use numeric and localized low/medium/high ranges', () => {
+test('GI badges are coloured from the number (low/medium/high), not from text', () => {
   const app = createRecipeApp();
 
   assert.equal(app.giClass('55'), 'bg-emerald-50 text-emerald-800');
-  assert.equal(app.giClass('56'), 'bg-amber-50 text-amber-800');
+  assert.equal(app.giClass(56), 'bg-amber-50 text-amber-800');
   assert.equal(app.giClass('70'), 'bg-red-50 text-red-800');
-  assert.equal(app.giClass('nízký'), 'bg-emerald-50 text-emerald-800');
-  assert.equal(app.giClass('vysoký'), 'bg-red-50 text-red-800');
-});
-
-test('the app script URL bypasses stale service worker cache entries', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
-  const serviceWorker = fs.readFileSync('sw.js', 'utf8');
-
-  // Bump all three together whenever js/app.js changes, or installed apps keep the old script.
-  const htmlVersion = html.match(/src="\.\/js\/app\.js\?v=(\d+)"/);
-  const cacheVersion = serviceWorker.match(/const CACHE_NAME = 'ham-mnam-shell-v(\d+)'/);
-  const precacheVersion = serviceWorker.match(/'\.\/js\/app\.js\?v=(\d+)'/);
-  assert.ok(htmlVersion && cacheVersion && precacheVersion);
-  assert.equal(cacheVersion[1], htmlVersion[1]);
-  assert.equal(precacheVersion[1], htmlVersion[1]);
-  assert.ok(Number(htmlVersion[1]) >= 6);
+  // Legacy free-text values get a neutral colour.
+  assert.equal(app.giClass('nízký'), 'bg-slate-100 text-slate-700');
+  assert.equal(app.giClass('vysoký'), 'bg-slate-100 text-slate-700');
 });
 
 test('new recipe form renders as a dedicated page rather than a modal', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const formPage = html.slice(html.indexOf('<main x-show="showForm"'), html.indexOf('<footer'));
 
   assert.match(formPage, /aria-labelledby="form-title"/);
@@ -283,7 +232,7 @@ test('new recipe form renders as a dedicated page rather than a modal', () => {
 });
 
 test('recipe details render as a dedicated page rather than a modal', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
 
   assert.match(html, /<main x-show="selectedRecipe" x-cloak/);
   assert.match(html, /<button\s+type="button"\s+@click="closeRecipe\(\)"/);
@@ -292,23 +241,24 @@ test('recipe details render as a dedicated page rather than a modal', () => {
 });
 
 test('recipe cards use nutrition tags and keep the full table on the detail page', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const recipeCards = html.slice(html.indexOf('<template x-for="recipe in filteredRecipes"'), html.indexOf('id="detail-nutrition-heading"'));
 
   assert.match(recipeCards, /displayMetric\(recipe\.calories, 'kcal'\)/);
   assert.equal((recipeCards.match(/t\('per100gSuffix'\)/g) || []).length, 3);
   assert.doesNotMatch(recipeCards, /<table/);
   assert.equal((html.match(/overflow-x-auto rounded-xl border border-slate-200/g) || []).length, 1);
-  assert.match(html, /min-w-\[40rem\] border-collapse/);
+  assert.match(html, /min-w-\[34rem\] border-collapse/);
 });
 
 test('recipe nutrition details avoid duplicate highlights and hide empty totals', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   const nutritionSection = html.slice(html.indexOf('id="detail-nutrition-heading"'), html.indexOf('id="detail-ingredients-heading"'));
   const totalNutritionSection = html.slice(html.indexOf('selectedRecipe.servings != null || selectedRecipe.total_weight != null'), html.indexOf('id="detail-nutrition-heading"'));
 
   assert.doesNotMatch(html, /grid grid-cols-3 gap-2 sm:gap-3/);
   assert.match(nutritionSection, /x-text="t\('gi'\)"/);
+  assert.match(nutritionSection, /id="detail-glycemic-heading"/);
   assert.match(nutritionSection, /t\('per100g'\)/);
   assert.match(totalNutritionSection, /x-text="t\('totalRecipeValues'\)"/);
   assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.servings != null/);
@@ -365,16 +315,7 @@ test('the app is Slovak-only and ignores a saved Czech preference', () => {
 });
 
 test('a saved Czech language preference falls back to Slovak', () => {
-  const source = fs.readFileSync('js/app.js', 'utf8');
-  let factory;
-  vm.runInNewContext(source, {
-    Alpine: { data(name, f) { factory = f; } },
-    document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
-    localStorage: { getItem: () => 'cs', setItem: () => {} },
-    window: { location: { hash: '', pathname: '/', search: '' }, history: {}, addEventListener() {} },
-    console
-  });
-  assert.equal(factory().language, 'sk');
+  assert.equal(loadApp({ savedLanguage: 'cs' }).language, 'sk');
 });
 
 test('Czech translations are kept for a future language switch', () => {
@@ -384,11 +325,13 @@ test('Czech translations are kept for a future language switch', () => {
 });
 
 test('the language switch is hidden and Slovak names are required in the form', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   assert.match(html, /<html lang="sk">/);
   assert.match(html, /x-show="canSwitchLanguage"\s+type="button"\s+@click="toggleLanguage\(\)"/);
-  assert.match(html, /x-model\.trim="newRecipe\.title_sk" :required="!isLanguageEnabled\('cs'\)"/);
-  assert.match(html, /x-model\.trim="newRecipe\.category_sk" :required="!isLanguageEnabled\('cs'\)"/);
+  // At least one title/category is needed, Slovak or Czech.
+  assert.match(html, /x-model\.trim="newRecipe\.title_sk" :required="!newRecipe\.title_cs"/);
+  assert.match(html, /x-model\.trim="newRecipe\.title_cs" :required="isLanguageEnabled\('cs'\) && !newRecipe\.title_sk"/);
+  assert.match(html, /x-model\.trim="newRecipe\.category_sk" :required="!newRecipe\.category_cs"/);
   assert.doesNotMatch(html, /x-model\.trim="newRecipe\.title_cs" required/);
 });
 

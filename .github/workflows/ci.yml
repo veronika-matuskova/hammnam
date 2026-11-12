@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Least privilege by default; the deploy job widens this for itself only.
+permissions:
+  contents: read
+
+# Cancel superseded runs for the same PR/branch. Runs on main are never
+# cancelled mid-flight so every merged commit gets tested.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Runs every tests/test-*.js file except the live Supabase ping, which
+      # lives in supabase-check.yml so network issues can't block a deploy.
+      - name: Run unit tests
+        run: |
+          mapfile -t files < <(find tests -maxdepth 1 -type f -name 'test-*.js' ! -name 'test-connection.js' | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No unit test files found" >&2
+            exit 1
+          fi
+          node --test "${files[@]}"
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # TODO(#19): replace this step with the npm build once it lands.
+      # Only publish the app itself: tests/, scripts/, .github/ and docs stay out.
+      - name: Build site
+        run: |
+          mkdir -p _site
+          cp index.html manifest.json sw.js config.js CNAME _site/
+          cp -r js icons _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

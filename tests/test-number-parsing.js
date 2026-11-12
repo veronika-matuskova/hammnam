@@ -1,53 +1,10 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp, plain, readRepoFile } = require('./helpers/app-harness');
 
-function createRecipeApp(fetch, initialHash = '') {
-  let factory;
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: {
-      data(name, registeredFactory) {
-        assert.equal(name, 'recipeApp');
-        factory = registeredFactory;
-      }
-    },
-    document: {
-      addEventListener(event, callback) {
-        if (event === 'alpine:init') callback();
-      }
-    },
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history, context });
+function createRecipeApp(fetch, hash = '') {
+  return loadApp({ fetch, hash });
 }
-
-const plain = (value) => JSON.parse(JSON.stringify(value));
 
 function recordingFetch(requests) {
   return async (url, options = {}) => {
@@ -57,7 +14,7 @@ function recordingFetch(requests) {
   };
 }
 
-test('parseDecimal handles the documented inputs', () => {
+test('parseDecimal handles the documented inputs (#9 table: "", " ", "1,5", -1, "0x10")', () => {
   const { parseDecimal } = createRecipeApp().context;
   const cases = [
     // [input, valid, value]
@@ -71,7 +28,9 @@ test('parseDecimal handles the documented inputs', () => {
     ['3.', true, 3],
     [',5', true, 0.5],
     ['', true, null],
+    [' ', true, null],
     ['   ', true, null],
+    ['\t\n', true, null],
     [null, true, null],
     [undefined, true, null],
     [0, true, 0],
@@ -80,7 +39,12 @@ test('parseDecimal handles the documented inputs', () => {
     ['0x10', false, null],
     ['-1', false, null],
     ['-0,5', false, null],
+    [-1, false, null],
     [-2, false, null],
+    ['+1', false, null],
+    ['1 000', false, null],
+    ['1,5,', false, null],
+    [Number.POSITIVE_INFINITY, false, null],
     ['1e3', false, null],
     ['1,000.5', false, null],
     ['1.2.3', false, null],
@@ -160,11 +124,36 @@ test('editing keeps zero ingredient amounts and drops null steps', () => {
 });
 
 test('number inputs use text with a decimal keyboard so commas are not mangled', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = readRepoFile('index.html');
   assert.equal((html.match(/type="number"/g) || []).length, 0);
   assert.equal((html.match(/x-model\.number/g) || []).length, 0);
+  // 10 nutrition fields + GI (validated as 0-100 in js/app.js), counted in the form only.
   const formPage = html.slice(html.indexOf('<main x-show="showForm"'), html.indexOf('<footer'));
-  assert.equal((formPage.match(/inputmode="decimal"/g) || []).length, 10);
+  assert.equal((formPage.match(/inputmode="decimal"/g) || []).length, 11);
   // The detail page's custom portion size (#14) also takes decimals.
   assert.match(html, /inputmode="decimal" x-model\.trim="portionSizeInput"/);
+});
+
+test('every numeric field is parsed on save and has a translated error label', async () => {
+  const numericFields = Object.entries(createRecipeApp().newRecipe)
+    .filter(([, value]) => value === null)
+    .map(([field]) => field);
+  assert.ok(numericFields.length >= 10, numericFields.join(','));
+
+  for (const field of numericFields) {
+    const requests = [];
+    const app = createRecipeApp(recordingFetch(requests));
+    app.newRecipe = { ...app.newRecipe, title_sk: 'Test', category_sk: 'Test', [field]: '1,5' };
+    await app.addRecipe();
+    assert.equal(requests[0].body[field], 1.5, `${field}: "1,5" should be saved as 1.5`);
+
+    const rejected = [];
+    const bad = createRecipeApp(recordingFetch(rejected));
+    bad.newRecipe = { ...bad.newRecipe, title_sk: 'Test', category_sk: 'Test', [field]: '0x10' };
+    await bad.addRecipe();
+    assert.equal(rejected.length, 0, `${field}: "0x10" should not be sent`);
+    const label = bad.formError.slice(bad.t('invalidNumber').length).trim();
+    assert.notEqual(label, field, `${field}: error label is the raw field name`);
+    assert.doesNotMatch(label, /^[a-z]+[A-Z_]/, `${field}: error label looks like a translation key: ${label}`);
+  }
 });

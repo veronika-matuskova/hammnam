@@ -1,65 +1,9 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp, jsonResponse, deferred } = require('./helpers/app-harness');
 
-function createRecipeApp(fetch, initialHash = '') {
-  let factory;
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: {
-      data(name, registeredFactory) {
-        assert.equal(name, 'recipeApp');
-        factory = registeredFactory;
-      }
-    },
-    document: {
-      addEventListener(event, callback) {
-        if (event === 'alpine:init') callback();
-      }
-    },
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history });
-}
-
-function jsonResponse(status, body) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body)
-  };
-}
-
-function deferred() {
-  let resolve;
-  const promise = new Promise((done) => { resolve = done; });
-  return { promise, resolve };
+function createRecipeApp(fetch, hash = '') {
+  return loadApp({ fetch, hash });
 }
 
 test('toggling a favourite sends return=representation and keeps the new state', async () => {
@@ -91,7 +35,8 @@ test('an HTTP error rolls the favourite back and shows its own message', async (
   await app.toggleFavorite(recipe);
 
   assert.equal(recipe.favorite, true);
-  assert.match(app.favoriteErrorMessage, /^Obľúbený recept sa nepodarilo aktualizovať\. \(Supabase HTTP 500/);
+  assert.equal(app.favoriteErrorMessage, 'Obľúbený recept sa nepodarilo aktualizovať. Služba je dočasne nedostupná. Skúste to o chvíľu znova.');
+  assert.doesNotMatch(app.favoriteErrorMessage, /Supabase|HTTP|boom/);
   assert.equal(app.isFavoriteSaving(recipe), false);
 });
 

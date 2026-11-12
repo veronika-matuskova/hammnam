@@ -37,11 +37,13 @@ const totalSection = between(formPage, 'aria-labelledby="nutrition-total-heading
 const recipeCards = between(html, '<template x-for="recipe in filteredRecipes"', '</template>');
 const detailNutrition = between(html, 'id="detail-nutrition-heading"', 'id="detail-ingredients-heading"');
 
-const per100gFields = ['calories', 'carbs', 'sj', 'proteins', 'fats', 'fiber', 'salt', 'gi', 'glycemic_load'];
+const glycemicSection = between(formPage, 'aria-labelledby="nutrition-glycemic-heading"', '</section>');
+const per100gFields = ['calories', 'carbs', 'proteins', 'fats', 'fiber', 'salt'];
+const glycemicFields = ['sj', 'gi', 'glycemic_load'];
 const totalFields = ['servings', 'total_weight'];
 
 test('each nutrition field has exactly one x-model binding in index.html', () => {
-  for (const field of [...per100gFields, ...totalFields]) {
+  for (const field of [...per100gFields, ...glycemicFields, ...totalFields]) {
     assert.equal(bindingCount(html, field), 1, `newRecipe.${field} should be bound exactly once`);
   }
 });
@@ -51,13 +53,23 @@ test('per-100 g values are entered only in the per-100 g section', () => {
     assert.equal(bindingCount(per100gSection, field), 1, `${field} missing from the per-100 g section`);
   }
   assert.match(per100gSection, /x-text="t\('nutritionPer100g'\)"/);
+  assert.equal((per100gSection.match(/x-model/g) || []).length, per100gFields.length);
+});
+
+test('SJ, GI and GL are entered in their own section, apart from the per-100 g values', () => {
+  for (const field of glycemicFields) {
+    assert.equal(bindingCount(glycemicSection, field), 1, `${field} missing from the SJ/GI/GL section`);
+    assert.equal(bindingCount(per100gSection, field), 0, `${field} must not be in the per-100 g section`);
+  }
+  assert.match(glycemicSection, /x-text="t\('glycemicValues'\)"/);
+  assert.match(glycemicSection, /x-text="t\('glycemicValuesNote'\)"/);
 });
 
 test('whole-recipe totals and servings stay in their own section', () => {
   for (const field of totalFields) {
     assert.equal(bindingCount(totalSection, field), 1, `${field} missing from the whole-recipe section`);
   }
-  for (const field of per100gFields) {
+  for (const field of [...per100gFields, ...glycemicFields]) {
     assert.equal(bindingCount(totalSection, field), 0, `${field} must not appear in the whole-recipe section`);
   }
   assert.match(totalSection, /x-text="t\('totalRecipeValues'\)"/);

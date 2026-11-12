@@ -75,7 +75,12 @@ const translations = {
     saveRecipe: 'Uložit recept',
     footer: 'Recepty s přehledem.',
     databaseUnavailable: 'Databáze není nakonfigurována. Zkontrolujte config.js.',
-    connectionError: 'Zkontrolujte připojení k internetu a nastavení Supabase.',
+    connectionError: 'Zkontrolujte připojení k internetu a zkuste to znovu.',
+    permissionError: 'K této akci nemáte oprávnění.',
+    invalidDataError: 'Některé údaje nebylo možné uložit. Zkontrolujte vyplněné hodnoty.',
+    serverError: 'Služba je dočasně nedostupná. Zkuste to za chvíli znovu.',
+    notSavedError: 'Změna se neprojevila – recept už možná neexistuje nebo k němu nemáte oprávnění.',
+    unexpectedError: 'Nastala neočekávaná chyba. Zkuste to znovu.',
     saveError: 'Recept se nepodařilo uložit.',
     favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
     invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:',
@@ -91,7 +96,15 @@ const translations = {
     sjFactorOption: 'g sacharidů',
     conflictTitle: 'Nutriční hodnoty si neodpovídají',
     conflictSj: 'Zadané SJ na 100 g ({entered}) neodpovídají sacharidům: při 1 SJ = {factor} g vychází {computed} SJ.',
-    conflictSjOtherFactor: 'Zadaná hodnota odpovídá přepočtu 1 SJ = {factor} g.'
+    conflictSjOtherFactor: 'Zadaná hodnota odpovídá přepočtu 1 SJ = {factor} g.',
+    titleRequired: 'Vyplňte název receptu (slovensky nebo česky).',
+    glycemicValues: 'Sacharidové jednotky a glykemie',
+    glycemicValuesNote: 'SJ zadávejte na 100 g hotového pokrmu. GI je číslo 0–100 (nízký ≤ 55, střední 56–69, vysoký ≥ 70); GI a GL nejsou hodnoty na 100 g.',
+    giHint: 'Číslo od 0 do 100',
+    giInvalid: 'Glykemický index musí být číslo od 0 do 100.',
+    giLow: 'Nízký GI',
+    giMedium: 'Střední GI',
+    giHigh: 'Vysoký GI'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -169,7 +182,12 @@ const translations = {
     saveRecipe: 'Uložiť recept',
     footer: 'Recepty prehľadne.',
     databaseUnavailable: 'Databáza nie je nakonfigurovaná. Skontrolujte config.js.',
-    connectionError: 'Skontrolujte pripojenie k internetu a nastavenie Supabase.',
+    connectionError: 'Skontrolujte pripojenie k internetu a skúste to znova.',
+    permissionError: 'Na túto akciu nemáte oprávnenie.',
+    invalidDataError: 'Niektoré údaje sa nepodarilo uložiť. Skontrolujte vyplnené hodnoty.',
+    serverError: 'Služba je dočasne nedostupná. Skúste to o chvíľu znova.',
+    notSavedError: 'Zmena sa neprejavila – recept už možno neexistuje alebo k nemu nemáte oprávnenie.',
+    unexpectedError: 'Nastala neočakávaná chyba. Skúste to znova.',
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
     invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:',
@@ -185,7 +203,15 @@ const translations = {
     sjFactorOption: 'g sacharidov',
     conflictTitle: 'Nutričné hodnoty si nezodpovedajú',
     conflictSj: 'Zadané SJ na 100 g ({entered}) nezodpovedajú sacharidom: pri 1 SJ = {factor} g vychádza {computed} SJ.',
-    conflictSjOtherFactor: 'Zadaná hodnota zodpovedá prepočtu 1 SJ = {factor} g.'
+    conflictSjOtherFactor: 'Zadaná hodnota zodpovedá prepočtu 1 SJ = {factor} g.',
+    titleRequired: 'Vyplňte názov receptu (po slovensky alebo po česky).',
+    glycemicValues: 'Sacharidové jednotky a glykémia',
+    glycemicValuesNote: 'SJ zadávajte na 100 g hotového jedla. GI je číslo 0–100 (nízky ≤ 55, stredný 56–69, vysoký ≥ 70); GI a GL nie sú hodnoty na 100 g.',
+    giHint: 'Číslo od 0 do 100',
+    giInvalid: 'Glykemický index musí byť číslo od 0 do 100.',
+    giLow: 'Nízky GI',
+    giMedium: 'Stredný GI',
+    giHigh: 'Vysoký GI'
   }
 };
 
@@ -363,6 +389,64 @@ function recipeNutritionInput(recipe, portionWeight = null) {
   return { per100, servings: source.servings, totalWeight: source.total_weight, portionWeight };
 }
 
+// Glycemic index: an optional number from 0 to 100 (same decimal rules as parseDecimal).
+function parseGi(raw) {
+  const parsed = parseDecimal(raw);
+  if (!parsed.valid || parsed.value === null) return parsed;
+  return parsed.value <= 100 ? parsed : { valid: false, value: null };
+}
+
+// Numeric GI for display, or null. Older rows may still hold free text such as "nízky";
+// those are shown as-is but get no low/medium/high category.
+function giNumber(value) {
+  const parsed = parseGi(value);
+  return parsed.valid ? parsed.value : null;
+}
+
+const GI_LOW_MAX = 55;
+const GI_HIGH_MIN = 70;
+
+function giCategory(value) {
+  const gi = giNumber(value);
+  if (gi === null) return null;
+  if (gi <= GI_LOW_MAX) return 'low';
+  if (gi >= GI_HIGH_MIN) return 'high';
+  return 'medium';
+}
+
+const GI_CLASSES = {
+  low: 'bg-emerald-50 text-emerald-800',
+  medium: 'bg-amber-50 text-amber-800',
+  high: 'bg-red-50 text-red-800'
+};
+const GI_LABEL_KEYS = { low: 'giLow', medium: 'giMedium', high: 'giHigh' };
+
+// A recipe needs at least one title, Slovak or Czech.
+function hasTitle(recipe) {
+  return Boolean(textValue(recipe.title_sk) || textValue(recipe.title_cs));
+}
+
+// Errors raised by request() carry a `code` (config, network, noRows) or an HTTP
+// `status`. Users get a translated reason; the technical message goes to the console.
+function apiError(code, message, status) {
+  const error = new Error(message);
+  error.code = code;
+  if (status !== undefined) error.status = status;
+  return error;
+}
+
+function errorReasonKey(error) {
+  const code = error && error.code;
+  const status = error && error.status;
+  if (code === 'config') return 'databaseUnavailable';
+  if (code === 'network') return 'connectionError';
+  if (code === 'noRows') return 'notSavedError';
+  if (status === 401 || status === 403) return 'permissionError';
+  if (status === 400 || status === 409 || status === 422) return 'invalidDataError';
+  if (status === 404 || status === 408 || status === 429 || status >= 500) return 'serverError';
+  return 'unexpectedError';
+}
+
 const RECIPE_COUNT_KEYS = { one: 'recipeCountOne', few: 'recipeCountFew' };
 
 function recipeCountKey(count, language) {
@@ -399,7 +483,7 @@ function textValue(value) {
   return value === null || value === undefined ? '' : String(value).trim();
 }
 
-const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'gi', 'notes'];
+const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'notes'];
 
 function recipeApp() {
   return {
@@ -563,24 +647,37 @@ function recipeApp() {
         : [];
     },
 
+    giCategory(value) {
+      return giCategory(value);
+    },
+
     giClass(value) {
-      const gi = String(value || '').toLocaleLowerCase();
-      if (gi.includes('nízk') || gi.includes('nizk') || gi.includes('low')) return 'bg-emerald-50 text-emerald-800';
-      if (gi.includes('vysok') || gi.includes('high')) return 'bg-red-50 text-red-800';
-      if (/^\d+(?:[.,]\d+)?$/.test(gi)) {
-        const numericGi = Number(gi.replace(',', '.'));
-        if (numericGi <= 55) return 'bg-emerald-50 text-emerald-800';
-        if (numericGi >= 70) return 'bg-red-50 text-red-800';
-        return 'bg-amber-50 text-amber-800';
-      }
-      return 'bg-violet-50 text-violet-800';
+      return GI_CLASSES[giCategory(value)] || 'bg-slate-100 text-slate-700';
+    },
+
+    giLabel(value) {
+      const category = giCategory(value);
+      return category ? this.t(GI_LABEL_KEYS[category]) : '';
+    },
+
+    displayGi(value) {
+      const gi = giNumber(value);
+      return gi === null ? this.displayValue(textValue(value)) : gi;
+    },
+
+    isGiInvalid(value) {
+      return !parseGi(value).valid;
+    },
+
+    errorText(contextKey, error) {
+      return `${this.t(contextKey)} ${this.t(errorReasonKey(error))}`;
     },
 
     apiBaseUrl() {
       const config = window.SUPABASE_CONFIG;
       if (!config || typeof config.url !== 'string' || typeof config.anonKey !== 'string'
         || !config.url.trim() || !config.anonKey.trim()) {
-        throw new Error(this.t('databaseUnavailable'));
+        throw apiError('config', 'Supabase URL or anon key is missing in config.js.');
       }
       const url = config.url.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
       return { url: `${url}/rest/v1/recipes`, key: config.anonKey.trim() };
@@ -588,18 +685,23 @@ function recipeApp() {
 
     async request(path, options = {}) {
       const { url, key } = this.apiBaseUrl();
-      const response = await fetch(`${url}${path}`, {
-        ...options,
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`,
-          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-          ...options.headers
-        }
-      });
+      let response;
+      try {
+        response = await fetch(`${url}${path}`, {
+          ...options,
+          headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            ...options.headers
+          }
+        });
+      } catch (error) {
+        throw apiError('network', `Network request failed: ${error && error.message}`);
+      }
       if (!response.ok) {
         const details = (await response.text()).slice(0, 240);
-        throw new Error(`Supabase HTTP ${response.status}${details ? `: ${details}` : ''}`);
+        throw apiError('http', `Supabase HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
       }
       if (response.status === 204) return null;
       return response.json();
@@ -652,9 +754,7 @@ function recipeApp() {
         this.syncRoute();
       } catch (error) {
         console.error('Could not load recipes:', error);
-        this.errorMessage = error.message === this.t('databaseUnavailable')
-          ? error.message
-          : `${this.t('connectionError')} (${error.message})`;
+        this.errorMessage = this.t(errorReasonKey(error));
       } finally {
         this.loading = false;
       }
@@ -681,6 +781,8 @@ function recipeApp() {
         if (recipe[field] !== undefined) form[field] = recipe[field];
       }
       for (const field of TEXT_FIELDS) form[field] = textValue(form[field]);
+      // GI is edited as text so "55,5" works; legacy text values stay visible and fail validation.
+      form.gi = textValue(form.gi);
       form.ingredients = Array.isArray(recipe.ingredients)
         ? recipe.ingredients
           .filter((ingredient) => ingredient && typeof ingredient === 'object')
@@ -772,6 +874,11 @@ function recipeApp() {
     async addRecipe() {
       this.saving = true;
       this.formError = '';
+      if (!hasTitle(this.newRecipe)) {
+        this.formError = this.t('titleRequired');
+        this.saving = false;
+        return;
+      }
       const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight'];
       const numericValues = {};
       const invalidFields = [];
@@ -780,11 +887,16 @@ function recipeApp() {
         if (parsed.valid) numericValues[field] = parsed.value;
         else invalidFields.push(this.t(field.replace(/_(\w)/g, (_match, letter) => letter.toUpperCase())));
       }
-      if (invalidFields.length) {
-        this.formError = `${this.t('invalidNumber')} ${invalidFields.join(', ')}`;
+      const gi = parseGi(this.newRecipe.gi);
+      if (invalidFields.length || !gi.valid) {
+        this.formError = [
+          invalidFields.length ? `${this.t('invalidNumber')} ${invalidFields.join(', ')}` : '',
+          gi.valid ? '' : this.t('giInvalid')
+        ].filter(Boolean).join(' ');
         this.saving = false;
         return;
       }
+      numericValues.gi = gi.value;
       try {
         const payload = {
           ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
@@ -807,10 +919,10 @@ function recipeApp() {
             body: JSON.stringify(payload)
           });
           if (!Array.isArray(updated) || !updated[0]) {
-            throw new Error('Supabase did not return the updated recipe.');
+            throw apiError('noRows', 'Supabase did not return the updated recipe.');
           }
           const index = this.recipes.findIndex((recipe) => String(recipe.id) === String(this.editingRecipeId));
-          if (index === -1) throw new Error('The updated recipe is no longer available.');
+          if (index === -1) throw apiError('noRows', 'The updated recipe is no longer available.');
           const updatedRecipe = updated[0];
           this.recipes.splice(index, 1, updatedRecipe);
           this.selectedRecipe = updatedRecipe;
@@ -834,7 +946,7 @@ function recipeApp() {
             body: JSON.stringify(payload)
           });
           if (!Array.isArray(created) || !created[0]) {
-            throw new Error('Supabase did not return the saved recipe.');
+            throw apiError('noRows', 'Supabase did not return the saved recipe.');
           }
           this.recipes.unshift(created[0]);
           this.newRecipe = emptyRecipe();
@@ -843,7 +955,7 @@ function recipeApp() {
         }
       } catch (error) {
         console.error('Could not save recipe:', error);
-        this.formError = `${this.t('saveError')} (${error.message})`;
+        this.formError = this.errorText('saveError', error);
       } finally {
         this.saving = false;
       }
@@ -868,12 +980,12 @@ function recipeApp() {
         });
         // An update blocked by row-level security succeeds with zero rows changed.
         if (!Array.isArray(updated) || updated.length === 0) {
-          throw new Error('Supabase did not update the recipe.');
+          throw apiError('noRows', 'Supabase did not update the recipe.');
         }
       } catch (error) {
         console.error('Could not update favorite:', error);
         recipe.favorite = previousFavorite;
-        this.favoriteErrorMessage = `${this.t('favoriteError')} (${error.message})`;
+        this.favoriteErrorMessage = this.errorText('favoriteError', error);
       } finally {
         delete this.favoriteSavingIds[recipe.id];
       }
