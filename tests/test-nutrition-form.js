@@ -38,7 +38,7 @@ const recipeCards = between(html, '<template x-for="recipe in filteredRecipes"',
 const detailNutrition = between(html, 'id="detail-nutrition-heading"', 'id="detail-ingredients-heading"');
 
 const per100gFields = ['calories', 'carbs', 'sj', 'proteins', 'fats', 'fiber', 'salt', 'gi', 'glycemic_load'];
-const totalFields = ['servings', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
+const totalFields = ['servings', 'total_weight'];
 
 test('each nutrition field has exactly one x-model binding in index.html', () => {
   for (const field of [...per100gFields, ...totalFields]) {
@@ -61,6 +61,7 @@ test('whole-recipe totals and servings stay in their own section', () => {
     assert.equal(bindingCount(totalSection, field), 0, `${field} must not appear in the whole-recipe section`);
   }
   assert.match(totalSection, /x-text="t\('totalRecipeValues'\)"/);
+  assert.equal((totalSection.match(/x-model/g) || []).length, 2, 'only servings and total weight');
 });
 
 test('no per-portion block remains', () => {
@@ -79,7 +80,7 @@ test('the form is well-formed: every <label> is closed', () => {
 
 test('the recipe detail labels the nutrition table per 100 g and the totals as whole recipe', () => {
   assert.match(detailNutrition, /t\('per100g'\)/);
-  const totals = between(html, 'selectedRecipe.total_weight != null', 'id="detail-nutrition-heading"');
+  const totals = between(html, 'selectedRecipe.servings != null || selectedRecipe.total_weight != null', 'id="detail-nutrition-heading"');
   assert.match(totals, /x-text="t\('totalRecipeValues'\)"/);
 });
 

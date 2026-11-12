@@ -232,20 +232,20 @@ test('language fallbacks keep nutrition labels translated when switching routes'
   assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
 });
 
-test('total nutrition labels stay distinct from the base values', () => {
+test('whole-recipe section keeps only servings and total weight', () => {
   const app = createRecipeApp();
-  app.language = 'cs';
-
-  assert.equal(app.t('totalCalories'), 'Kalorie celkem (kcal)');
-  assert.equal(app.t('totalProteins'), 'Bílkoviny celkem (g)');
-  assert.equal(app.t('totalFats'), 'Tuky celkem (g)');
-  assert.equal(app.t('totalCarbs'), 'Sacharidy celkem (g)');
-
+  for (const language of ['sk', 'cs']) {
+    app.language = language;
+    for (const key of ['totalCalories', 'totalProteins', 'totalFats', 'totalCarbs']) {
+      assert.equal(app.t(key), key, `${language}.${key} should be removed`);
+    }
+  }
+  for (const field of ['total_calories', 'total_proteins', 'total_fats', 'total_carbs']) {
+    assert.equal(field in app.newRecipe, false, `${field} should not be in the form model`);
+  }
   app.language = 'sk';
-  assert.equal(app.t('totalCalories'), 'Kalórie celkom (kcal)');
-  assert.equal(app.t('totalProteins'), 'Bielkoviny celkom (g)');
-  assert.equal(app.t('totalFats'), 'Tuky celkom (g)');
-  assert.equal(app.t('totalCarbs'), 'Sacharidy celkom (g)');
+  assert.equal(app.t('totalRecipeValues'), 'Celý recept');
+  assert.equal(app.t('totalRecipeNote'), 'Počet porcií a hmotnosť celého hotového jedla.');
 });
 
 test('GI badges use numeric and localized low/medium/high ranges', () => {
@@ -262,9 +262,14 @@ test('the app script URL bypasses stale service worker cache entries', () => {
   const html = fs.readFileSync('index.html', 'utf8');
   const serviceWorker = fs.readFileSync('sw.js', 'utf8');
 
-  assert.match(html, /src="\.\/js\/app\.js\?v=5"/);
-  assert.match(serviceWorker, /const CACHE_NAME = 'ham-mnam-shell-v5'/);
-  assert.match(serviceWorker, /'\.\/js\/app\.js\?v=5'/);
+  // Bump all three together whenever js/app.js changes, or installed apps keep the old script.
+  const htmlVersion = html.match(/src="\.\/js\/app\.js\?v=(\d+)"/);
+  const cacheVersion = serviceWorker.match(/const CACHE_NAME = 'ham-mnam-shell-v(\d+)'/);
+  const precacheVersion = serviceWorker.match(/'\.\/js\/app\.js\?v=(\d+)'/);
+  assert.ok(htmlVersion && cacheVersion && precacheVersion);
+  assert.equal(cacheVersion[1], htmlVersion[1]);
+  assert.equal(precacheVersion[1], htmlVersion[1]);
+  assert.ok(Number(htmlVersion[1]) >= 6);
 });
 
 test('new recipe form renders as a dedicated page rather than a modal', () => {
@@ -300,17 +305,15 @@ test('recipe cards use nutrition tags and keep the full table on the detail page
 test('recipe nutrition details avoid duplicate highlights and hide empty totals', () => {
   const html = fs.readFileSync('index.html', 'utf8');
   const nutritionSection = html.slice(html.indexOf('id="detail-nutrition-heading"'), html.indexOf('id="detail-ingredients-heading"'));
-  const totalNutritionSection = html.slice(html.indexOf('selectedRecipe.total_weight != null'), html.indexOf('id="detail-nutrition-heading"'));
+  const totalNutritionSection = html.slice(html.indexOf('selectedRecipe.servings != null || selectedRecipe.total_weight != null'), html.indexOf('id="detail-nutrition-heading"'));
 
   assert.doesNotMatch(html, /grid grid-cols-3 gap-2 sm:gap-3/);
   assert.match(nutritionSection, /x-text="t\('gi'\)"/);
   assert.match(nutritionSection, /t\('per100g'\)/);
   assert.match(totalNutritionSection, /x-text="t\('totalRecipeValues'\)"/);
-  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_calories != null/);
-  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_proteins != null/);
-  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_fats != null/);
-  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_carbs != null/);
-  assert.match(totalNutritionSection, /selectedRecipe\.total_weight != null/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.servings != null/);
+  assert.match(totalNutritionSection, /selectedRecipe && selectedRecipe\.total_weight != null/);
+  assert.doesNotMatch(html, /total_(calories|proteins|fats|carbs)/);
 });
 
 test('saving a recipe posts normalized ingredients, steps, and notes', async () => {
