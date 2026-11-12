@@ -17,7 +17,7 @@ TYPES=(fix feat ui i18n refactor chore)
 TYPE_HELP="  fix       bug fix
   feat      new feature
   ui        UI / styling
-  i18n      translations (CZ/SK)
+  i18n      translations
   refactor  refactor / cleanup
   chore     docs / config / CI"
 BASE_BRANCH="main"
