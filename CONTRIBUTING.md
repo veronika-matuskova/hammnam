@@ -56,10 +56,10 @@ The UI is currently Slovak only. Czech texts are still kept in `js/app.js`; to b
 
 ## Tests
 
-The GitHub Actions pre-deploy check runs the recipe detail tests before checking the Supabase connection. Run the recipe detail tests locally with Node.js:
+CI (`.github/workflows/ci.yml`) runs every `tests/test-*.js` file except `tests/test-connection.js` and builds the site on each pull request and push to `main`. The live Supabase connection check runs nightly in `supabase-check.yml`. Run the unit tests locally with Node.js:
 
 ```sh
-node --test tests/test-recipe-details.js
+node --test $(ls tests/test-*.js | grep -v test-connection)
 ```
 
 ## Pull requests
@@ -69,5 +69,5 @@ Open PRs with `scripts/create-pr.sh` from your feature branch. It needs the [Git
 ## Deployment (GitHub Pages)
 
 1. Set the Supabase project URL and publishable/anon key in `config.js`. A browser-visible anon/publishable key is expected; protect data with appropriate Supabase Row Level Security policies.
-2. Publish the built `dist/` folder (`npm install && npm run build`), not the repository root. Keep the relative `./` asset paths if deploying under a project subpath.
+2. Pushes to `main` are deployed by `ci.yml`: after the tests and the build pass, the built `dist/` folder is published with `actions/deploy-pages`. In Settings → Pages, Source must be "GitHub Actions"; the repository root is no longer a working site.
 3. Serve the site over HTTPS. The service worker caches the static app shell for repeat visits and offline navigation; Supabase data operations still require a network connection.
