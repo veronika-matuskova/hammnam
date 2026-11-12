@@ -1,15 +1,17 @@
+<!--
+PR title format: <type>: <short description>
+  fix:      bug fix
+  feat:     new feature
+  ui:       UI / styling
+  i18n:     translations (CZ/SK)
+  refactor: refactor / cleanup
+  chore:    docs / config / CI
+Example: fix: Correct SJ calculation for recipes without servings
+-->
+
 ## Summary
 
 <!-- What does this PR change, and why? -->
-
-## Type of change
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] UI / styling
-- [ ] Translations (CZ/SK)
-- [ ] Refactor / cleanup
-- [ ] Docs / config / CI
 
 ## Related issue
 
