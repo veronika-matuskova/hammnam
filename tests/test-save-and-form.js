@@ -1,50 +1,9 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
+const { loadApp } = require('./helpers/app-harness');
 
-function createRecipeApp(fetch, initialHash = '') {
-  let factory;
-  const location = { hash: initialHash, pathname: '/', search: '' };
-  const history = {
-    state: null,
-    pushState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    replaceState(state, title, url) {
-      this.state = state;
-      location.hash = url.includes('#') ? url.slice(url.indexOf('#')) : '';
-    },
-    back() {
-      this.state = null;
-      location.hash = '';
-    }
-  };
-  const context = {
-    Alpine: {
-      data(name, registeredFactory) {
-        assert.equal(name, 'recipeApp');
-        factory = registeredFactory;
-      }
-    },
-    document: {
-      addEventListener(event, callback) {
-        if (event === 'alpine:init') callback();
-      }
-    },
-    fetch,
-    localStorage: { getItem: () => null, setItem: () => {} },
-    window: {
-      SUPABASE_CONFIG: { url: 'https://example.supabase.co', anonKey: 'test-key' },
-      location,
-      history,
-      addEventListener() {}
-    },
-    console
-  };
-  vm.runInNewContext(fs.readFileSync('js/app.js', 'utf8'), context);
-  return Object.assign(factory(), { location, history });
+function createRecipeApp(fetch, hash = '') {
+  return loadApp({ fetch, hash });
 }
 
 function stubFetch(calls, responseFor = (options) => [{ id: 99, ...JSON.parse(options.body) }]) {
