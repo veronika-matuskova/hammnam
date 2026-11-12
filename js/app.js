@@ -79,7 +79,8 @@ const translations = {
     databaseUnavailable: 'Databáze není nakonfigurována. Zkontrolujte config.js.',
     connectionError: 'Zkontrolujte připojení k internetu a nastavení Supabase.',
     saveError: 'Recept se nepodařilo uložit.',
-    favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.'
+    favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
+    invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -161,7 +162,8 @@ const translations = {
     databaseUnavailable: 'Databáza nie je nakonfigurovaná. Skontrolujte config.js.',
     connectionError: 'Skontrolujte pripojenie na internet a nastavenie Supabase.',
     saveError: 'Recept sa nepodarilo uložiť.',
-    favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.'
+    favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
+    invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:'
   }
 };
 
@@ -178,6 +180,20 @@ function getSavedLanguage() {
     console.warn('Could not read the saved language preference:', error);
     return DEFAULT_LANGUAGE;
   }
+}
+
+// Shared parser for numeric form fields. Accepts both "1.5" and "1,5", trims
+// whitespace and treats an empty value as null. Anything else (text, hex,
+// exponents, negative numbers) is reported as invalid instead of being saved.
+function parseDecimal(raw) {
+  if (raw === null || raw === undefined) return { valid: true, value: null };
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) && raw >= 0 ? { valid: true, value: raw } : { valid: false, value: null };
+  }
+  const text = String(raw).trim();
+  if (text === '') return { valid: true, value: null };
+  if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return { valid: false, value: null };
+  return { valid: true, value: Number(text.replace(',', '.')) };
 }
 
 function emptyRecipe() {
@@ -418,11 +434,13 @@ function recipeApp() {
           .filter((ingredient) => ingredient && typeof ingredient === 'object')
           .map((ingredient) => ({
             name: String(ingredient.name || ''),
-            amount: String(ingredient.amount || ''),
+            amount: ingredient.amount === null || ingredient.amount === undefined ? '' : String(ingredient.amount),
             unit: String(ingredient.unit || '')
           }))
         : [];
-      form.steps = Array.isArray(recipe.steps) ? recipe.steps.map((step) => String(step)) : [];
+      form.steps = Array.isArray(recipe.steps)
+        ? recipe.steps.filter((step) => step !== null && step !== undefined).map((step) => String(step))
+        : [];
       if (!this.isLanguageEnabled('cs')) {
         // Older recipes may only have Czech names; prefill the Slovak fields so they can be saved.
         if (!form.title_sk) form.title_sk = form.title_cs || '';
@@ -499,13 +517,21 @@ function recipeApp() {
       this.saving = true;
       this.formError = '';
       const numericFields = ['servings', 'sj', 'carbs', 'fiber', 'calories', 'proteins', 'fats', 'salt', 'glycemic_load', 'total_weight', 'total_calories', 'total_proteins', 'total_fats', 'total_carbs'];
+      const numericValues = {};
+      const invalidFields = [];
+      for (const field of numericFields) {
+        const parsed = parseDecimal(this.newRecipe[field]);
+        if (parsed.valid) numericValues[field] = parsed.value;
+        else invalidFields.push(this.t(field.replace(/_(\w)/g, (_match, letter) => letter.toUpperCase())));
+      }
+      if (invalidFields.length) {
+        this.formError = `${this.t('invalidNumber')} ${invalidFields.join(', ')}`;
+        this.saving = false;
+        return;
+      }
       const payload = {
         ...Object.fromEntries(Object.keys(emptyRecipe()).map((field) => [field, this.newRecipe[field]])),
-        ...Object.fromEntries(numericFields.map((field) => {
-          const raw = this.newRecipe[field];
-          const value = raw === '' || raw === null || raw === undefined ? null : Number(raw);
-          return [field, Number.isFinite(value) ? value : null];
-        })),
+        ...numericValues,
         gi: this.newRecipe.gi.trim(),
         ingredients: this.newRecipe.ingredients
           .filter((ingredient) => ingredient.name.trim() || ingredient.amount.trim() || ingredient.unit.trim())
