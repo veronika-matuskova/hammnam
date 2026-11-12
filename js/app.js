@@ -8,6 +8,8 @@ const translations = {
     heading: 'Recepty na jednom místě',
     intro: 'Ukládejte oblíbená jídla a mějte nutriční hodnoty vždy po ruce.',
     recipeCount: 'receptů',
+    recipeCountOne: 'recept',
+    recipeCountFew: 'recepty',
     search: 'Hledat recept nebo kategorii…',
     category: 'Kategorie',
     allCategories: 'Všechny kategorie',
@@ -19,7 +21,6 @@ const translations = {
     addFavorite: 'Přidat mezi oblíbené',
     removeFavorite: 'Odebrat z oblíbených',
     openRecipe: 'Otevřít recept',
-    backToRecipes: 'Zpět na recepty',
     noIngredients: 'U tohoto receptu zatím nejsou uvedené suroviny.',
     noSteps: 'U tohoto receptu zatím není uvedený postup.',
     noMatches: 'Nic jsme nenašli',
@@ -27,11 +28,11 @@ const translations = {
     emptyTitle: 'Zatím tu nejsou žádné recepty',
     emptyDescription: 'Přidejte svůj první recept a začněte si tvořit kuchařku.',
     formEyebrow: 'Nový přírůstek do kuchařky',
+    editFormEyebrow: 'Úprava receptu v kuchařce',
     addRecipeTitle: 'Přidat recept',
     editRecipeTitle: 'Upravit recept',
     editRecipe: 'Upravit recept',
     updateRecipe: 'Uložit změny',
-    close: 'Zavřít',
     recipeNameCs: 'Název (CZ)',
     recipeNameSk: 'Názov (SK)',
     categoryCs: 'Kategorie (CZ)',
@@ -51,7 +52,7 @@ const translations = {
     extraValues: 'Doplňkové hodnoty',
     perPortion: 'Na 1 porci',
     totalValues: 'Celkové hodnoty za celý recept',
-    totalWeight: 'Celková hmotnost upečeného pokrmu',
+    totalWeight: 'Celková hmotnost hotového pokrmu',
     totalRecipeValues: 'Celkové hodnoty za celý recept',
     totalWeightNote: 'podle toho, kolik vody se odpaří',
     totalCalories: 'Kalorie celkem (kcal)',
@@ -90,6 +91,8 @@ const translations = {
     heading: 'Recepty na jednom mieste',
     intro: 'Ukladajte obľúbené jedlá a majte nutričné hodnoty vždy poruke.',
     recipeCount: 'receptov',
+    recipeCountOne: 'recept',
+    recipeCountFew: 'recepty',
     search: 'Hľadať recept alebo kategóriu…',
     category: 'Kategória',
     allCategories: 'Všetky kategórie',
@@ -101,7 +104,6 @@ const translations = {
     addFavorite: 'Pridať medzi obľúbené',
     removeFavorite: 'Odobrať z obľúbených',
     openRecipe: 'Otvoriť recept',
-    backToRecipes: 'Späť na recepty',
     noIngredients: 'Pri tomto recepte zatiaľ nie sú uvedené suroviny.',
     noSteps: 'Pri tomto recepte zatiaľ nie je uvedený postup.',
     noMatches: 'Nič sme nenašli',
@@ -109,19 +111,19 @@ const translations = {
     emptyTitle: 'Zatiaľ tu nie sú žiadne recepty',
     emptyDescription: 'Pridajte svoj prvý recept a začnite si tvoriť kuchárku.',
     formEyebrow: 'Nový prírastok do kuchárky',
+    editFormEyebrow: 'Úprava receptu v kuchárke',
     addRecipeTitle: 'Pridať recept',
     editRecipeTitle: 'Upraviť recept',
     editRecipe: 'Upraviť recept',
     updateRecipe: 'Uložiť zmeny',
-    close: 'Zavrieť',
-    recipeNameCs: 'Název (CZ)',
+    recipeNameCs: 'Názov (CZ)',
     recipeNameSk: 'Názov (SK)',
-    categoryCs: 'Kategorie (CZ)',
+    categoryCs: 'Kategória (CZ)',
     categorySk: 'Kategória (SK)',
     sj: 'Sacharidové jednotky (SJ)',
     carbs: 'Sacharidy (g)',
     fiber: 'Vláknina (g)',
-    calories: 'Kalorie (kcal)',
+    calories: 'Kalórie (kcal)',
     proteins: 'Bielkoviny (g)',
     fats: 'Tuky (g)',
     salt: 'Soľ (g)',
@@ -130,10 +132,10 @@ const translations = {
     nutritionTable: 'Nutričná tabuľka',
     nutritionValues: 'Nutričné hodnoty',
     nutritionTable100g: 'Kalorická tabuľka (na 100 g)',
-    extraValues: 'Doplňkové hodnoty',
+    extraValues: 'Doplnkové hodnoty',
     perPortion: 'Na 1 porciu',
     totalValues: 'Celkové hodnoty za celý recept',
-    totalWeight: 'Celková hmotnosť upečeného pokrmu',
+    totalWeight: 'Celková hmotnosť hotového jedla',
     totalRecipeValues: 'Celkové hodnoty za celý recept',
     totalWeightNote: 'podľa toho, koľko vody sa odparí',
     totalCalories: 'Kalórie celkom (kcal)',
@@ -159,7 +161,7 @@ const translations = {
     saveRecipe: 'Uložiť recept',
     footer: 'Recepty prehľadne.',
     databaseUnavailable: 'Databáza nie je nakonfigurovaná. Skontrolujte config.js.',
-    connectionError: 'Skontrolujte pripojenie na internet a nastavenie Supabase.',
+    connectionError: 'Skontrolujte pripojenie k internetu a nastavenie Supabase.',
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.'
   }
@@ -178,6 +180,13 @@ function getSavedLanguage() {
     console.warn('Could not read the saved language preference:', error);
     return DEFAULT_LANGUAGE;
   }
+}
+
+const RECIPE_COUNT_KEYS = { one: 'recipeCountOne', few: 'recipeCountFew' };
+
+function recipeCountKey(count, language) {
+  const category = new Intl.PluralRules(language).select(count);
+  return RECIPE_COUNT_KEYS[category] || 'recipeCount';
 }
 
 function emptyRecipe() {
@@ -251,6 +260,10 @@ function recipeApp() {
     t(key) {
       const locale = translations[this.language] || translations[DEFAULT_LANGUAGE];
       return locale[key] || translations[DEFAULT_LANGUAGE][key] || translations.cs[key] || key;
+    },
+
+    recipeCountLabel(count) {
+      return `${count} ${this.t(recipeCountKey(count, this.language))}`;
     },
 
     toggleLanguage() {

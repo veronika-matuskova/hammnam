@@ -219,7 +219,7 @@ test('language fallbacks keep nutrition labels translated when switching routes'
   app.language = 'sk';
 
   assert.equal(app.t('nutritionTable'), 'Nutričná tabuľka');
-  assert.equal(app.t('totalWeight'), 'Celková hmotnosť upečeného pokrmu');
+  assert.equal(app.t('totalWeight'), 'Celková hmotnosť hotového jedla');
 
   app.showForm = true;
   const recipe = { id: 1, title_cs: 'Polévka', title_sk: 'Polievka', servings: 2 };

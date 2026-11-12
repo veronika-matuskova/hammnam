@@ -57,8 +57,7 @@
             <p class="mt-2 max-w-2xl text-slate-600" x-text="t('intro')"></p>
           </div>
           <p class="text-sm text-slate-500" aria-live="polite">
-            <span x-text="filteredRecipes.length"></span>
-            <span x-text="t('recipeCount')"></span>
+            <span x-text="recipeCountLabel(filteredRecipes.length)"></span>
           </p>
         </div>
       </section>
@@ -306,7 +305,7 @@
         </button>
         <div class="mb-6">
           <div>
-            <p class="text-sm font-medium text-slate-500" x-text="t('formEyebrow')"></p>
+            <p class="text-sm font-medium text-slate-500" x-text="t(editingRecipeId !== null ? 'editFormEyebrow' : 'formEyebrow')"></p>
             <h1 id="form-title" class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" x-text="t(editingRecipeId !== null ? 'editRecipeTitle' : 'addRecipeTitle')"></h1>
           </div>
         </div>
