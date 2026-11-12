@@ -105,7 +105,8 @@ test('corrected Slovak copy', () => {
   const app = createRecipeApp();
   app.language = 'sk';
   assert.equal(app.t('calories'), 'Kalórie (kcal)');
-  assert.equal(app.t('extraValues'), 'Doplnkové hodnoty');
+  assert.equal(app.t('nutritionPer100g'), 'Nutričné hodnoty na 100 g');
+  assert.equal(app.t('totalRecipeValues'), 'Celý recept');
   assert.equal(app.t('totalWeight'), 'Celková hmotnosť hotového jedla');
   assert.equal(app.t('close'), 'Zavrieť');
 });
