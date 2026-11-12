@@ -26,7 +26,7 @@ Example: fix: Correct SJ calculation for recipes without servings
 - [ ] Recipe detail tests pass locally: `node --test tests/test-recipe-details.js`
 - [ ] Tested in the browser (including a mobile-width viewport)
 - [ ] New or changed UI text is added in Slovak in `js/app.js` (and in Czech, so the language switch can be re-enabled later)
-- [ ] If app-shell files changed (`index.html`, `js/`, `icons/`, `manifest.json`), `CACHE_NAME` in `sw.js` is bumped
+- [ ] `npm run build` succeeds (asset hashes and the service worker cache name are generated; no manual bumps)
 - [ ] Nutrition values (SJ, carbohydrates, glycemic index, etc.) are calculated and displayed correctly
 - [ ] If the Supabase schema or payloads changed, the database and Row Level Security policies are updated to match
 - [ ] No secrets added — `config.js` holds only the public URL and publishable/anon key
