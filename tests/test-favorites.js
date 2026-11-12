@@ -91,7 +91,8 @@ test('an HTTP error rolls the favourite back and shows its own message', async (
   await app.toggleFavorite(recipe);
 
   assert.equal(recipe.favorite, true);
-  assert.match(app.favoriteErrorMessage, /^Obľúbený recept sa nepodarilo aktualizovať\. \(Supabase HTTP 500/);
+  assert.equal(app.favoriteErrorMessage, 'Obľúbený recept sa nepodarilo aktualizovať. Služba je dočasne nedostupná. Skúste to o chvíľu znova.');
+  assert.doesNotMatch(app.favoriteErrorMessage, /Supabase|HTTP|boom/);
   assert.equal(app.isFavoriteSaving(recipe), false);
 });
 

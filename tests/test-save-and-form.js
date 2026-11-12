@@ -89,7 +89,7 @@ test('#7: editing a recipe with NULL text fields saves and resets saving', async
   const payload = JSON.parse(calls[0].options.body);
   assert.equal(payload.notes, '');
   assert.equal(payload.photo, '');
-  assert.equal(payload.gi, '');
+  assert.equal(payload.gi, null);
   assert.equal(payload.title_sk, 'Koláč');
   assert.equal(payload.category_sk, 'Dezert');
   assert.deepEqual(payload.ingredients, [
@@ -125,7 +125,7 @@ test('#7: null text fields set directly on the form are normalised in the payloa
   assert.equal(payload.title_cs, '');
   assert.equal(payload.category_cs, '');
   assert.equal(payload.photo, '');
-  assert.equal(payload.gi, '');
+  assert.equal(payload.gi, null);
   assert.equal(payload.notes, '');
   assert.deepEqual(payload.ingredients, [{ name: 'Mrkva', amount: '2', unit: '' }]);
   assert.deepEqual(payload.steps, ['Uvariť.']);
@@ -140,7 +140,8 @@ test('#7: a failure while building the payload shows an error and resets saving'
   await app.addRecipe();
 
   assert.equal(app.saving, false);
-  assert.match(app.formError, /boom/);
+  assert.equal(app.formError, 'Recept sa nepodarilo uložiť. Nastala neočakávaná chyba. Skúste to znova.');
+  assert.doesNotMatch(app.formError, /boom/);
   assert.equal(calls.length, 0);
 });
 

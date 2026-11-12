@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=6"></script>
+    <script defer src="./js/app.js?v=7"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -141,7 +141,7 @@
                     class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
                     :class="giClass(recipe.gi)"
                   >
-                    <span>GI</span><span x-text="displayValue(recipe.gi)"></span>
+                    <span>GI</span><span x-text="displayGi(recipe.gi)"></span>
                   </span>
                 </div>
               </div>
@@ -220,7 +220,7 @@
               <h3 id="detail-nutrition-heading" class="text-lg font-semibold text-slate-900"><span x-text="t('nutritionTable')"></span> <span class="text-sm font-medium text-slate-500" x-text="`(${t('per100g')})`"></span></h3>
             </div>
             <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/50">
-              <table class="min-w-[40rem] border-collapse text-left text-sm">
+              <table class="min-w-[34rem] border-collapse text-left text-sm">
                 <thead class="bg-slate-100 text-slate-700">
                   <tr>
                     <th class="px-3 py-2 font-semibold" x-text="t('calories')"></th>
@@ -229,9 +229,6 @@
                     <th class="px-3 py-2 font-semibold" x-text="t('fats')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('fiber')"></th>
                     <th class="px-3 py-2 font-semibold" x-text="t('salt')"></th>
-                    <th class="px-3 py-2 font-semibold" x-text="t('sj')"></th>
-                    <th class="px-3 py-2 font-semibold" x-text="t('gi')"></th>
-                    <th class="px-3 py-2 font-semibold" x-text="t('glycemicLoad')"></th>
                   </tr>
                 </thead>
                 <tbody class="bg-white text-slate-700">
@@ -242,12 +239,29 @@
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fats, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.fiber, 'g') : '—'"></td>
                     <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayMetric(selectedRecipe.salt, 'g') : '—'"></td>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></td>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.gi) : '—'"></td>
-                    <td class="border-t border-slate-200 px-3 py-3" x-text="selectedRecipe ? displayValue(selectedRecipe.glycemic_load) : '—'"></td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section class="mb-8" aria-labelledby="detail-glycemic-heading">
+            <h3 id="detail-glycemic-heading" class="mb-3 text-lg font-semibold text-slate-900" x-text="t('glycemicValues')"></h3>
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
+              <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                <p class="text-[11px] font-medium leading-tight text-slate-500 sm:text-xs" x-text="t('sj')"></p>
+                <p class="mt-1 text-xl font-bold text-slate-900 sm:text-2xl" x-text="selectedRecipe ? displayValue(selectedRecipe.sj) : '—'"></p>
+                <p class="mt-1 text-[11px] text-slate-500 sm:text-xs" x-text="t('per100g')"></p>
+              </div>
+              <div class="rounded-xl border border-transparent p-3 sm:p-4" :class="giClass(selectedRecipe && selectedRecipe.gi)">
+                <p class="text-[11px] font-medium leading-tight opacity-80 sm:text-xs" x-text="t('gi')"></p>
+                <p class="mt-1 text-xl font-bold sm:text-2xl" x-text="selectedRecipe ? displayGi(selectedRecipe.gi) : '—'"></p>
+                <p x-show="selectedRecipe && giLabel(selectedRecipe.gi)" class="mt-1 text-[11px] font-semibold sm:text-xs" x-text="selectedRecipe ? giLabel(selectedRecipe.gi) : ''"></p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                <p class="text-[11px] font-medium leading-tight text-slate-500 sm:text-xs" x-text="t('glycemicLoad')"></p>
+                <p class="mt-1 text-xl font-bold text-slate-900 sm:text-2xl" x-text="selectedRecipe ? displayValue(selectedRecipe.glycemic_load) : '—'"></p>
+              </div>
             </div>
           </section>
 
@@ -305,19 +319,19 @@
           <div class="grid gap-4 sm:grid-cols-2">
             <label x-show="isLanguageEnabled('cs')" class="block text-sm font-medium text-slate-700">
               <span x-text="t('recipeNameCs')"></span>
-              <input type="text" x-model.trim="newRecipe.title_cs" :required="isLanguageEnabled('cs')" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.title_cs" :required="isLanguageEnabled('cs') && !newRecipe.title_sk" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
             <label class="block text-sm font-medium text-slate-700">
               <span x-text="t('recipeNameSk')"></span>
-              <input type="text" x-model.trim="newRecipe.title_sk" :required="!isLanguageEnabled('cs')" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.title_sk" :required="!newRecipe.title_cs" maxlength="160" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
             <label x-show="isLanguageEnabled('cs')" class="block text-sm font-medium text-slate-700">
               <span x-text="t('categoryCs')"></span>
-              <input type="text" x-model.trim="newRecipe.category_cs" :required="isLanguageEnabled('cs')" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.category_cs" :required="isLanguageEnabled('cs') && !newRecipe.category_sk" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
             <label class="block text-sm font-medium text-slate-700">
               <span x-text="t('categorySk')"></span>
-              <input type="text" x-model.trim="newRecipe.category_sk" :required="!isLanguageEnabled('cs')" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              <input type="text" x-model.trim="newRecipe.category_sk" :required="!newRecipe.category_cs" maxlength="80" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             </label>
           </div>
           <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="nutrition-per-100g-heading" aria-describedby="nutrition-per-100g-note">
@@ -331,10 +345,6 @@
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('carbs')"></span>
                 <input type="text" inputmode="decimal" x-model.trim="newRecipe.carbs" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-              </label>
-              <label class="block text-sm font-medium text-slate-700">
-                <span x-text="t('sj')"></span>
-                <input type="text" inputmode="decimal" x-model.trim="newRecipe.sj" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
               </label>
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('proteins')"></span>
@@ -352,9 +362,31 @@
                 <span x-text="t('salt')"></span>
                 <input type="text" inputmode="decimal" x-model.trim="newRecipe.salt" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
               </label>
+            </div>
+          </section>
+          <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" aria-labelledby="nutrition-glycemic-heading" aria-describedby="nutrition-glycemic-note">
+            <h3 id="nutrition-glycemic-heading" class="text-sm font-semibold text-slate-800" x-text="t('glycemicValues')"></h3>
+            <p id="nutrition-glycemic-note" class="mb-3 mt-1 text-xs text-slate-500" x-text="t('glycemicValuesNote')"></p>
+            <div class="grid gap-4 sm:grid-cols-3">
+              <label class="block text-sm font-medium text-slate-700">
+                <span x-text="t('sj')"></span> <span class="text-xs font-normal text-slate-500" x-text="`(${t('per100g')})`"></span>
+                <input type="text" inputmode="decimal" x-model.trim="newRecipe.sj" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('gi')"></span>
-                <input type="text" x-model.trim="newRecipe.gi" maxlength="40" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  x-model.trim="newRecipe.gi"
+                  maxlength="40"
+                  placeholder="0–100"
+                  aria-describedby="gi-hint"
+                  :aria-invalid="isGiInvalid(newRecipe.gi)"
+                  class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  :class="isGiInvalid(newRecipe.gi) ? 'border-red-300' : ''"
+                >
+                <span id="gi-hint" class="mt-1 block text-xs font-normal" :class="isGiInvalid(newRecipe.gi) ? 'text-red-700' : 'text-slate-500'" x-text="isGiInvalid(newRecipe.gi) ? t('giInvalid') : t('giHint')"></span>
+                <span x-show="giLabel(newRecipe.gi)" class="mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold" :class="giClass(newRecipe.gi)" x-text="giLabel(newRecipe.gi)"></span>
               </label>
               <label class="block text-sm font-medium text-slate-700">
                 <span x-text="t('glycemicLoad')"></span>
