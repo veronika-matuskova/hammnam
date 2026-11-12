@@ -231,6 +231,7 @@ function recipeApp() {
     search: '',
     selectedCategory: '',
     favoritesOnly: false,
+    recipesLoaded: false,
     newRecipe: emptyRecipe(),
 
     get filteredRecipes() {
@@ -375,6 +376,10 @@ function recipeApp() {
         ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === editRoute[1]) || null
         : null;
       this.showForm = hash === '#new-recipe' || Boolean(recipeToEdit);
+      if (this.recipesLoaded && ((route && !this.selectedRecipe) || (editRoute && !recipeToEdit))) {
+        // Unknown recipe id: drop the stale hash so the URL matches the list that is shown.
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
       if (recipeToEdit) {
         if (!wasFormOpen || String(this.editingRecipeId) !== String(recipeToEdit.id)) {
           this.loadRecipeForEditing(recipeToEdit);
@@ -391,6 +396,7 @@ function recipeApp() {
         const data = await this.request('?select=*&order=created_at.desc');
         if (!Array.isArray(data)) throw new Error('Supabase returned an unexpected recipes response.');
         this.recipes = data;
+        this.recipesLoaded = true;
         this.syncRoute();
       } catch (error) {
         console.error('Could not load recipes:', error);
@@ -489,8 +495,9 @@ function recipeApp() {
         if (window.history.state && window.history.state.hamMnamEditRecipe) {
           window.history.back();
         } else if (recipe) {
+          // Deep-linked edit: there is no in-app entry to go back to, so the detail's Back must go to the list.
           window.history.replaceState(
-            { ...(window.history.state || {}), hamMnamRecipeDetail: true },
+            { ...(window.history.state || {}), hamMnamEditRecipe: false, hamMnamRecipeDetail: false },
             '',
             `${window.location.pathname}${window.location.search}#recipe/${encodeURIComponent(String(recipe.id))}`
           );
@@ -548,11 +555,16 @@ function recipeApp() {
           this.newRecipe = emptyRecipe();
           this.editingRecipeId = null;
           this.showForm = false;
-          window.history.replaceState(
-            { ...(window.history.state || {}), hamMnamRecipeDetail: true },
-            '',
-            `${window.location.pathname}${window.location.search}#recipe/${encodeURIComponent(String(updatedRecipe.id))}`
-          );
+          if (window.history.state && window.history.state.hamMnamEditRecipe) {
+            // Return to the detail entry the edit was opened from, so its Back still leads to the list.
+            window.history.back();
+          } else {
+            window.history.replaceState(
+              { ...(window.history.state || {}), hamMnamEditRecipe: false, hamMnamRecipeDetail: false },
+              '',
+              `${window.location.pathname}${window.location.search}#recipe/${encodeURIComponent(String(updatedRecipe.id))}`
+            );
+          }
         } else {
           const created = await this.request('', {
             method: 'POST',

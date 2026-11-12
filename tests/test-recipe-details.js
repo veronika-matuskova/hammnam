@@ -211,7 +211,9 @@ test('editing a recipe loads its values and patches the existing row', async () 
   assert.equal(app.recipes[0].title_cs, 'Upravený koláč');
   assert.equal(app.selectedRecipe, app.recipes[0]);
   assert.equal(app.showForm, false);
-  assert.equal(app.location.hash, '#recipe/42');
+  // Saving goes back to the detail entry; this stub's back() only clears the hash.
+  // The real history stack is covered in tests/test-navigation.js.
+  assert.notEqual(app.location.hash, '#edit-recipe/42');
 });
 
 test('language fallbacks keep nutrition labels translated when switching routes', () => {
