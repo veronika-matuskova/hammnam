@@ -341,27 +341,27 @@
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('calories')"></span>
-                    <input type="number" x-model.number="newRecipe.calories" min="0" step="1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.calories" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('carbs')"></span>
-                    <input type="number" x-model.number="newRecipe.carbs" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.carbs" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('proteins')"></span>
-                    <input type="number" x-model.number="newRecipe.proteins" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.proteins" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('fats')"></span>
-                    <input type="number" x-model.number="newRecipe.fats" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.fats" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('fiber')"></span>
-                    <input type="number" x-model.number="newRecipe.fiber" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.fiber" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('salt')"></span>
-                    <input type="number" x-model.number="newRecipe.salt" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.salt" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                 </div>
               </div>
@@ -370,11 +370,11 @@
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('servings')"></span>
-                    <input type="number" x-model.number="newRecipe.servings" min="1" step="1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.servings" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('sj')"></span>
-                    <input type="number" x-model.number="newRecipe.sj" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.sj" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('gi')"></span>
@@ -382,7 +382,7 @@
                   </label>
                   <label class="block text-sm font-medium text-slate-700">
                     <span x-text="t('glycemicLoad')"></span>
-                    <input type="number" x-model.number="newRecipe.glycemic_load" min="0" step="0.1" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.glycemic_load" class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                 </div>
               </div>
@@ -466,23 +466,23 @@
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('fiber')"></span>
-                    <input type="number" x-model.number="newRecipe.fiber" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.fiber" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('calories')"></span>
-                    <input type="number" x-model.number="newRecipe.calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.calories" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('proteins')"></span>
-                    <input type="number" x-model.number="newRecipe.proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.proteins" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('fats')"></span>
-                    <input type="number" x-model.number="newRecipe.fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.fats" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('salt')"></span>
-                    <input type="number" x-model.number="newRecipe.salt" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.salt" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                 </div>
               </div>
@@ -491,23 +491,23 @@
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('totalWeight')"></span>
-                    <input type="number" x-model.number="newRecipe.total_weight" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_weight" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('totalCalories')"></span>
-                    <input type="number" x-model.number="newRecipe.total_calories" min="0" step="1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_calories" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('totalProteins')"></span>
-                    <input type="number" x-model.number="newRecipe.total_proteins" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_proteins" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('totalFats')"></span>
-                    <input type="number" x-model.number="newRecipe.total_fats" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_fats" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                   <label class="block text-xs font-medium text-slate-600">
                     <span x-text="t('totalCarbs')"></span>
-                    <input type="number" x-model.number="newRecipe.total_carbs" min="0" step="0.1" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                    <input type="text" inputmode="decimal" x-model.trim="newRecipe.total_carbs" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
                   </label>
                 </div>
               </div>
