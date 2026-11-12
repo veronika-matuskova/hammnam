@@ -19,7 +19,7 @@ The home screen lists all recipes, newest first. Each card shows the category, n
 
 - **Search** – type in the search box to find recipes by name or category.
 - **Category** – pick a category to see only those recipes.
-- **Obľúbené (Favorites)** – shows only your favorite recipes. Tap the star on a card to add a recipe to favorites or remove it.
+- **Obľúbené (Favorites)** – shows only your favorite recipes. When signed in, tap the star on a card to add a recipe to favorites or remove it.
 
 ### Glycemic index colors
 
@@ -44,6 +44,16 @@ Tap a recipe to open it. The detail shows:
 
 Use **Späť na recepty** to go back to the list, or **Upraviť recept** to edit the recipe. Each recipe has its own link, so you can bookmark it or send it to someone.
 
+## Sign in
+
+Everyone can browse recipes. Adding, editing and starring recipes is only for the family:
+
+1. Tap **Prihlásiť sa**, enter your e-mail and tap **Poslať prihlasovací odkaz**.
+2. Open the link from the e-mail on the same device. You are signed in and the edit buttons appear.
+3. Tap **Odhlásiť sa** to sign out.
+
+Your e-mail must first be added to the family list by the app owner; otherwise no link is sent.
+
 ## Add or edit a recipe
 
 Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detail to change it. Only the name and the category are required; everything else is optional.
@@ -62,6 +72,8 @@ Tap **Uložiť recept** (or **Uložiť zmeny** when editing) to save, or **Zruš
 
 - **"Recepty sa nepodarilo načítať."** – check your internet connection and tap **Skúsiť znova**.
 - **"Recept sa nepodarilo uložiť."** – your changes are still in the form; check the connection and save again.
+- **"Prihlasovací odkaz sa nepodarilo odoslať."** – your e-mail is not on the family list yet, or too many links were requested; wait a minute and try again.
+- **"Prihlásenie vypršalo."** – sign in again with a new link.
 - **The app looks out of date** – close it and open it again (sometimes twice); the new version loads in the background.
 
 ---

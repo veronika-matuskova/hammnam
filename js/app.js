@@ -2,6 +2,20 @@ const translations = {
   cs: {
     tagline: 'Vaše recepty, přehledně',
     switchLanguage: 'Přepnout jazyk na slovenštinu',
+    signIn: 'Přihlásit se',
+    signOut: 'Odhlásit se',
+    signInTitle: 'Přihlášení pro rodinu',
+    signInIntro: 'Recepty může přidávat a upravovat jen rodina. Zadejte svůj e-mail a pošleme vám přihlašovací odkaz.',
+    email: 'E-mail',
+    sendMagicLink: 'Poslat přihlašovací odkaz',
+    sendingMagicLink: 'Odesílám…',
+    magicLinkSent: 'Hotovo! Zkontrolujte e-mail a otevřete přihlašovací odkaz na tomto zařízení.',
+    invalidEmail: 'Zadejte platnou e-mailovou adresu.',
+    signInError: 'Přihlašovací odkaz se nepodařilo odeslat.',
+    signedInAs: 'Přihlášen(a) jako',
+    signInToEdit: 'Pro přidávání a úpravu receptů se přihlaste.',
+    notFamilyMember: 'Tento účet nemá oprávnění upravovat recepty.',
+    sessionExpired: 'Přihlášení vypršelo. Přihlaste se prosím znovu.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Zpět na recepty',
     eyebrow: 'Vaše kuchařka',
@@ -83,6 +97,20 @@ const translations = {
   sk: {
     tagline: 'Vaše recepty, prehľadne',
     switchLanguage: 'Prepnúť jazyk na češtinu',
+    signIn: 'Prihlásiť sa',
+    signOut: 'Odhlásiť sa',
+    signInTitle: 'Prihlásenie pre rodinu',
+    signInIntro: 'Recepty môže pridávať a upravovať len rodina. Zadajte svoj e-mail a pošleme vám prihlasovací odkaz.',
+    email: 'E-mail',
+    sendMagicLink: 'Poslať prihlasovací odkaz',
+    sendingMagicLink: 'Odosielam…',
+    magicLinkSent: 'Hotovo! Skontrolujte e-mail a otvorte prihlasovací odkaz na tomto zariadení.',
+    invalidEmail: 'Zadajte platnú e-mailovú adresu.',
+    signInError: 'Prihlasovací odkaz sa nepodarilo odoslať.',
+    signedInAs: 'Prihlásený/á ako',
+    signInToEdit: 'Na pridávanie a úpravu receptov sa prihláste.',
+    notFamilyMember: 'Tento účet nemá oprávnenie upravovať recepty.',
+    sessionExpired: 'Prihlásenie vypršalo. Prihláste sa, prosím, znova.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Späť na recepty',
     eyebrow: 'Vaša kuchárka',
@@ -230,7 +258,82 @@ function textValue(value) {
 
 const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'gi', 'notes'];
 
+// --- Supabase Auth (magic link) over plain REST, without supabase-js. ---
+const AUTH_STORAGE_KEY = 'hamMnam-session';
+// Refresh the access token when it has less than this many seconds left.
+const SESSION_REFRESH_MARGIN_SECONDS = 60;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function supabaseProject() {
+  const config = typeof window !== 'undefined' ? window.SUPABASE_CONFIG : null;
+  if (!config || typeof config.url !== 'string' || typeof config.anonKey !== 'string'
+    || !config.url.trim() || !config.anonKey.trim()) {
+    return null;
+  }
+  const url = config.url.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+  return { url, key: config.anonKey.trim() };
+}
+
+// Builds a session from a GoTrue token response or magic-link redirect parameters.
+function sessionFromTokenResponse(data, nowMs, fallbackUser = null) {
+  if (!data || typeof data.access_token !== 'string' || !data.access_token) return null;
+  const expiresIn = Number(data.expires_in);
+  const expiresAt = Number(data.expires_at) > 0
+    ? Number(data.expires_at)
+    : Math.floor(nowMs / 1000) + (expiresIn > 0 ? expiresIn : 3600);
+  const user = data.user && typeof data.user === 'object'
+    ? { id: textValue(data.user.id), email: textValue(data.user.email) }
+    : fallbackUser;
+  return {
+    access_token: data.access_token,
+    refresh_token: typeof data.refresh_token === 'string' ? data.refresh_token : '',
+    expires_at: expiresAt,
+    user: user || null
+  };
+}
+
+function sessionExpiresSoon(session, nowMs) {
+  return !session || !(Number(session.expires_at) * 1000 - nowMs > SESSION_REFRESH_MARGIN_SECONDS * 1000);
+}
+
+// Parses "#access_token=…&refresh_token=…" (or "#error=…") from a magic-link redirect.
+function parseAuthRedirect(hash) {
+  const text = String(hash || '').replace(/^#/, '');
+  if (!/(?:^|&)(?:access_token|error)=/.test(text)) return null;
+  const params = {};
+  for (const part of text.split('&')) {
+    const index = part.indexOf('=');
+    if (index <= 0) continue;
+    try {
+      params[decodeURIComponent(part.slice(0, index))] = decodeURIComponent(part.slice(index + 1).replace(/\+/g, ' '));
+    } catch (error) {
+      // Ignore a malformed parameter instead of failing the whole redirect.
+    }
+  }
+  return params;
+}
+
+function loadStoredSession() {
+  try {
+    const session = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY));
+    return session && typeof session.access_token === 'string' && session.access_token ? session : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function storeSession(session) {
+  try {
+    if (session) localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    else if (typeof localStorage.removeItem === 'function') localStorage.removeItem(AUTH_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Could not store the sign-in session:', error);
+  }
+}
+
 function recipeApp() {
+  // Kept outside the reactive state: one token refresh at a time.
+  let pendingRefresh = null;
   return {
     language: getSavedLanguage(),
     recipes: [],
@@ -248,6 +351,28 @@ function recipeApp() {
     favoritesOnly: false,
     recipesLoaded: false,
     newRecipe: emptyRecipe(),
+    session: loadStoredSession(),
+    // true/false once the allow-list check has answered; null while unknown.
+    familyMember: null,
+    showSignIn: false,
+    signInEmail: '',
+    authSending: false,
+    magicLinkSent: false,
+    authError: '',
+
+    get isSignedIn() {
+      return Boolean(this.session && this.session.access_token);
+    },
+
+    // Write controls are shown to signed-in users unless the allow-list says no.
+    // Row Level Security in Supabase is what actually blocks other writes.
+    get canEdit() {
+      return this.isSignedIn && this.familyMember !== false;
+    },
+
+    get signedInEmail() {
+      return (this.session && this.session.user && this.session.user.email) || '';
+    },
 
     get filteredRecipes() {
       const query = this.search.trim().toLocaleLowerCase(this.language);
@@ -343,27 +468,36 @@ function recipeApp() {
       return 'bg-violet-50 text-violet-800';
     },
 
-    apiBaseUrl() {
-      const config = window.SUPABASE_CONFIG;
-      if (!config || typeof config.url !== 'string' || typeof config.anonKey !== 'string'
-        || !config.url.trim() || !config.anonKey.trim()) {
-        throw new Error(this.t('databaseUnavailable'));
-      }
-      const url = config.url.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
-      return { url: `${url}/rest/v1/recipes`, key: config.anonKey.trim() };
+    projectConfig() {
+      const project = supabaseProject();
+      if (!project) throw new Error(this.t('databaseUnavailable'));
+      return project;
     },
 
+    apiBaseUrl() {
+      const { url, key } = this.projectConfig();
+      return { url: `${url}/rest/v1/recipes`, key };
+    },
+
+    // Reads use the publishable key; writes send the signed-in user's access token.
     async request(path, options = {}) {
       const { url, key } = this.apiBaseUrl();
-      const response = await fetch(`${url}${path}`, {
+      const method = String(options.method || 'GET').toUpperCase();
+      const token = method === 'GET' || method === 'HEAD' ? null : await this.accessToken();
+      const send = (bearer) => fetch(`${url}${path}`, {
         ...options,
         headers: {
           apikey: key,
-          Authorization: `Bearer ${key}`,
+          Authorization: `Bearer ${bearer || key}`,
           ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           ...options.headers
         }
       });
+      let response = await send(token);
+      if (response.status === 401 && token) {
+        // The token was rejected (e.g. clock skew or revoked): refresh once and retry.
+        response = await send(await this.accessToken({ forceRefresh: true }));
+      }
       if (!response.ok) {
         const details = (await response.text()).slice(0, 240);
         throw new Error(`Supabase HTTP ${response.status}${details ? `: ${details}` : ''}`);
@@ -379,8 +513,173 @@ function recipeApp() {
         });
       }
       window.addEventListener('popstate', () => this.syncRoute());
+      this.consumeAuthRedirect();
       this.syncRoute();
-      await this.fetchRecipes();
+      await Promise.all([this.fetchRecipes(), this.loadAuthState()]);
+    },
+
+    authUrl() {
+      const { url, key } = this.projectConfig();
+      return { url: `${url}/auth/v1`, key };
+    },
+
+    setSession(session) {
+      this.session = session;
+      if (!session) this.familyMember = null;
+      storeSession(session);
+    },
+
+    // A magic link lands on the app with the tokens (or an error) in the URL hash.
+    consumeAuthRedirect() {
+      const params = parseAuthRedirect(window.location.hash);
+      if (!params) return;
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      if (params.error || params.error_description) {
+        this.authError = `${this.t('signInError')} (${params.error_description || params.error})`;
+        this.showSignIn = true;
+        return;
+      }
+      const session = sessionFromTokenResponse(params, Date.now());
+      if (session) {
+        this.setSession(session);
+        this.showSignIn = false;
+        this.authError = '';
+      }
+    },
+
+    // Refreshes an expiring token, fills in the user and asks whether they are on the allow-list.
+    async loadAuthState() {
+      if (!this.session) return;
+      try {
+        const token = await this.accessToken();
+        if (!token) return;
+        const { url, key } = this.authUrl();
+        if (!this.signedInEmail) {
+          const response = await fetch(`${url}/user`, { headers: { apikey: key, Authorization: `Bearer ${token}` } });
+          if (response.ok) {
+            const user = await response.json();
+            if (this.session && user && typeof user === 'object') {
+              this.setSession({ ...this.session, user: { id: textValue(user.id), email: textValue(user.email) } });
+            }
+          }
+        }
+        await this.checkFamilyMember();
+      } catch (error) {
+        console.warn('Could not load the sign-in state:', error);
+      }
+    },
+
+    async checkFamilyMember() {
+      const token = this.session && this.session.access_token;
+      if (!token) return;
+      const { url, key } = this.projectConfig();
+      try {
+        const response = await fetch(`${url}/rest/v1/rpc/is_family_member`, {
+          method: 'POST',
+          headers: { apikey: key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        // If the function is missing (migration not applied yet) keep the state unknown.
+        this.familyMember = response.ok ? (await response.json()) === true : null;
+      } catch (error) {
+        this.familyMember = null;
+      }
+    },
+
+    // Returns a valid access token (refreshing it if needed), or null when signed out.
+    async accessToken({ forceRefresh = false } = {}) {
+      if (!this.session) return null;
+      if (!forceRefresh && !sessionExpiresSoon(this.session, Date.now())) return this.session.access_token;
+      if (!pendingRefresh) {
+        pendingRefresh = this.refreshSession().finally(() => { pendingRefresh = null; });
+      }
+      await pendingRefresh;
+      return this.session ? this.session.access_token : null;
+    },
+
+    async refreshSession() {
+      const current = this.session;
+      if (!current) return;
+      const { url, key } = this.authUrl();
+      let response = null;
+      if (current.refresh_token) {
+        response = await fetch(`${url}/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { apikey: key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: current.refresh_token })
+        });
+      }
+      if (response && response.status >= 500) {
+        // A server problem is temporary: keep the session and let the caller report the error.
+        throw new Error(`Supabase Auth HTTP ${response.status}`);
+      }
+      const session = response && response.ok
+        ? sessionFromTokenResponse(await response.json(), Date.now(), current.user)
+        : null;
+      if (!session) {
+        // Network errors throw above and keep the session; a rejected refresh token ends it.
+        this.setSession(null);
+        this.authError = this.t('sessionExpired');
+        this.showSignIn = true;
+        throw new Error(this.t('sessionExpired'));
+      }
+      this.setSession(session);
+    },
+
+    openSignIn() {
+      this.showSignIn = true;
+      this.magicLinkSent = false;
+      this.authError = '';
+    },
+
+    async requestMagicLink() {
+      if (this.authSending) return;
+      const email = textValue(this.signInEmail).toLowerCase();
+      this.authError = '';
+      this.magicLinkSent = false;
+      if (!EMAIL_PATTERN.test(email)) {
+        this.authError = this.t('invalidEmail');
+        return;
+      }
+      this.authSending = true;
+      try {
+        const { url, key } = this.authUrl();
+        const location = window.location;
+        const redirectTo = location && typeof location.origin === 'string'
+          ? `${location.origin}${location.pathname || '/'}`
+          : '';
+        const response = await fetch(`${url}/otp${redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : ''}`, {
+          method: 'POST',
+          headers: { apikey: key, 'Content-Type': 'application/json' },
+          // Only existing users get a link: family accounts are created in the Supabase dashboard.
+          body: JSON.stringify({ email, create_user: false })
+        });
+        if (!response.ok) {
+          const details = (await response.text()).slice(0, 240);
+          throw new Error(`HTTP ${response.status}${details ? `: ${details}` : ''}`);
+        }
+        this.magicLinkSent = true;
+      } catch (error) {
+        console.error('Could not send the magic link:', error);
+        this.authError = `${this.t('signInError')} (${error.message})`;
+      } finally {
+        this.authSending = false;
+      }
+    },
+
+    async signOut() {
+      const token = this.session && this.session.access_token;
+      this.setSession(null);
+      this.showSignIn = false;
+      this.magicLinkSent = false;
+      this.authError = '';
+      if (!token) return;
+      try {
+        const { url, key } = this.authUrl();
+        await fetch(`${url}/logout`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${token}` } });
+      } catch (error) {
+        console.warn('Could not revoke the session on the server:', error);
+      }
     },
 
     syncRoute() {
