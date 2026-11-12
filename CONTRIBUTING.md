@@ -20,6 +20,8 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 │   ├── test-*.js              # Other unit tests (node --test, no network)
 │   ├── helpers/app-harness.js # Loads js/app.js in node:vm with stubbed browser globals
 │   └── test-connection.js     # Supabase connection check (needs network)
+├── supabase/
+│   └── migrations/     # Database schema, allow-list and RLS policies, one SQL file per change
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
 └── icons/
@@ -48,22 +50,13 @@ Tests load the app through `tests/helpers/app-harness.js`. Writes need a signed-
 
 ## Database migrations
 
-The Supabase schema and its Row Level Security (RLS) policies live in `supabase/migrations/` as plain SQL files, applied in file-name order. Every PR that changes the schema, a payload field or a policy adds a new migration file in the same PR; never edit a migration that has already been applied.
+Every change to the Supabase schema goes in a new file in `supabase/migrations/`, named `YYYYMMDDHHMMSS_short_description.sql` (UTC timestamp). Never edit a migration that has already been applied; add a new one instead.
 
-- Name new files `YYYYMMDDHHMMSS_short_description.sql` (UTC timestamp), e.g. `supabase migration new add_recipe_tags` creates one.
-- `20261112000000_recipes_baseline.sql` records the `recipes` table and its policies as they were on the live project before any migration here. It was never run there, so mark it as applied: `supabase migration repair --status applied 20261112000000`.
-- Migrations applied through the Supabase dashboard or the Supabase connector are recorded in the project's migration history under their own version; keep the file name in this folder equal to that version (e.g. `20261112214456_recipes_add_total_weight.sql`).
+`20261112000000_baseline.sql` records the schema as it was before migrations were tracked.
 
-Apply migrations with the [Supabase CLI](https://supabase.com/docs/guides/cli):
+Apply a migration with the Supabase CLI (`supabase link --project-ref bjeboxfypkkhvdqxviip`, then `supabase db push`) or by running the file in the dashboard's SQL editor. Ship the matching `js/app.js` change in the same PR.
 
-```sh
-supabase login
-supabase link --project-ref <project-ref>   # the subdomain of the URL in config.js
-supabase db push --dry-run                   # shows which migrations would run
-supabase db push
-```
-
-Without the CLI, open **SQL Editor** in the Supabase dashboard and run each new file's contents in order. Afterwards check **Authentication → Policies** for the expected policies.
+Migrations applied through the Supabase dashboard or the Supabase connector are recorded in the project's migration history under their own version; keep the file name here equal to that version (e.g. `20261112221310_family_write_access.sql`).
 
 ## Sign-in and write access
 

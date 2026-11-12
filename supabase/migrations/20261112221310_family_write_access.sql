@@ -2,6 +2,8 @@
 -- hamMňam: only family members may create, edit or delete recipes (#5)
 -- =============================================================================
 --
+-- Applied to the live project on 2026-11-12 (version 20261112221310).
+--
 -- After this migration:
 --   * everyone (anon and signed-in) can read recipes;
 --   * INSERT / UPDATE / DELETE need a signed-in Supabase Auth user whose
