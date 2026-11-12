@@ -84,6 +84,19 @@ const translations = {
     saveError: 'Recept se nepodařilo uložit.',
     favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
     invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:',
+    portionHeading: 'Na jednu porci',
+    portionNote: 'Vypočteno z hodnot na 100 g a hmotnosti porce.',
+    portionWeight: 'Hmotnost porce',
+    customPortion: 'Vlastní porce (g)',
+    customPortionHint: 'Prázdné = celková hmotnost / počet porcí.',
+    portionUnavailable: 'Pro výpočet porce zadejte počet porcí a celkovou hmotnost hotového pokrmu, nebo vlastní porci v gramech.',
+    sjPerPortion: 'SJ na porci',
+    perPortionSuffix: '/porce',
+    sjFactor: '1 SJ =',
+    sjFactorOption: 'g sacharidů',
+    conflictTitle: 'Nutriční hodnoty si neodpovídají',
+    conflictSj: 'Zadané SJ na 100 g ({entered}) neodpovídají sacharidům: při 1 SJ = {factor} g vychází {computed} SJ.',
+    conflictSjOtherFactor: 'Zadaná hodnota odpovídá přepočtu 1 SJ = {factor} g.',
     titleRequired: 'Vyplňte název receptu (slovensky nebo česky).',
     glycemicValues: 'Sacharidové jednotky a glykemie',
     glycemicValuesNote: 'SJ zadávejte na 100 g hotového pokrmu. GI je číslo 0–100 (nízký ≤ 55, střední 56–69, vysoký ≥ 70); GI a GL nejsou hodnoty na 100 g.',
@@ -178,6 +191,19 @@ const translations = {
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
     invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:',
+    portionHeading: 'Na jednu porciu',
+    portionNote: 'Vypočítané z hodnôt na 100 g a hmotnosti porcie.',
+    portionWeight: 'Hmotnosť porcie',
+    customPortion: 'Vlastná porcia (g)',
+    customPortionHint: 'Prázdne = celková hmotnosť / počet porcií.',
+    portionUnavailable: 'Na výpočet porcie zadajte počet porcií a celkovú hmotnosť hotového jedla, alebo vlastnú porciu v gramoch.',
+    sjPerPortion: 'SJ na porciu',
+    perPortionSuffix: '/porcia',
+    sjFactor: '1 SJ =',
+    sjFactorOption: 'g sacharidov',
+    conflictTitle: 'Nutričné hodnoty si nezodpovedajú',
+    conflictSj: 'Zadané SJ na 100 g ({entered}) nezodpovedajú sacharidom: pri 1 SJ = {factor} g vychádza {computed} SJ.',
+    conflictSjOtherFactor: 'Zadaná hodnota zodpovedá prepočtu 1 SJ = {factor} g.',
     titleRequired: 'Vyplňte názov receptu (po slovensky alebo po česky).',
     glycemicValues: 'Sacharidové jednotky a glykémia',
     glycemicValuesNote: 'SJ zadávajte na 100 g hotového jedla. GI je číslo 0–100 (nízky ≤ 55, stredný 56–69, vysoký ≥ 70); GI a GL nie sú hodnoty na 100 g.',
@@ -216,6 +242,151 @@ function parseDecimal(raw) {
   if (text === '') return { valid: true, value: null };
   if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text)) return { valid: false, value: null };
   return { valid: true, value: Number(text.replace(',', '.')) };
+}
+
+// --- Per-portion nutrition (issue #14) -------------------------------------
+// Pure helpers: no Alpine state, no DOM. Values may be numbers, numeric strings
+// ("1,5"), null or garbage; anything that is not a finite number >= 0 counts as
+// missing, so a calculation returns null instead of NaN, Infinity or 0.
+
+// 1 SJ (sacharidová jednotka) = 10 g of carbohydrates by default; 12 g is the
+// older convention some patients still use. Users pick one; it is stored locally.
+const SJ_FACTORS = [10, 12];
+const DEFAULT_SJ_FACTOR = 10;
+const SJ_FACTOR_STORAGE_KEY = 'hamMnam-sjFactor';
+// Nutrients that have a per-100 g column. SJ is derived from carbs and handled separately.
+const PORTION_NUTRIENTS = ['calories', 'carbs', 'proteins', 'fats', 'fiber', 'salt'];
+// Entered SJ may differ from carbs / factor by rounding; only flag real mismatches.
+const SJ_TOLERANCE = { absolute: 0.15, relative: 0.1 };
+const TOTAL_TOLERANCE = { absolute: 0.5, relative: 0.05 };
+
+function nonNegativeNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? value : null;
+  if (typeof value !== 'string') return null;
+  const parsed = parseDecimal(value);
+  return parsed.valid ? parsed.value : null;
+}
+
+function positiveNumber(value) {
+  const number = nonNegativeNumber(value);
+  return number !== null && number > 0 ? number : null;
+}
+
+function normalizeSjFactor(value) {
+  const factor = Number(value);
+  return SJ_FACTORS.includes(factor) ? factor : DEFAULT_SJ_FACTOR;
+}
+
+function getSavedSjFactor() {
+  try {
+    return normalizeSjFactor(localStorage.getItem(SJ_FACTOR_STORAGE_KEY));
+  } catch (error) {
+    console.warn('Could not read the saved SJ factor:', error);
+    return DEFAULT_SJ_FACTOR;
+  }
+}
+
+function saveSjFactor(value) {
+  const factor = normalizeSjFactor(value);
+  try {
+    localStorage.setItem(SJ_FACTOR_STORAGE_KEY, String(factor));
+  } catch (error) {
+    console.warn('Could not save the SJ factor:', error);
+  }
+  return factor;
+}
+
+function carbsToSj(carbs, factor = DEFAULT_SJ_FACTOR) {
+  const grams = nonNegativeNumber(carbs);
+  return grams === null ? null : grams / normalizeSjFactor(factor);
+}
+
+// input: {
+//   per100: { calories, carbs, proteins, fats, fiber, salt, sj },  // hand-entered per 100 g
+//   totals: { calories, carbs, ... },                               // whole recipe (optional)
+//   totalWeight, servings,                                          // whole recipe
+//   portionWeight                                                   // optional custom portion in g
+// }
+// Per-100 g values win; totals fill gaps (totals / total weight). Per portion =
+// per-100 g x portion weight, or totals / servings when no weight is known.
+// Returns { servings, totalWeight, portionWeight, per100, perPortion }; every
+// missing value is null.
+function computeNutrition(input = {}, factor = DEFAULT_SJ_FACTOR) {
+  const per100Input = input.per100 || {};
+  const totalsInput = input.totals || {};
+  const servings = positiveNumber(input.servings);
+  const totalWeight = positiveNumber(input.totalWeight);
+  const customPortion = positiveNumber(input.portionWeight);
+  const portionWeight = customPortion !== null
+    ? customPortion
+    : totalWeight !== null && servings !== null ? totalWeight / servings : null;
+  const per100 = {};
+  const perPortion = {};
+  for (const field of PORTION_NUTRIENTS) {
+    const entered = nonNegativeNumber(per100Input[field]);
+    const total = nonNegativeNumber(totalsInput[field]);
+    per100[field] = entered !== null
+      ? entered
+      : total !== null && totalWeight !== null ? (total * 100) / totalWeight : null;
+    if (per100[field] !== null && portionWeight !== null) {
+      perPortion[field] = (per100[field] * portionWeight) / 100;
+    } else if (total !== null && servings !== null && customPortion === null) {
+      perPortion[field] = total / servings;
+    } else {
+      perPortion[field] = null;
+    }
+  }
+  // SJ follows the carbs and the chosen factor. Only without carbs fall back to the entered SJ.
+  const enteredSj = nonNegativeNumber(per100Input.sj);
+  per100.sj = per100.carbs !== null ? carbsToSj(per100.carbs, factor) : enteredSj;
+  perPortion.sj = perPortion.carbs !== null
+    ? carbsToSj(perPortion.carbs, factor)
+    : enteredSj !== null && portionWeight !== null ? (enteredSj * portionWeight) / 100 : null;
+  return { servings, totalWeight, portionWeight, per100, perPortion };
+}
+
+function valuesConflict(entered, computed, tolerance = TOTAL_TOLERANCE) {
+  if (entered === null || computed === null) return false;
+  const allowed = Math.max(tolerance.absolute, tolerance.relative * Math.max(Math.abs(entered), Math.abs(computed)));
+  return Math.abs(entered - computed) > allowed + 1e-9;
+}
+
+// Compares hand-entered per-100 g values with the values computed from other
+// inputs: SJ vs carbs / factor, and (when totals are given) each per-100 g value
+// vs total x 100 / total weight. Returns [{ field, entered, computed, matchingFactor? }].
+function detectNutritionConflicts(input = {}, factor = DEFAULT_SJ_FACTOR) {
+  const per100 = input.per100 || {};
+  const totals = input.totals || {};
+  const totalWeight = positiveNumber(input.totalWeight);
+  const conflicts = [];
+  const enteredSj = nonNegativeNumber(per100.sj);
+  const computedSj = carbsToSj(per100.carbs, factor);
+  if (valuesConflict(enteredSj, computedSj, SJ_TOLERANCE)) {
+    const conflict = { field: 'sj', entered: enteredSj, computed: computedSj };
+    const otherFactor = SJ_FACTORS.find((candidate) => candidate !== normalizeSjFactor(factor)
+      && !valuesConflict(enteredSj, carbsToSj(per100.carbs, candidate), SJ_TOLERANCE));
+    if (otherFactor) conflict.matchingFactor = otherFactor;
+    conflicts.push(conflict);
+  }
+  if (totalWeight !== null) {
+    for (const field of PORTION_NUTRIENTS) {
+      const entered = nonNegativeNumber(per100[field]);
+      const total = nonNegativeNumber(totals[field]);
+      const computed = total === null ? null : (total * 100) / totalWeight;
+      if (valuesConflict(entered, computed)) conflicts.push({ field, entered, computed });
+    }
+  }
+  return conflicts;
+}
+
+// Recipe row (or form model) -> calculation input. Only the per-100 g values,
+// servings and total weight are edited in the app (see #6), so the legacy
+// total_* columns are not used here.
+function recipeNutritionInput(recipe, portionWeight = null) {
+  const source = recipe || {};
+  const per100 = {};
+  for (const field of [...PORTION_NUTRIENTS, 'sj']) per100[field] = source[field];
+  return { per100, servings: source.servings, totalWeight: source.total_weight, portionWeight };
 }
 
 // Glycemic index: an optional number from 0 to 100 (same decimal rules as parseDecimal).
@@ -332,6 +503,9 @@ function recipeApp() {
     favoritesOnly: false,
     recipesLoaded: false,
     newRecipe: emptyRecipe(),
+    sjFactor: getSavedSjFactor(),
+    sjFactors: SJ_FACTORS,
+    portionSizeInput: '',
 
     get filteredRecipes() {
       const query = this.search.trim().toLocaleLowerCase(this.language);
@@ -384,6 +558,65 @@ function recipeApp() {
 
     displayCategory(recipe) {
       return (this.language === 'sk' && recipe.category_sk) || recipe.category_cs || recipe.category_sk || '';
+    },
+
+    // Like t(), but replaces {name} placeholders with params.name.
+    tf(key, params = {}) {
+      return this.t(key).replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+    },
+
+    setSjFactor(value) {
+      this.sjFactor = saveSjFactor(value);
+    },
+
+    formatNumber(value, maximumFractionDigits = 1) {
+      if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+      return new Intl.NumberFormat(this.language, { maximumFractionDigits }).format(value);
+    },
+
+    formatAmount(value, unit, maximumFractionDigits = 1) {
+      const formatted = this.formatNumber(value, maximumFractionDigits);
+      return formatted === '—' || !unit ? formatted : `${formatted} ${unit}`;
+    },
+
+    // Custom portion from the detail page; anything invalid falls back to total weight / servings.
+    customPortionWeight() {
+      const parsed = parseDecimal(this.portionSizeInput);
+      return parsed.valid && parsed.value > 0 ? parsed.value : null;
+    },
+
+    recipeNutrition(recipe, useCustomPortion = true) {
+      const portion = useCustomPortion ? this.customPortionWeight() : null;
+      return computeNutrition(recipeNutritionInput(recipe, portion), this.sjFactor);
+    },
+
+    recipePortionSj(recipe) {
+      return this.recipeNutrition(recipe, false).perPortion.sj;
+    },
+
+    hasPortionValues(recipe) {
+      const { perPortion } = this.recipeNutrition(recipe);
+      return Object.values(perPortion).some((value) => value !== null);
+    },
+
+    nutritionConflicts(recipe) {
+      return detectNutritionConflicts(recipeNutritionInput(recipe), this.sjFactor);
+    },
+
+    get formNutritionConflicts() {
+      return this.nutritionConflicts(this.newRecipe);
+    },
+
+    conflictMessage(conflict) {
+      if (conflict.field !== 'sj') return '';
+      const message = this.tf('conflictSj', {
+        entered: this.formatNumber(conflict.entered, 2),
+        computed: this.formatNumber(conflict.computed, 2),
+        factor: this.sjFactor
+      });
+      return conflict.matchingFactor
+        ? `${message} ${this.tf('conflictSjOtherFactor', { factor: conflict.matchingFactor })}`
+        : message;
     },
 
     displayValue(value) {
@@ -592,10 +825,12 @@ function recipeApp() {
         `#recipe/${encodeURIComponent(String(recipe.id))}`
       );
       this.selectedRecipe = recipe;
+      this.portionSizeInput = '';
     },
 
     closeRecipe() {
       this.selectedRecipe = null;
+      this.portionSizeInput = '';
       if (!window.location.hash.startsWith('#recipe/')) return;
 
       if (window.history.state && window.history.state.hamMnamRecipeDetail) {

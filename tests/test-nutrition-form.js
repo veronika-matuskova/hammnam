@@ -76,13 +76,14 @@ test('whole-recipe totals and servings stay in their own section', () => {
   assert.equal((totalSection.match(/x-model/g) || []).length, 2, 'only servings and total weight');
 });
 
-test('no per-portion block remains', () => {
-  assert.doesNotMatch(html, /perPortion/);
+// #6 removed the hand-entered per-portion inputs. #14 brings per-portion values
+// back only as a computed, read-only block on the detail page.
+test('the form has no per-portion inputs', () => {
+  assert.doesNotMatch(formPage, /perPortion|portionSizeInput/);
   assert.doesNotMatch(html, /id="nutrition-heading"/);
   const { sk, cs } = translations();
   assert.equal('perPortion' in sk, false);
   assert.equal('perPortion' in cs, false);
-  assert.doesNotMatch(Object.values(sk).join('\n'), /porciu/i);
 });
 
 test('the form is well-formed: every <label> is closed', () => {
