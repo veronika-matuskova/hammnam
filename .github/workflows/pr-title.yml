@@ -1,0 +1,53 @@
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check PR title
+    runs-on: ubuntu-latest
+    steps:
+      # Only the PR template is needed: it is the single source of truth for
+      # the allowed types (lines like "  fix:      bug fix" in its top comment).
+      - name: Checkout PR template
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/pull_request_template.md
+          sparse-checkout-cone-mode: false
+
+      # The title is passed via env, never interpolated into the script, so a
+      # crafted title can't inject shell commands.
+      - name: Check title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          TEMPLATE: .github/pull_request_template.md
+        run: |
+          mapfile -t types < <(sed -n 's/^  \([a-z0-9-]*\):.*/\1/p' "$TEMPLATE")
+          if [ "${#types[@]}" -eq 0 ]; then
+            echo "::error::No PR types found in $TEMPLATE"
+            exit 1
+          fi
+          pattern="^($(IFS='|'; echo "${types[*]}")): .+"
+          if [[ "$PR_TITLE" =~ $pattern ]]; then
+            echo "PR title OK: $PR_TITLE"
+            exit 0
+          fi
+          {
+            echo "PR title must be '<type>: <description>', e.g. 'fix: Correct SJ calculation'."
+            echo "Got: $PR_TITLE"
+            echo "Allowed types (from $TEMPLATE):"
+            sed -n 's/^  \([a-z0-9-]*\):[[:space:]]*\(.*\)$/  \1\t\2/p' "$TEMPLATE" | expand -t 12
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::error title=Invalid PR title::Title must start with one of: ${types[*]} (followed by ': ' and a description)"
+          exit 1
