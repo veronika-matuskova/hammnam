@@ -1,4 +1,4 @@
-// Educational page (ucenie.html): small "try it yourself" calculators for
+// Educational page (learn.html): small "try it yourself" calculators for
 // calories, SJ and glycemic load. Pure helpers first, then the Alpine component.
 // Inputs are text so "1,5" works like elsewhere in the app; anything that is not
 // a finite number >= 0 counts as missing and the result is null, never NaN.

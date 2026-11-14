@@ -7,13 +7,13 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ```text
 .
 ├── index.html          # App layout and CDN references
-├── ucenie.html         # Educational page: calorie table, SJ, GI, GL (static, Slovak)
+├── learn.html         # Educational page: calorie table, SJ, GI, GL (static, Slovak)
 ├── manifest.json       # PWA install metadata
 ├── sw.js               # Offline app-shell cache
 ├── config.js           # Supabase URL and publishable/anon key
 ├── js/
 │   ├── app.js          # Alpine component, REST and Auth calls, filters, translations
-│   └── learn.js        # Calculators for ucenie.html
+│   └── learn.js        # Calculators for learn.html
 ├── supabase/
 │   └── migrations/     # SQL for the recipes table, allow-list and RLS policies
 ├── tests/

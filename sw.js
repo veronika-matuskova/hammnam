@@ -5,7 +5,7 @@ const APP_SHELL = [
   './manifest.json',
   './js/app.js?v=11',
   './js/learn.js',
-  './ucenie.html',
+  './learn.html',
   './config.js',
   './icons/app-icon.svg'
 ];
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      // Offline: serve the cached page itself (e.g. ucenie.html), else the app shell.
+      // Offline: serve the cached page itself (e.g. learn.html), else the app shell.
       fetch(request).catch(() => caches.match(request, { ignoreSearch: true })
         .then((cachedResponse) => cachedResponse || caches.match('./index.html')))
     );

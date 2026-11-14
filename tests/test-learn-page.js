@@ -1,4 +1,4 @@
-// The educational page (ucenie.html) and its calculators (js/learn.js).
+// The educational page (learn.html) and its calculators (js/learn.js).
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const vm = require('node:vm');
@@ -14,7 +14,7 @@ function loadLearn(storage = {}) {
   return context.api;
 }
 
-const page = readRepoFile('ucenie.html');
+const page = readRepoFile('learn.html');
 
 test('kcal from macros uses 4 / 4 / 9 (+ 2 for fiber)', () => {
   const { kcalFromMacros, kcalToKj } = loadLearn();
@@ -75,10 +75,10 @@ test('default calculator results match the worked examples on the page', () => {
 
 test('links from the app point to sections that exist on the page', () => {
   const html = readRepoFile('index.html');
-  const links = [...html.matchAll(/href="\.\/ucenie\.html(?:#([a-z0-9-]+))?"/g)];
-  assert.ok(links.length >= 3, 'index.html should link to ucenie.html');
+  const links = [...html.matchAll(/href="\.\/learn\.html(?:#([a-z0-9-]+))?"/g)];
+  assert.ok(links.length >= 3, 'index.html should link to learn.html');
   for (const [, anchor] of links) {
-    if (anchor) assert.match(page, new RegExp(`id="${anchor}"`), `#${anchor} missing in ucenie.html`);
+    if (anchor) assert.match(page, new RegExp(`id="${anchor}"`), `#${anchor} missing in learn.html`);
   }
   for (const [, anchor] of page.matchAll(/href="#([a-z0-9-]+)"/g)) {
     assert.match(page, new RegExp(`id="${anchor}"`), `table of contents link #${anchor} has no section`);
@@ -88,8 +88,8 @@ test('links from the app point to sections that exist on the page', () => {
 test('the page is deployed and cached for offline use', () => {
   const ci = readRepoFile('.github/workflows/ci.yml');
   const serviceWorker = readRepoFile('sw.js');
-  assert.match(ci, /cp [^\n]*\bucenie\.html\b[^\n]*_site\//, 'ci.yml must copy ucenie.html into _site');
-  assert.match(serviceWorker, /'\.\/ucenie\.html'/, 'APP_SHELL should precache ucenie.html');
+  assert.match(ci, /cp [^\n]*\blearn\.html\b[^\n]*_site\//, 'ci.yml must copy learn.html into _site');
+  assert.match(serviceWorker, /'\.\/learn\.html'/, 'APP_SHELL should precache learn.html');
   assert.match(serviceWorker, /'\.\/js\/learn\.js'/, 'APP_SHELL should precache js/learn.js');
   assert.match(page, /src="\.\/js\/learn\.js"/);
 });
