@@ -128,7 +128,11 @@ const translations = {
     giInvalid: 'Glykemický index musí být číslo od 0 do 100.',
     giLow: 'Nízký GI',
     giMedium: 'Střední GI',
-    giHigh: 'Vysoký GI'
+    giHigh: 'Vysoký GI',
+    learnLink: 'Vysvětlivky',
+    learnLinkLabel: 'Co znamenají čísla v receptech',
+    learnNutrition: 'Co je kalorická tabulka?',
+    learnGlycemic: 'Co znamenají SJ, GI a GL?'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -259,7 +263,11 @@ const translations = {
     giInvalid: 'Glykemický index musí byť číslo od 0 do 100.',
     giLow: 'Nízky GI',
     giMedium: 'Stredný GI',
-    giHigh: 'Vysoký GI'
+    giHigh: 'Vysoký GI',
+    learnLink: 'Vysvetlivky',
+    learnLinkLabel: 'Čo znamenajú čísla v receptoch',
+    learnNutrition: 'Čo je kalorická tabuľka?',
+    learnGlycemic: 'Čo znamenajú SJ, GI a GL?'
   }
 };
 
