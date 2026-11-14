@@ -129,6 +129,18 @@ const translations = {
     giLow: 'Nízký GI',
     giMedium: 'Střední GI',
     giHigh: 'Vysoký GI',
+    nutritionFilters: 'Filtry',
+    nutritionFiltersActive: 'Aktivní filtry: {count}',
+    nutritionFiltersHeading: 'Filtrovat podle hodnot',
+    nutritionFiltersNote: 'Kalorie a SJ jsou na jednu porci (1 SJ = {factor} g sacharidů). Recepty bez dané hodnoty se při nastaveném filtru skryjí.',
+    filterCalories: 'Kalorie na porci',
+    filterSj: 'SJ na porci',
+    filterGi: 'Glykemický index',
+    filterGl: 'Glykemická zátěž',
+    filterMin: 'od',
+    filterMax: 'do',
+    filterInvalid: 'Zadejte nezáporné číslo, např. 1,5.',
+    resetFilters: 'Zrušit filtry',
     learnLink: 'Vysvětlivky',
     learnLinkLabel: 'Co znamenají čísla v receptech',
     learnNutrition: 'Co je kalorická tabulka?',
@@ -264,6 +276,18 @@ const translations = {
     giLow: 'Nízky GI',
     giMedium: 'Stredný GI',
     giHigh: 'Vysoký GI',
+    nutritionFilters: 'Filtre',
+    nutritionFiltersActive: 'Aktívne filtre: {count}',
+    nutritionFiltersHeading: 'Filtrovať podľa hodnôt',
+    nutritionFiltersNote: 'Kalórie a SJ sú na jednu porciu (1 SJ = {factor} g sacharidov). Recepty bez danej hodnoty sa pri nastavenom filtri skryjú.',
+    filterCalories: 'Kalórie na porciu',
+    filterSj: 'SJ na porciu',
+    filterGi: 'Glykemický index',
+    filterGl: 'Glykemická záťaž',
+    filterMin: 'od',
+    filterMax: 'do',
+    filterInvalid: 'Zadajte nezáporné číslo, napr. 1,5.',
+    resetFilters: 'Zrušiť filtre',
     learnLink: 'Vysvetlivky',
     learnLinkLabel: 'Čo znamenajú čísla v receptoch',
     learnNutrition: 'Čo je kalorická tabuľka?',
@@ -527,6 +551,55 @@ const GI_CLASSES = {
 };
 const GI_LABEL_KEYS = { low: 'giLow', medium: 'giMedium', high: 'giHigh' };
 
+// --- Min/max filters on nutrition values -----------------------------------
+// calories and sj are per portion (the same values the recipe detail shows),
+// gi and gl are recipe-level values. The value function gets the component
+// so it can reuse recipeNutrition() and the chosen SJ factor.
+const NUTRITION_FILTERS = [
+  { field: 'calories', unit: 'kcal', labelKey: 'filterCalories' },
+  { field: 'sj', unit: 'SJ', labelKey: 'filterSj' },
+  { field: 'gi', unit: 'GI', labelKey: 'filterGi' },
+  { field: 'gl', unit: 'GL', labelKey: 'filterGl' }
+];
+
+function emptyNutritionFilters() {
+  return Object.fromEntries(NUTRITION_FILTERS.map(({ field }) => [field, { min: '', max: '' }]));
+}
+
+// One filter's bounds as numbers: { min, max } (either may be null), or null when
+// no valid bound is set. Bounds use parseDecimal ("1,5" works); an invalid bound
+// is ignored. min > max is swapped, so "250–100" means 100–250.
+function nutritionFilterRange(bounds) {
+  const parse = (raw) => {
+    const parsed = parseDecimal(raw);
+    return parsed.valid ? parsed.value : null;
+  };
+  let min = parse(bounds && bounds.min);
+  let max = parse(bounds && bounds.max);
+  if (min === null && max === null) return null;
+  if (min !== null && max !== null && min > max) [min, max] = [max, min];
+  return { min, max };
+}
+
+// Fraction digits the detail shows: kcal per portion with 0 (index.html,
+// per-portion <dl>), SJ per portion with formatNumber's default of 1.
+const FILTER_DISPLAY_DIGITS = { calories: 0, sj: 1 };
+
+// Rounds with Intl.NumberFormat, like formatNumber does for the display. Not
+// toFixed: that rounds the binary value (0.15 -> "0.1"), Intl shows "0,2".
+const DISPLAY_ROUNDERS = {};
+function roundForDisplay(value, digits) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  if (!DISPLAY_ROUNDERS[digits]) DISPLAY_ROUNDERS[digits] = new Intl.NumberFormat('en-US', { maximumFractionDigits: digits, useGrouping: false });
+  return Number(DISPLAY_ROUNDERS[digits].format(value));
+}
+
+// Inclusive. An unknown value (null) never matches a set range.
+function valueInRange(value, range) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return false;
+  return (range.min === null || value >= range.min) && (range.max === null || value <= range.max);
+}
+
 // Lower-cased text without diacritics and with single spaces, for search:
 // "Raňajky  " and "ranajky" both become "ranajky". NFD splits letters such as
 // ň, ľ, ô, ů, ř into a base letter plus combining marks (U+0300–U+036F), which are dropped.
@@ -706,6 +779,9 @@ function recipeApp() {
     search: '',
     selectedCategory: '',
     favoritesOnly: false,
+    nutritionFilterFields: NUTRITION_FILTERS,
+    nutritionFilters: emptyNutritionFilters(),
+    showNutritionFilters: false,
     recipesLoaded: false,
     newRecipe: emptyRecipe(),
     session: loadStoredSession(),
@@ -739,11 +815,17 @@ function recipeApp() {
 
     // Every word of the search must appear in the title, the category or an
     // ingredient name; case and diacritics are ignored ("ryza" finds "ryža").
+    // The nutrition range filters (see activeNutritionRanges) are combined with AND.
     get filteredRecipes() {
       const words = normalizeSearchText(this.search).split(' ').filter(Boolean);
+      const ranges = this.activeNutritionRanges;
       return this.recipes.filter((recipe) => {
         if (this.selectedCategory && this.displayCategory(recipe) !== this.selectedCategory) return false;
         if (this.favoritesOnly && !recipe.favorite) return false;
+        if (ranges.length) {
+          const values = this.recipeFilterValues(recipe);
+          if (!ranges.every(({ field, range }) => valueInRange(values[field], range))) return false;
+        }
         if (!words.length) return true;
         const haystack = normalizeSearchText([
           this.displayTitle(recipe),
@@ -752,6 +834,40 @@ function recipeApp() {
         ].join('\n'));
         return words.every((word) => haystack.includes(word));
       });
+    },
+
+    // [{ field, range }] for every nutrition filter with at least one valid bound.
+    get activeNutritionRanges() {
+      return NUTRITION_FILTERS
+        .map(({ field }) => ({ field, range: nutritionFilterRange(this.nutritionFilters[field]) }))
+        .filter(({ range }) => range !== null);
+    },
+
+    get activeNutritionFilterCount() {
+      return this.activeNutritionRanges.length;
+    },
+
+    // The values the filters compare, the same ones the recipe detail shows:
+    // kcal and SJ per portion (total weight / servings, current SJ factor; the
+    // detail's custom portion is not used), GI and GL as entered on the recipe.
+    // kcal and SJ are rounded like the detail displays them (formatNumber), so a
+    // portion shown as "250 kcal" matches "do 250" even when it is 250.4.
+    recipeFilterValues(recipe) {
+      const { perPortion } = this.recipeNutrition(recipe, false);
+      return {
+        calories: roundForDisplay(perPortion.calories, FILTER_DISPLAY_DIGITS.calories),
+        sj: roundForDisplay(perPortion.sj, FILTER_DISPLAY_DIGITS.sj),
+        gi: giNumber(recipe.gi),
+        gl: nonNegativeNumber(recipe.glycemic_load)
+      };
+    },
+
+    isFilterBoundInvalid(value) {
+      return !parseDecimal(value).valid;
+    },
+
+    resetNutritionFilters() {
+      this.nutritionFilters = emptyNutritionFilters();
     },
 
     get categories() {
