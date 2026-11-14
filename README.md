@@ -70,6 +70,17 @@ Each topic has a small calculator to try your own numbers. The page also works o
 
 A second tab, **🍽️ Výživný tanier**, shows how to put together a balanced plate (half vegetables and fruit, a quarter protein, a quarter complex carbohydrates, a little healthy fat and water) and lists good sources of carbohydrates and proteins, based on materials from a nutrition coach. It also points out which of these foods still count towards SJ. Both pages work offline once the app has been opened.
 
+## Shopping list
+
+Signed-in family members get a **🛒 Nákupný zoznam** button in the header; the number on it is how many items are still to buy. The list is private: each person sees only their own, on every device where they are signed in. People who are not signed in don't see it.
+
+- **Add an item** – type the name, and optionally the amount and unit (for example *Mlieko*, *2*, *l*), then tap **Pridať**.
+- **From a recipe** – in a recipe detail, choose the number of servings above the ingredients and tap **Do nákupného zoznamu**. All ingredients are added in the amounts for those servings, and the recipe is listed under *Z receptov* so you can open it from the list.
+- **The same item twice** – if an item with the same name and unit is already on the list, the amounts are added up (200 g + 150 g = 350 g). Amounts written as text or as a range ("podľa chuti", "1–2") stay on their own line. An item you already ticked off comes back unticked.
+- **While shopping** – tick an item when it's in the basket; ticked items move to the bottom. **Odstrániť kúpené** removes the ticked ones, and **Vymazať zoznam** (confirm with **Áno, vymazať**) empties the whole list.
+
+Every change is saved straight away (*Ukladám…* → *Uložené*), so a connection is needed. If saving fails, the change stays on screen with a message; the next change you make saves everything again. Reloading the page before that drops the unsaved changes.
+
 ## Sign in
 
 Everyone can browse recipes. Adding, editing and starring recipes is only for the family:
@@ -118,6 +129,7 @@ If the app says the recipe was taken over as it is on the page (not translated, 
 - **"Recept sa nepodarilo uložiť."** – your changes are still in the form; check the connection and save again.
 - **"Prihlasovací odkaz sa nepodarilo odoslať."** – your e-mail is not on the family list yet, or too many links were requested; wait a minute and try again.
 - **"Prihlásenie vypršalo."** – sign in again with a new link.
+- **"Nákupný zoznam sa nepodarilo načítať."** / **"Zmeny v nákupnom zozname sa nepodarilo uložiť."** – check the connection; tap **Skúsiť znova**, or sign in again if your sign-in has expired.
 - **"Recept sa nepodarilo načítať."** – the page could not be opened, it has no recipe, or the import is busy; check the link, try again later, or fill in the form by hand.
 - **The app looks out of date** – close it and open it again (sometimes twice); the new version loads in the background.
 

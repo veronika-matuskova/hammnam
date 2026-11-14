@@ -88,6 +88,36 @@ const translations = {
     removeStep: 'Odebrat krok',
     notes: 'Poznámky a tipy',
     notesPlaceholder: 'Volitelné poznámky k receptu…',
+    shoppingList: 'Nákupní seznam',
+    shoppingIntro: 'Váš seznam na nákup. Vidíte ho jen vy, když jste přihlášeni.',
+    shoppingSignInNote: 'Nákupní seznam je jen pro přihlášené. Přihlaste se a uvidíte svůj seznam.',
+    shoppingItemName: 'Položka',
+    shoppingItemPlaceholder: 'Např. mléko',
+    shoppingAmount: 'Množství',
+    shoppingUnit: 'Jednotka',
+    shoppingAdd: 'Přidat',
+    shoppingLoading: 'Načítám nákupní seznam…',
+    shoppingLoadError: 'Nákupní seznam se nepodařilo načíst.',
+    shoppingSaveError: 'Změny v nákupním seznamu se nepodařilo uložit.',
+    shoppingEmpty: 'Seznam je prázdný',
+    shoppingEmptyHint: 'Přidejte položku výše nebo suroviny z receptu tlačítkem „Do nákupního seznamu“.',
+    shoppingRemaining: 'Zbývá koupit: {count}',
+    shoppingInBasket: 'V košíku: {count}',
+    shoppingFromRecipes: 'Z receptů:',
+    shoppingToBuy: 'Koupit',
+    shoppingBought: 'Koupeno',
+    shoppingCheckItem: 'Koupeno: {name}',
+    shoppingRemoveItem: 'Odebrat {name}',
+    shoppingRemoveChecked: 'Odebrat koupené',
+    shoppingClear: 'Smazat seznam',
+    shoppingClearConfirm: 'Opravdu smazat celý seznam?',
+    shoppingClearYes: 'Ano, smazat',
+    shoppingSaving: 'Ukládám…',
+    shoppingSaved: 'Uloženo',
+    addToShopping: 'Do nákupního seznamu',
+    addToShoppingNote: 'Přidají se množství pro zvolený počet porcí.',
+    shoppingAdded: 'Přidáno do nákupního seznamu: {count}',
+    openShoppingList: 'Otevřít nákupní seznam',
     cancel: 'Zrušit',
     saving: 'Ukládám…',
     saveRecipe: 'Uložit recept',
@@ -258,6 +288,36 @@ const translations = {
     removeStep: 'Odobrať krok',
     notes: 'Poznámky a tipy',
     notesPlaceholder: 'Voliteľné poznámky k receptu…',
+    shoppingList: 'Nákupný zoznam',
+    shoppingIntro: 'Váš zoznam na nákup. Vidíte ho len vy, keď ste prihlásení.',
+    shoppingSignInNote: 'Nákupný zoznam je len pre prihlásených. Prihláste sa a uvidíte svoj zoznam.',
+    shoppingItemName: 'Položka',
+    shoppingItemPlaceholder: 'Napr. mlieko',
+    shoppingAmount: 'Množstvo',
+    shoppingUnit: 'Jednotka',
+    shoppingAdd: 'Pridať',
+    shoppingLoading: 'Načítavam nákupný zoznam…',
+    shoppingLoadError: 'Nákupný zoznam sa nepodarilo načítať.',
+    shoppingSaveError: 'Zmeny v nákupnom zozname sa nepodarilo uložiť.',
+    shoppingEmpty: 'Zoznam je prázdny',
+    shoppingEmptyHint: 'Pridajte položku vyššie alebo suroviny z receptu tlačidlom „Do nákupného zoznamu“.',
+    shoppingRemaining: 'Zostáva kúpiť: {count}',
+    shoppingInBasket: 'V košíku: {count}',
+    shoppingFromRecipes: 'Z receptov:',
+    shoppingToBuy: 'Kúpiť',
+    shoppingBought: 'Kúpené',
+    shoppingCheckItem: 'Kúpené: {name}',
+    shoppingRemoveItem: 'Odstrániť {name}',
+    shoppingRemoveChecked: 'Odstrániť kúpené',
+    shoppingClear: 'Vymazať zoznam',
+    shoppingClearConfirm: 'Naozaj vymazať celý zoznam?',
+    shoppingClearYes: 'Áno, vymazať',
+    shoppingSaving: 'Ukladám…',
+    shoppingSaved: 'Uložené',
+    addToShopping: 'Do nákupného zoznamu',
+    addToShoppingNote: 'Pridajú sa množstvá pre zvolený počet porcií.',
+    shoppingAdded: 'Pridané do nákupného zoznamu: {count}',
+    openShoppingList: 'Otvoriť nákupný zoznam',
     cancel: 'Zrušiť',
     saving: 'Ukladám…',
     saveRecipe: 'Uložiť recept',
@@ -898,9 +958,83 @@ function storeSession(session) {
   }
 }
 
+// --- Shopping list (public.shopping_lists, migration 20261114124921) ---
+// Each signed-in user has one open list: their newest row with completed_at NULL.
+// items is a JSON array of { name, amount, unit, checked }; RLS keeps rows private.
+const SHOPPING_TABLE = 'shopping_lists';
+const SHOPPING_NAME_MAX = 120;
+const SHOPPING_TEXT_MAX = 40;
+const SHOPPING_ITEMS_MAX = 300;
+
+function shoppingText(value, max) {
+  return textValue(value).replace(/\s+/g, ' ').slice(0, max);
+}
+
+// A clean item, or null when it has no name. Amounts stay text ("1,5", "podľa chuti").
+function normalizeShoppingItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const name = shoppingText(item.name, SHOPPING_NAME_MAX);
+  if (!name) return null;
+  return {
+    name,
+    amount: shoppingText(item.amount, SHOPPING_TEXT_MAX),
+    unit: shoppingText(item.unit, SHOPPING_TEXT_MAX),
+    checked: item.checked === true
+  };
+}
+
+function normalizeShoppingItems(items) {
+  return Array.isArray(items)
+    ? items.map(normalizeShoppingItem).filter(Boolean).slice(0, SHOPPING_ITEMS_MAX)
+    : [];
+}
+
+function shoppingItemKey(item) {
+  return `${normalizeSearchText(item.name)}|${normalizeSearchText(item.unit)}`;
+}
+
+// Adds `additions` to `items` (both normalized) and returns a new array.
+// An item already on the list with the same name and unit is merged: plain
+// numeric amounts are added up ("200" g + "150" g = "350" g); if either amount
+// is text or a range, the addition goes on its own line. A bought (checked)
+// item that is added again comes back unchecked with the new amount.
+function mergeShoppingItems(items, additions, formatNumber) {
+  const result = items.map((item) => ({ ...item }));
+  for (const addition of additions) {
+    const key = shoppingItemKey(addition);
+    const open = result.find((item) => !item.checked && shoppingItemKey(item) === key);
+    if (open) {
+      if (!addition.amount) continue;
+      if (!open.amount) {
+        open.amount = addition.amount;
+        continue;
+      }
+      const current = parseAmount(open.amount);
+      const added = parseAmount(addition.amount);
+      if (current && added && current.length === 1 && added.length === 1) {
+        open.amount = formatNumber(roundAmount(current[0] + added[0]), 2);
+        continue;
+      }
+    } else {
+      const bought = result.find((item) => item.checked && shoppingItemKey(item) === key);
+      if (bought) {
+        bought.checked = false;
+        bought.amount = addition.amount;
+        continue;
+      }
+    }
+    if (result.length >= SHOPPING_ITEMS_MAX) break;
+    result.push({ ...addition, checked: false });
+  }
+  return result;
+}
+
 function recipeApp() {
   // Kept outside the reactive state: one token refresh at a time.
   let pendingRefresh = null;
+  // One shopping-list write at a time; changes made meanwhile are saved right after.
+  let shoppingWrite = null;
+  let shoppingDirty = false;
   return {
     language: getSavedLanguage(),
     recipes: [],
@@ -935,6 +1069,20 @@ function recipeApp() {
     authSending: false,
     magicLinkSent: false,
     authError: '',
+    // Shopping list (signed-in users only).
+    showShoppingList: false,
+    shoppingListId: null,
+    shoppingItems: [],
+    shoppingRecipeIds: [],
+    shoppingLoaded: false,
+    shoppingLoading: false,
+    shoppingLoadError: '',
+    shoppingSaving: false,
+    shoppingSaveError: '',
+    shoppingConfirmClear: false,
+    shoppingDraft: { name: '', amount: '', unit: '' },
+    // { recipeId, count } after "Do nákupného zoznamu" in a recipe detail.
+    shoppingAddedNotice: null,
 
     get isSignedIn() {
       return Boolean(this.session && this.session.access_token);
@@ -944,6 +1092,32 @@ function recipeApp() {
     // Row Level Security in Supabase is what actually blocks other writes.
     get canEdit() {
       return this.isSignedIn && this.familyMember !== false;
+    },
+
+    // The shopping list needs a signed-in family member (RLS checks is_family_member on writes).
+    get canUseShoppingList() {
+      return this.canEdit;
+    },
+
+    get shoppingRemainingCount() {
+      return this.shoppingItems.filter((item) => !item.checked).length;
+    },
+
+    get shoppingCheckedCount() {
+      return this.shoppingItems.length - this.shoppingRemainingCount;
+    },
+
+    // Open items first, bought ones below; each keeps its index in shoppingItems.
+    get shoppingRows() {
+      const rows = this.shoppingItems.map((item, index) => ({ item, index }));
+      return [...rows.filter((row) => !row.item.checked), ...rows.filter((row) => row.item.checked)];
+    },
+
+    // Recipes the open list was built from, that still exist.
+    get shoppingRecipes() {
+      return this.shoppingRecipeIds
+        .map((id) => this.recipes.find((recipe) => String(recipe.id) === String(id)))
+        .filter(Boolean);
     },
 
     get signedInEmail() {
@@ -1234,16 +1408,20 @@ function recipeApp() {
     },
 
     // Reads use the publishable key; writes send the signed-in user's access token.
+    // `table` picks another REST table (default recipes); `auth: true` sends the
+    // user's token on reads too, for tables whose rows only their owner may see.
     async request(path, options = {}) {
-      const { url, key } = this.apiBaseUrl();
-      const method = String(options.method || 'GET').toUpperCase();
+      const { table, auth, ...fetchOptions } = options;
+      const { url: recipesUrl, key } = this.apiBaseUrl();
+      const url = table ? recipesUrl.replace(/\/recipes$/, `/${table}`) : recipesUrl;
+      const method = String(fetchOptions.method || 'GET').toUpperCase();
       const isWrite = method !== 'GET' && method !== 'HEAD';
       // Only wait for a token when there is a session, so a signed-out request starts in the same tick.
-      const token = isWrite && this.session ? await this.accessToken() : null;
+      const token = (isWrite || auth) && this.session ? await this.accessToken() : null;
       const send = async (bearer) => {
         try {
           return await fetch(`${url}${path}`, {
-            ...options,
+            ...fetchOptions,
             headers: {
               apikey: key,
               Authorization: `Bearer ${bearer || key}`,
@@ -1287,7 +1465,10 @@ function recipeApp() {
 
     setSession(session) {
       this.session = session;
-      if (!session) this.familyMember = null;
+      if (!session) {
+        this.familyMember = null;
+        this.resetShoppingList();
+      }
       storeSession(session);
     },
 
@@ -1329,6 +1510,10 @@ function recipeApp() {
         await this.checkFamilyMember();
       } catch (error) {
         console.warn('Could not load the sign-in state:', error);
+      }
+      // Load the list for the header count (and the list view, if it is open).
+      if (this.canUseShoppingList && !this.shoppingLoaded && !this.shoppingLoading) {
+        await this.loadShoppingList();
       }
     },
 
@@ -1460,6 +1645,11 @@ function recipeApp() {
         ? this.recipes.find((recipe) => encodeURIComponent(String(recipe.id)) === editRoute[1]) || null
         : null;
       this.showForm = hash === '#new-recipe' || Boolean(recipeToEdit);
+      this.showShoppingList = hash === '#shopping-list';
+      this.shoppingConfirmClear = false;
+      if (this.showShoppingList && this.canUseShoppingList && !this.shoppingLoaded && !this.shoppingLoading) {
+        this.loadShoppingList();
+      }
       if (this.recipesLoaded && ((route && !this.selectedRecipe) || (editRoute && !recipeToEdit))) {
         // Unknown recipe id: drop the stale hash so the URL matches the list that is shown.
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
@@ -1551,6 +1741,8 @@ function recipeApp() {
 
     openRecipe(recipe) {
       this.showForm = false;
+      this.showShoppingList = false;
+      this.shoppingAddedNotice = null;
       window.history.pushState(
         { ...(window.history.state || {}), hamMnamRecipeDetail: true },
         '',
@@ -1884,6 +2076,192 @@ function recipeApp() {
       } finally {
         delete this.favoriteSavingIds[recipe.id];
       }
+    },
+
+    // --- Shopping list ---
+    resetShoppingList() {
+      this.shoppingListId = null;
+      this.shoppingItems = [];
+      this.shoppingRecipeIds = [];
+      this.shoppingLoaded = false;
+      this.shoppingLoading = false;
+      this.shoppingLoadError = '';
+      this.shoppingSaveError = '';
+      this.shoppingConfirmClear = false;
+      this.shoppingAddedNotice = null;
+      this.shoppingDraft = { name: '', amount: '', unit: '' };
+    },
+
+    openShoppingList() {
+      this.showForm = false;
+      this.selectedRecipe = null;
+      if (window.location.hash !== '#shopping-list') {
+        window.history.pushState(
+          { ...(window.history.state || {}), hamMnamShoppingList: true },
+          '',
+          `${window.location.pathname}${window.location.search}#shopping-list`
+        );
+      }
+      this.syncRoute();
+    },
+
+    closeShoppingList() {
+      this.showShoppingList = false;
+      this.shoppingConfirmClear = false;
+      if (window.location.hash !== '#shopping-list') return;
+      if (window.history.state && window.history.state.hamMnamShoppingList) {
+        window.history.back();
+      } else {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
+    },
+
+    // Loads the user's open list (newest row with completed_at NULL), or starts empty.
+    async loadShoppingList() {
+      if (!this.canUseShoppingList || this.shoppingLoading) return;
+      this.shoppingLoading = true;
+      this.shoppingLoadError = '';
+      try {
+        const rows = await this.request(
+          '?select=id,items,recipe_ids&completed_at=is.null&order=created_at.desc&limit=1',
+          { table: SHOPPING_TABLE, auth: true }
+        );
+        if (!this.session) return;
+        const row = Array.isArray(rows) && rows[0] ? rows[0] : null;
+        this.shoppingListId = row ? row.id : null;
+        this.shoppingItems = normalizeShoppingItems(row && row.items);
+        this.shoppingRecipeIds = row && Array.isArray(row.recipe_ids)
+          ? row.recipe_ids.map(recipeIdValue).filter((id) => id !== null)
+          : [];
+        this.shoppingLoaded = true;
+      } catch (error) {
+        console.error('Could not load the shopping list:', error);
+        this.shoppingLoadError = this.errorText('shoppingLoadError', error);
+      } finally {
+        this.shoppingLoading = false;
+      }
+    },
+
+    // Saves the current list. Calls made while a save is running are folded into
+    // one more save afterwards, so the last state always reaches the database.
+    saveShoppingList() {
+      shoppingDirty = true;
+      if (shoppingWrite) return shoppingWrite;
+      this.shoppingSaving = true;
+      shoppingWrite = (async () => {
+        try {
+          while (shoppingDirty) {
+            shoppingDirty = false;
+            await this.writeShoppingList();
+          }
+          this.shoppingSaveError = '';
+        } catch (error) {
+          shoppingDirty = false;
+          console.error('Could not save the shopping list:', error);
+          this.shoppingSaveError = this.errorText('shoppingSaveError', error);
+        } finally {
+          this.shoppingSaving = false;
+          shoppingWrite = null;
+        }
+      })();
+      return shoppingWrite;
+    },
+
+    async writeShoppingList() {
+      const body = {
+        items: this.shoppingItems.map((item) => ({ ...item })),
+        recipe_ids: [...this.shoppingRecipeIds]
+      };
+      if (this.shoppingListId === null) {
+        const created = await this.request('', {
+          table: SHOPPING_TABLE,
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify(body)
+        });
+        if (!Array.isArray(created) || !created[0]) throw apiError('noRows', 'Supabase did not return the new shopping list.');
+        this.shoppingListId = created[0].id;
+        return;
+      }
+      const updated = await this.request(`?id=eq.${encodeURIComponent(this.shoppingListId)}`, {
+        table: SHOPPING_TABLE,
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(body)
+      });
+      // An update blocked by row-level security succeeds with zero rows changed.
+      if (!Array.isArray(updated) || updated.length === 0) {
+        throw apiError('noRows', 'Supabase did not update the shopping list.');
+      }
+    },
+
+    // Changes only a list that loaded: saving over an unloaded one could start a second open list.
+    changeShoppingItems(items, recipeIds = this.shoppingRecipeIds) {
+      if (!this.shoppingLoaded) return false;
+      this.shoppingItems = items;
+      this.shoppingRecipeIds = recipeIds;
+      this.shoppingConfirmClear = false;
+      this.saveShoppingList();
+      return true;
+    },
+
+    addShoppingDraft() {
+      const item = normalizeShoppingItem(this.shoppingDraft);
+      if (!item) return;
+      const merged = mergeShoppingItems(this.shoppingItems, [item], (value, digits) => this.formatNumber(value, digits));
+      if (this.changeShoppingItems(merged)) this.shoppingDraft = { name: '', amount: '', unit: '' };
+    },
+
+    toggleShoppingItem(index) {
+      const item = this.shoppingItems[index];
+      if (!item) return;
+      this.changeShoppingItems(this.shoppingItems.map((entry, i) => (i === index ? { ...entry, checked: !entry.checked } : entry)));
+    },
+
+    removeShoppingItem(index) {
+      if (!this.shoppingItems[index]) return;
+      const items = this.shoppingItems.filter((_, i) => i !== index);
+      this.changeShoppingItems(items, items.length ? this.shoppingRecipeIds : []);
+    },
+
+    removeCheckedShoppingItems() {
+      const items = this.shoppingItems.filter((item) => !item.checked);
+      if (items.length === this.shoppingItems.length) return;
+      this.changeShoppingItems(items, items.length ? this.shoppingRecipeIds : []);
+    },
+
+    clearShoppingList() {
+      this.changeShoppingItems([], []);
+    },
+
+    shoppingItemMeasure(item) {
+      return [item.amount, item.unit].filter(Boolean).join(' ');
+    },
+
+    // Adds the recipe's ingredients for the servings chosen in the detail.
+    async addRecipeToShoppingList(recipe) {
+      if (!recipe || !this.canUseShoppingList) return;
+      this.shoppingAddedNotice = null;
+      if (!this.shoppingLoaded) await this.loadShoppingList();
+      if (!this.shoppingLoaded) {
+        this.shoppingSaveError = this.shoppingLoadError || this.t('shoppingLoadError');
+        return;
+      }
+      const factor = this.ingredientServings(recipe) / this.recipeBaseServings(recipe);
+      const additions = this.recipeIngredients(recipe)
+        .map((ingredient) => normalizeShoppingItem({
+          name: ingredient.name,
+          amount: scaleAmount(ingredient.amount, factor, (value, digits) => this.formatNumber(value, digits)),
+          unit: ingredient.unit
+        }))
+        .filter(Boolean);
+      if (!additions.length) return;
+      const merged = mergeShoppingItems(this.shoppingItems, additions, (value, digits) => this.formatNumber(value, digits));
+      const id = recipeIdValue(recipe.id);
+      const recipeIds = id !== null && !this.shoppingRecipeIds.includes(id) ? [...this.shoppingRecipeIds, id] : this.shoppingRecipeIds;
+      this.shoppingSaveError = '';
+      this.changeShoppingItems(merged, recipeIds);
+      this.shoppingAddedNotice = { recipeId: recipe.id, count: additions.length };
     }
   };
 }

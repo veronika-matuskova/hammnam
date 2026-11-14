@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=16"></script>
+    <script defer src="./js/app.js?v=17"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -23,7 +23,7 @@
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
           <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
-          <span>
+          <span :class="canUseShoppingList && 'hidden min-[400px]:block'">
             <span class="block text-lg font-bold tracking-tight">hamMňam</span>
             <span class="hidden text-xs text-slate-500 sm:block" x-text="t('tagline')"></span>
           </span>
@@ -54,15 +54,35 @@
             x-text="t('signIn')"
           ></button>
           <button
+            x-show="canUseShoppingList"
+            x-cloak
+            type="button"
+            @click="showShoppingList ? closeShoppingList() : openShoppingList()"
+            class="relative inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm font-semibold transition sm:px-3"
+            :class="showShoppingList ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-700 hover:bg-slate-100'"
+            :aria-label="shoppingRemainingCount ? `${t('shoppingList')} – ${tf('shoppingRemaining', { count: shoppingRemainingCount })}` : t('shoppingList')"
+            :aria-pressed="showShoppingList ? 'true' : 'false'"
+            :title="t('shoppingList')"
+          >
+            <span aria-hidden="true">🛒</span><span class="hidden sm:inline" x-text="t('shoppingList')"></span>
+            <span
+              x-show="shoppingRemainingCount"
+              class="grid min-w-[1.25rem] place-items-center rounded-full px-1 text-[11px] font-bold leading-5"
+              :class="showShoppingList ? 'bg-white text-slate-900' : 'bg-emerald-600 text-white'"
+              aria-hidden="true"
+              x-text="shoppingRemainingCount"
+            ></span>
+          </button>
+          <button
             x-show="isSignedIn"
             x-cloak
             type="button"
             @click="signOut()"
-            class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            class="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             x-text="t('signOut')"
           ></button>
           <button
-            x-show="canEdit && !selectedRecipe && !showForm"
+            x-show="canEdit && !selectedRecipe && !showForm && !showShoppingList"
             x-cloak
             type="button"
             @click="openForm()"
@@ -73,13 +93,13 @@
       </div>
     </header>
 
-    <section x-show="!isSignedIn && (showSignIn || showForm)" x-cloak class="mx-auto mt-6 max-w-md px-4 sm:px-6" aria-labelledby="sign-in-title">
+    <section x-show="!isSignedIn && (showSignIn || showForm || showShoppingList)" x-cloak class="mx-auto mt-6 max-w-md px-4 sm:px-6" aria-labelledby="sign-in-title">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between gap-3">
           <h2 id="sign-in-title" class="text-lg font-semibold text-slate-900" x-text="t('signInTitle')"></h2>
-          <button x-show="!showForm" type="button" @click="showSignIn = false; authError = ''" :aria-label="t('close')" class="shrink-0 text-lg font-semibold leading-none text-slate-500">&times;</button>
+          <button x-show="!showForm && !showShoppingList" type="button" @click="showSignIn = false; authError = ''" :aria-label="t('close')" class="shrink-0 text-lg font-semibold leading-none text-slate-500">&times;</button>
         </div>
-        <p class="mt-1 text-sm text-slate-600" x-text="showForm ? t('signInToEdit') : t('signInIntro')"></p>
+        <p class="mt-1 text-sm text-slate-600" x-text="showShoppingList ? t('shoppingSignInNote') : showForm ? t('signInToEdit') : t('signInIntro')"></p>
         <form @submit.prevent="requestMagicLink()" class="mt-4 flex flex-col gap-2 sm:flex-row">
           <label class="min-w-0 flex-1">
             <span class="sr-only" x-text="t('email')"></span>
@@ -89,12 +109,12 @@
         </form>
         <p x-show="magicLinkSent" class="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800" role="status" x-text="t('magicLinkSent')"></p>
         <p x-show="authError" class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="authError"></p>
-        <button x-show="showForm" type="button" @click="closeForm()" class="mt-4 text-sm font-semibold text-slate-600 hover:text-slate-950" x-text="t('backToRecipes')"></button>
+        <button x-show="showForm || showShoppingList" type="button" @click="showForm ? closeForm() : closeShoppingList()" class="mt-4 text-sm font-semibold text-slate-600 hover:text-slate-950" x-text="t('backToRecipes')"></button>
       </div>
     </section>
     <p x-show="isSignedIn && familyMember === false" x-cloak class="mx-auto mt-4 max-w-6xl px-4 text-sm text-amber-800 sm:px-6" role="status" x-text="t('notFamilyMember')"></p>
 
-    <main x-show="!selectedRecipe && !showForm" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main x-show="!selectedRecipe && !showForm && !showShoppingList" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <section class="mb-8">
         <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500" x-text="t('eyebrow')"></p>
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -520,6 +540,27 @@
               </template>
             </ul>
             <p x-show="selectedRecipe && !recipeIngredients(selectedRecipe).length" class="rounded-xl border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500" x-text="t('noIngredients')"></p>
+            <div x-show="canUseShoppingList && selectedRecipe && recipeIngredients(selectedRecipe).length" x-cloak class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <button
+                type="button"
+                @click="addRecipeToShoppingList(selectedRecipe)"
+                :disabled="shoppingLoading"
+                class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-60"
+              >
+                <span aria-hidden="true">🛒</span><span x-text="t('addToShopping')"></span>
+              </button>
+              <span class="text-xs text-slate-500" x-text="t('addToShoppingNote')"></span>
+            </div>
+            <p
+              x-show="selectedRecipe && shoppingAddedNotice && String(shoppingAddedNotice.recipeId) === String(selectedRecipe.id)"
+              x-cloak
+              class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800"
+              role="status"
+            >
+              <span x-text="shoppingAddedNotice ? tf('shoppingAdded', { count: shoppingAddedNotice.count }) : ''"></span>
+              <button type="button" @click="openShoppingList()" class="font-semibold underline underline-offset-2 hover:text-emerald-950" x-text="t('openShoppingList')"></button>
+            </p>
+            <p x-show="selectedRecipe && shoppingSaveError" x-cloak class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="shoppingSaveError"></p>
           </section>
 
           <section class="mb-8" aria-labelledby="detail-steps-heading">
@@ -545,6 +586,119 @@
           </section>
         </div>
       </article>
+    </main>
+
+    <main x-show="showShoppingList && canUseShoppingList" x-cloak class="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10" aria-labelledby="shopping-title">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <button
+              type="button"
+              @click="closeShoppingList()"
+              class="-ml-2 mb-2 inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            >
+              <span aria-hidden="true">←</span><span x-text="t('backToRecipes')"></span>
+            </button>
+            <h1 id="shopping-title" class="text-2xl font-bold tracking-tight sm:text-3xl" x-text="t('shoppingList')"></h1>
+            <p class="mt-1 text-sm text-slate-500" x-text="t('shoppingIntro')"></p>
+          </div>
+          <span
+            class="mt-10 shrink-0 text-xs text-slate-500"
+            role="status"
+            x-text="shoppingSaving ? t('shoppingSaving') : (shoppingLoaded && shoppingListId !== null && !shoppingSaveError ? t('shoppingSaved') : '')"
+          ></span>
+        </div>
+
+        <div x-show="shoppingLoading" class="rounded-xl border border-slate-200 px-4 py-8 text-center text-sm text-slate-500" role="status" x-text="t('shoppingLoading')"></div>
+        <div x-show="shoppingLoadError && !shoppingLoading" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          <p x-text="shoppingLoadError"></p>
+          <button type="button" @click="loadShoppingList()" class="mt-3 rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800" x-text="t('retry')"></button>
+        </div>
+
+        <div x-show="shoppingLoaded && !shoppingLoading">
+          <form @submit.prevent="addShoppingDraft()" class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]" autocomplete="off">
+            <label class="sr-only" for="shopping-name" x-text="t('shoppingItemName')"></label>
+            <input id="shopping-name" x-model="shoppingDraft.name" maxlength="120" :placeholder="t('shoppingItemPlaceholder')" class="col-span-3 min-w-0 rounded-lg sm:col-span-1 border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            <label class="sr-only" for="shopping-amount" x-text="t('shoppingAmount')"></label>
+            <input id="shopping-amount" x-model="shoppingDraft.amount" maxlength="40" inputmode="decimal" :placeholder="t('shoppingAmount')" class="min-w-0 rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            <label class="sr-only" for="shopping-unit" x-text="t('shoppingUnit')"></label>
+            <input id="shopping-unit" x-model="shoppingDraft.unit" maxlength="40" :placeholder="t('shoppingUnit')" class="min-w-0 rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            <button type="submit" :disabled="!shoppingDraft.name.trim()" class="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40" x-text="t('shoppingAdd')"></button>
+          </form>
+
+          <p x-show="shoppingSaveError" x-cloak class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="shoppingSaveError"></p>
+
+          <div x-show="shoppingItems.length" class="mt-6">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+              <p class="font-semibold text-slate-800">
+                <span x-text="tf('shoppingRemaining', { count: shoppingRemainingCount })"></span>
+                <span x-show="shoppingCheckedCount" class="font-normal text-slate-500" x-text="` · ${tf('shoppingInBasket', { count: shoppingCheckedCount })}`"></span>
+              </p>
+            </div>
+            <div class="mb-3 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+              <div class="h-full rounded-full bg-emerald-500 transition-all" :style="`width: ${shoppingItems.length ? (shoppingCheckedCount / shoppingItems.length) * 100 : 0}%`"></div>
+            </div>
+            <ul class="divide-y divide-slate-100 rounded-xl border border-slate-200">
+              <template x-for="row in shoppingRows" :key="row.index + '|' + row.item.name + '|' + row.item.unit">
+                <li class="flex items-center gap-3 px-3 py-2.5 text-sm">
+                  <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      :checked="row.item.checked"
+                      @change="toggleShoppingItem(row.index)"
+                      :aria-label="tf('shoppingCheckItem', { name: row.item.name })"
+                      class="h-5 w-5 shrink-0 rounded border-slate-300 text-emerald-600 accent-emerald-600"
+                    >
+                    <span class="min-w-0 flex-1 break-words font-medium" :class="row.item.checked ? 'text-slate-400 line-through' : 'text-slate-800'" x-text="row.item.name"></span>
+                    <span class="shrink-0 text-right" :class="row.item.checked ? 'text-slate-400' : 'text-slate-500'" x-text="shoppingItemMeasure(row.item)"></span>
+                  </label>
+                  <button
+                    type="button"
+                    @click="removeShoppingItem(row.index)"
+                    class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-red-50 hover:text-red-700"
+                    :aria-label="tf('shoppingRemoveItem', { name: row.item.name })"
+                  >&times;</button>
+                </li>
+              </template>
+            </ul>
+
+            <div x-show="shoppingRecipes.length" class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span x-text="t('shoppingFromRecipes')"></span>
+              <template x-for="recipe in shoppingRecipes" :key="recipe.id">
+                <button type="button" @click="openLinkedRecipe(recipe)" class="rounded-full border border-slate-200 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-100" x-text="displayTitle(recipe)"></button>
+              </template>
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+              <button
+                x-show="shoppingCheckedCount"
+                type="button"
+                @click="removeCheckedShoppingItems()"
+                class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                x-text="t('shoppingRemoveChecked')"
+              ></button>
+              <button
+                x-show="!shoppingConfirmClear"
+                type="button"
+                @click="shoppingConfirmClear = true"
+                class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                x-text="t('shoppingClear')"
+              ></button>
+              <div x-show="shoppingConfirmClear" class="flex flex-wrap items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                <span x-text="t('shoppingClearConfirm')"></span>
+                <button type="button" @click="clearShoppingList()" class="rounded-md bg-red-700 px-2.5 py-1 font-semibold text-white hover:bg-red-800" x-text="t('shoppingClearYes')"></button>
+                <button type="button" @click="shoppingConfirmClear = false" class="rounded-md px-2.5 py-1 font-semibold text-red-800 hover:bg-red-100" x-text="t('cancel')"></button>
+              </div>
+            </div>
+          </div>
+
+          <div x-show="!shoppingItems.length" class="mt-6 rounded-xl border border-dashed border-slate-300 px-6 py-10 text-center">
+            <p class="text-3xl" aria-hidden="true">🛒</p>
+            <p class="mt-2 font-semibold text-slate-800" x-text="t('shoppingEmpty')"></p>
+            <p class="mt-1 text-sm text-slate-500" x-text="t('shoppingEmptyHint')"></p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <main x-show="showForm" x-cloak class="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10" aria-labelledby="form-title">
