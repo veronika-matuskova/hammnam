@@ -79,6 +79,69 @@ test('a failed magic link request shows a Slovak error', async () => {
   assert.equal(app.authSending, false);
 });
 
+async function requestLinkWith(response) {
+  const { fetch } = router([[/\/auth\/v1\/otp/, () => response]]);
+  const app = createRecipeApp(fetch);
+  app.signInEmail = 'mama@example.com';
+  await app.requestMagicLink();
+  return app;
+}
+
+test('429 over_email_send_rate_limit tells the user to try again in about an hour', async () => {
+  const app = await requestLinkWith(jsonResponse(429, {
+    code: 429,
+    error_code: 'over_email_send_rate_limit',
+    msg: 'email rate limit exceeded'
+  }));
+
+  assert.equal(
+    app.authError,
+    'Prihlasovací odkaz sa nepodarilo odoslať. Bolo odoslaných príliš veľa prihlasovacích odkazov. Skúste to znova približne o hodinu. Ak ste už odkaz dostali, otvorte ten najnovší.'
+  );
+  assert.doesNotMatch(app.authError, /429|rate limit|HTTP/);
+  assert.equal(app.magicLinkSent, false);
+  assert.equal(app.authSending, false);
+});
+
+test('429 over_request_rate_limit asks the user to wait a moment', async () => {
+  const app = await requestLinkWith(jsonResponse(429, {
+    code: 429,
+    error_code: 'over_request_rate_limit',
+    msg: 'For security purposes, you can only request this after 42 seconds.'
+  }));
+
+  assert.equal(
+    app.authError,
+    'Prihlasovací odkaz sa nepodarilo odoslať. Odkaz ste si vyžiadali pred chvíľou. Skúste to znova o minútu a medzitým skontrolujte e-mail.'
+  );
+  assert.doesNotMatch(app.authError, /429|42|seconds|HTTP/);
+  assert.equal(app.magicLinkSent, false);
+});
+
+test('429 with an unparseable body falls back to the generic rate-limit text', async () => {
+  const app = await requestLinkWith({
+    ok: false,
+    status: 429,
+    json: async () => { throw new SyntaxError('Unexpected token'); },
+    text: async () => '<html>Too Many Requests</html>'
+  });
+
+  assert.equal(
+    app.authError,
+    'Prihlasovací odkaz sa nepodarilo odoslať. Bolo odoslaných príliš veľa prihlasovacích odkazov. Skúste to znova približne o hodinu. Ak ste už odkaz dostali, otvorte ten najnovší.'
+  );
+  assert.equal(app.magicLinkSent, false);
+});
+
+test('a 5xx from the magic-link endpoint keeps the generic server error', async () => {
+  const app = await requestLinkWith(jsonResponse(503, { msg: 'unavailable' }));
+
+  assert.equal(
+    app.authError,
+    `Prihlasovací odkaz sa nepodarilo odoslať. ${app.t('serverError')}`
+  );
+});
+
 test('the magic-link redirect is turned into a stored session and cleared from the URL', async () => {
   const { fetch, calls } = router([
     [/\/auth\/v1\/user$/, () => jsonResponse(200, { id: 'u1', email: 'mama@example.com' })],

@@ -9,7 +9,7 @@ const translations = {
     email: 'E-mail',
     sendMagicLink: 'Poslat přihlašovací odkaz',
     sendingMagicLink: 'Odesílám…',
-    magicLinkSent: 'Hotovo! Zkontrolujte e-mail a otevřete přihlašovací odkaz na tomto zařízení.',
+    magicLinkSent: 'Hotovo! Zkontrolujte e-mail a otevřete přihlašovací odkaz na tomto zařízení. Odkaz funguje jen jednou; nový si nevyžadujte hned, počet odkazů je omezený.',
     invalidEmail: 'Zadejte platnou e-mailovou adresu.',
     signInError: 'Přihlašovací odkaz se nepodařilo odeslat.',
     signedInAs: 'Přihlášen(a) jako',
@@ -18,6 +18,8 @@ const translations = {
     sessionExpired: 'Přihlášení vypršelo. Přihlaste se prosím znovu.',
     signInNotAllowed: 'Tento e-mail nemá do aplikace přístup. Požádejte správce o přidání.',
     signInLinkInvalid: 'Odkaz je neplatný nebo vypršel. Vyžádejte si nový.',
+    signInRateLimited: 'Bylo odesláno příliš mnoho přihlašovacích odkazů. Zkuste to znovu přibližně za hodinu. Pokud jste už odkaz dostali, otevřete ten nejnovější.',
+    signInTooSoon: 'Odkaz jste si vyžádali před chvílí. Zkuste to znovu za minutu a mezitím zkontrolujte e-mail.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Zpět na recepty',
     eyebrow: 'Vaše kuchařka',
@@ -138,7 +140,7 @@ const translations = {
     email: 'E-mail',
     sendMagicLink: 'Poslať prihlasovací odkaz',
     sendingMagicLink: 'Odosielam…',
-    magicLinkSent: 'Hotovo! Skontrolujte e-mail a otvorte prihlasovací odkaz na tomto zariadení.',
+    magicLinkSent: 'Hotovo! Skontrolujte e-mail a otvorte prihlasovací odkaz na tomto zariadení. Odkaz funguje len raz; nový si nežiadajte hneď, počet odkazov je obmedzený.',
     invalidEmail: 'Zadajte platnú e-mailovú adresu.',
     signInError: 'Prihlasovací odkaz sa nepodarilo odoslať.',
     signedInAs: 'Prihlásený/á ako',
@@ -147,6 +149,8 @@ const translations = {
     sessionExpired: 'Prihlásenie vypršalo. Prihláste sa, prosím, znova.',
     signInNotAllowed: 'Tento e-mail nemá do aplikácie prístup. Požiadajte správcu o pridanie.',
     signInLinkInvalid: 'Odkaz je neplatný alebo vypršal. Vyžiadajte si nový.',
+    signInRateLimited: 'Bolo odoslaných príliš veľa prihlasovacích odkazov. Skúste to znova približne o hodinu. Ak ste už odkaz dostali, otvorte ten najnovší.',
+    signInTooSoon: 'Odkaz ste si vyžiadali pred chvíľou. Skúste to znova o minútu a medzitým skontrolujte e-mail.',
     newRecipe: '+ Nový recept',
     backToRecipes: 'Späť na recepty',
     eyebrow: 'Vaša kuchárka',
@@ -529,6 +533,17 @@ function apiError(code, message, status) {
   return error;
 }
 
+// Supabase Auth error bodies look like {"code":429,"error_code":"over_email_send_rate_limit","msg":"..."}.
+// Returns error_code, or '' when the body is missing or not JSON.
+function authErrorCode(body) {
+  try {
+    const parsed = JSON.parse(body);
+    return parsed && typeof parsed.error_code === 'string' ? parsed.error_code : '';
+  } catch {
+    return '';
+  }
+}
+
 function errorReasonKey(error) {
   const code = error && error.code;
   const status = error && error.status;
@@ -905,10 +920,16 @@ function recipeApp() {
       return !parseGi(value).valid;
     },
 
-    // Supabase Auth answers 400/422 when the e-mail has no account (create_user is false).
+    // Supabase Auth answers 400/422 when the e-mail has no account (create_user is false),
+    // and 429 when a rate limit is hit: over_request_rate_limit is the short per-user wait
+    // between two links; anything else (over_email_send_rate_limit, unknown body) is the
+    // project-wide hourly e-mail limit.
     signInErrorText(error) {
       const status = error && error.status;
-      const reason = status === 400 || status === 422 ? 'signInNotAllowed' : errorReasonKey(error);
+      let reason;
+      if (status === 400 || status === 422) reason = 'signInNotAllowed';
+      else if (status === 429) reason = error.authCode === 'over_request_rate_limit' ? 'signInTooSoon' : 'signInRateLimited';
+      else reason = errorReasonKey(error);
       return `${this.t('signInError')} ${this.t(reason)}`;
     },
 
@@ -1112,8 +1133,11 @@ function recipeApp() {
           body: JSON.stringify({ email, create_user: false })
         });
         if (!response.ok) {
-          const details = (await response.text()).slice(0, 240);
-          throw apiError('http', `Supabase Auth HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
+          const body = await response.text();
+          const details = body.slice(0, 240);
+          const error = apiError('http', `Supabase Auth HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
+          error.authCode = authErrorCode(body);
+          throw error;
         }
         this.magicLinkSent = true;
       } catch (error) {

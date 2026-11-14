@@ -69,6 +69,7 @@ Your e-mail must first be added to the family list by the app owner; otherwise n
 Good to know:
 
 - There is no password. The link works once and expires after about an hour; request a new one if it has expired.
+- Only a few sign-in e-mails can be sent per hour (for the whole app). If you see "Bolo odoslaných príliš veľa prihlasovacích odkazov", wait about an hour, or open the newest link you already received.
 - Open the link in the same browser where you asked for it. If you installed the app on your home screen, it may keep its own sign-in, separate from the browser.
 - You stay signed in on that device until you tap **Odhlásiť sa**; the app renews the sign-in automatically when needed.
 - Reading recipes never needs sign-in.
