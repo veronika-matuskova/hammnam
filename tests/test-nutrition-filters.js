@@ -212,3 +212,31 @@ test('the filter panel is in the list view with decimal inputs and a reset butto
   assert.equal(app.t('resetFilters'), 'Zrušiť filtre');
   assert.equal(app.t('nutritionFilters'), 'Filtre');
 });
+
+test('kcal and SJ are compared as the detail rounds them', () => {
+  const app = loadApp({});
+  // 200 g portion: 250.4 kcal (shown "250 kcal") and 20.4 g carbs = 2.04 SJ (shown "2").
+  app.recipes = [{ id: 1, calories: 125.2, carbs: 10.2, total_weight: 800, servings: 4 }];
+  const { perPortion } = app.recipeNutrition(app.recipes[0], false);
+  assert.equal(app.formatAmount(perPortion.calories, 'kcal', 0), '250 kcal');
+  assert.equal(app.formatNumber(perPortion.sj), '2');
+  setFilter(app, 'calories', '', '250');
+  assert.deepEqual(ids(app), [1]);
+  setFilter(app, 'calories');
+  setFilter(app, 'sj', '2', '2');
+  assert.deepEqual(ids(app), [1]);
+  // 12 g factor: 20.4 / 12 = 1.7 SJ as shown.
+  app.setSjFactor(12);
+  setFilter(app, 'sj', '1,7', '1,7');
+  assert.deepEqual(ids(app), [1]);
+});
+
+test('rounding for the filters matches formatNumber, also at .x5 values', () => {
+  const app = loadApp({});
+  // 200 g portion with 0.75 g carbs per 100 g: 1.5 g carbs = 0.15 SJ, shown "0,2".
+  app.recipes = [{ id: 1, carbs: 0.75, total_weight: 800, servings: 4 }];
+  const { perPortion } = app.recipeNutrition(app.recipes[0], false);
+  assert.equal(app.formatNumber(perPortion.sj), '0,2');
+  setFilter(app, 'sj', '0,2', '0,2');
+  assert.deepEqual(ids(app), [1]);
+});

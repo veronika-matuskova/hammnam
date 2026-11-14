@@ -573,6 +573,19 @@ function nutritionFilterRange(bounds) {
   return { min, max };
 }
 
+// Fraction digits the detail shows: kcal per portion with 0 (index.html,
+// per-portion <dl>), SJ per portion with formatNumber's default of 1.
+const FILTER_DISPLAY_DIGITS = { calories: 0, sj: 1 };
+
+// Rounds with Intl.NumberFormat, like formatNumber does for the display. Not
+// toFixed: that rounds the binary value (0.15 -> "0.1"), Intl shows "0,2".
+const DISPLAY_ROUNDERS = {};
+function roundForDisplay(value, digits) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  if (!DISPLAY_ROUNDERS[digits]) DISPLAY_ROUNDERS[digits] = new Intl.NumberFormat('en-US', { maximumFractionDigits: digits, useGrouping: false });
+  return Number(DISPLAY_ROUNDERS[digits].format(value));
+}
+
 // Inclusive. An unknown value (null) never matches a set range.
 function valueInRange(value, range) {
   if (value === null || value === undefined || !Number.isFinite(value)) return false;
@@ -829,11 +842,13 @@ function recipeApp() {
     // The values the filters compare, the same ones the recipe detail shows:
     // kcal and SJ per portion (total weight / servings, current SJ factor; the
     // detail's custom portion is not used), GI and GL as entered on the recipe.
+    // kcal and SJ are rounded like the detail displays them (formatNumber), so a
+    // portion shown as "250 kcal" matches "do 250" even when it is 250.4.
     recipeFilterValues(recipe) {
       const { perPortion } = this.recipeNutrition(recipe, false);
       return {
-        calories: perPortion.calories,
-        sj: perPortion.sj,
+        calories: roundForDisplay(perPortion.calories, FILTER_DISPLAY_DIGITS.calories),
+        sj: roundForDisplay(perPortion.sj, FILTER_DISPLAY_DIGITS.sj),
         gi: giNumber(recipe.gi),
         gl: nonNegativeNumber(recipe.glycemic_load)
       };
