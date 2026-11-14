@@ -32,6 +32,17 @@ The GI label is colored so you can read it at a glance:
 | Amber | Medium GI (56–69) |
 | Red | High GI (70 or more, or text such as "vysoký") |
 
+## Čo uvarím? (What should I cook?)
+
+Can't decide? Tap **🎲 Čo uvarím?** above the recipe list and the app picks a recipe at random. You can narrow it down, all conditions are optional:
+
+- **Category** – only recipes from one category.
+- **Len obľúbené** – only your favorite recipes.
+- **Len nízky GI** – only recipes with a low glycemic index (55 or less).
+- **Najviac SJ na porciu** – only recipes with at most this many SJ per portion. Recipes without servings and weight are left out, because their SJ per portion is unknown.
+
+Tap **Iný návrh** for another recipe (it never repeats the one shown), or **Otvoriť recept** to open it. The panel shows how many recipes meet the conditions; if none do, it says so.
+
 ## Recipe detail
 
 Tap a recipe to open it. The detail shows:
