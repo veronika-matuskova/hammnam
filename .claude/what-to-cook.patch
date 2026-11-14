@@ -1,0 +1,440 @@
+From e4f160a95a1cfde08d8743db28e912ca88a1bc83 Mon Sep 17 00:00:00 2001
+From: Veronika Matuskova
+ <56894657+veronika-matuskova@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 12:57:51 +0000
+Subject: [PATCH] =?UTF-8?q?feat:=20Suggest=20a=20random=20recipe=20with=20?=
+ =?UTF-8?q?"=C4=8Co=20uvar=C3=ADm=3F"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+A button above the recipe list opens a panel that picks a random recipe.
+Optional conditions: category, favorites only, low GI only and a maximum
+SJ per portion (recipes without servings and weight are skipped while it
+is set). "Iný návrh" never repeats the recipe shown. Texts in Slovak and
+Czech; app-shell cache bumped to v11.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_019fFYC9X96eeNoe8wvcc53T
+---
+ README.md                |  11 ++++
+ index.html               |  90 +++++++++++++++++++++++--
+ js/app.js                |  86 +++++++++++++++++++++++-
+ sw.js                    |   4 +-
+ tests/test-suggestion.js | 139 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 322 insertions(+), 8 deletions(-)
+ create mode 100644 tests/test-suggestion.js
+
+diff --git a/README.md b/README.md
+index eda3266..2c4db5b 100644
+--- a/README.md
++++ b/README.md
+@@ -31,6 +31,17 @@ The GI label is colored so you can read it at a glance:
+ | Amber | Medium GI (56–69) |
+ | Red | High GI (70 or more, or text such as "vysoký") |
+ 
++## Čo uvarím? (What should I cook?)
++
++Can't decide? Tap **🎲 Čo uvarím?** above the recipe list and the app picks a recipe at random. You can narrow it down, all conditions are optional:
++
++- **Category** – only recipes from one category.
++- **Len obľúbené** – only your favorite recipes.
++- **Len nízky GI** – only recipes with a low glycemic index (55 or less).
++- **Najviac SJ na porciu** – only recipes with at most this many SJ per portion. Recipes without servings and weight are left out, because their SJ per portion is unknown.
++
++Tap **Iný návrh** for another recipe (it never repeats the one shown), or **Otvoriť recept** to open it. The panel shows how many recipes meet the conditions; if none do, it says so.
++
+ ## Recipe detail
+ 
+ Tap a recipe to open it. The detail shows:
+diff --git a/index.html b/index.html
+index 6b68e09..da996aa 100644
+--- a/index.html
++++ b/index.html
+@@ -11,7 +11,7 @@
+     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <script defer src="./config.js"></script>
+-    <script defer src="./js/app.js?v=10"></script>
++    <script defer src="./js/app.js?v=11"></script>
+     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+   </head>
+   <body
+@@ -94,10 +94,92 @@
+             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl" x-text="t('heading')"></h1>
+             <p class="mt-2 max-w-2xl text-slate-600" x-text="t('intro')"></p>
+           </div>
+-          <p class="text-sm text-slate-500" aria-live="polite">
+-            <span x-text="recipeCountLabel(filteredRecipes.length)"></span>
+-          </p>
++          <div class="flex items-center gap-3">
++            <button
++              type="button"
++              @click="toggleSuggestion()"
++              :disabled="loading || recipes.length === 0"
++              :aria-expanded="showSuggestion"
++              aria-controls="suggestion-panel"
++              class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
++            >
++              <span aria-hidden="true">🎲</span>
++              <span x-text="t('suggestTitle')"></span>
++            </button>
++            <p class="text-sm text-slate-500" aria-live="polite">
++              <span x-text="recipeCountLabel(filteredRecipes.length)"></span>
++            </p>
++          </div>
++        </div>
++      </section>
++
++      <section id="suggestion-panel" x-show="showSuggestion" x-cloak class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-sm sm:p-5" aria-labelledby="suggestion-title">
++        <div class="flex items-start justify-between gap-3">
++          <div>
++            <h2 id="suggestion-title" class="text-lg font-semibold text-slate-900" x-text="t('suggestTitle')"></h2>
++            <p class="mt-1 text-sm text-slate-600" x-text="t('suggestIntro')"></p>
++          </div>
++          <button type="button" @click="showSuggestion = false" :aria-label="t('close')" class="shrink-0 text-lg font-semibold leading-none text-slate-500">&times;</button>
++        </div>
++        <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
++          <label>
++            <span class="sr-only" x-text="t('category')"></span>
++            <select x-model="suggestionFilters.category" @change="suggestRecipe()" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
++              <option value="" x-text="t('allCategories')"></option>
++              <template x-for="category in categories" :key="category">
++                <option :value="category" x-text="category"></option>
++              </template>
++            </select>
++          </label>
++          <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
++            <input type="checkbox" x-model="suggestionFilters.favoritesOnly" @change="suggestRecipe()" class="h-4 w-4 rounded border-slate-300">
++            <span x-text="t('suggestFavoritesOnly')"></span>
++          </label>
++          <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
++            <input type="checkbox" x-model="suggestionFilters.lowGi" @change="suggestRecipe()" class="h-4 w-4 rounded border-slate-300">
++            <span x-text="t('suggestLowGi')"></span>
++          </label>
++          <label>
++            <span class="sr-only" x-text="t('suggestMaxSj')"></span>
++            <input
++              type="text"
++              inputmode="decimal"
++              x-model="suggestionFilters.maxSj"
++              @change="suggestRecipe()"
++              :placeholder="t('suggestMaxSj')"
++              :aria-invalid="suggestionMaxSjInvalid"
++              class="w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-100"
++              :class="suggestionMaxSjInvalid ? 'border-red-300' : 'border-slate-200 focus:border-slate-400'"
++            >
++          </label>
+         </div>
++        <p x-show="suggestionMaxSjInvalid" class="mt-2 text-xs text-red-700" x-text="t('suggestMaxSjInvalid')"></p>
++        <p x-show="suggestionMaxSj !== null" class="mt-2 text-xs text-slate-500" x-text="t('suggestMaxSjHint')"></p>
++
++        <template x-if="suggestedRecipe">
++          <div class="mt-4 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center" aria-live="polite">
++            <img x-show="suggestedRecipe.photo" :src="suggestedRecipe.photo" :alt="displayTitle(suggestedRecipe)" class="h-28 w-full rounded-lg object-cover sm:w-40">
++            <div class="min-w-0 flex-1">
++              <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500" x-text="displayCategory(suggestedRecipe)"></p>
++              <p class="text-lg font-semibold leading-snug text-slate-900" x-text="displayTitle(suggestedRecipe)"></p>
++              <div class="mt-3 flex flex-wrap gap-2">
++                <span x-show="recipePortionSj(suggestedRecipe) !== null" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">
++                  <span class="text-emerald-700">SJ</span><span x-text="formatNumber(recipePortionSj(suggestedRecipe))"></span><span class="font-normal opacity-70" x-text="t('perPortionSuffix')"></span>
++                </span>
++                <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold" :class="giClass(suggestedRecipe.gi)">
++                  <span>GI</span><span x-text="displayGi(suggestedRecipe.gi)"></span>
++                </span>
++              </div>
++            </div>
++            <div class="flex shrink-0 gap-2">
++              <button type="button" @click="openRecipe(suggestedRecipe)" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700" x-text="t('openRecipe')"></button>
++              <button type="button" x-show="suggestionCandidates.length > 1" @click="suggestRecipe()" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" x-text="t('suggestAnother')"></button>
++            </div>
++          </div>
++        </template>
++        <p x-show="suggestionCandidates.length === 0" class="mt-4 rounded-lg bg-white p-3 text-sm text-slate-700" role="status" x-text="t('suggestNone')"></p>
++        <button x-show="!suggestedRecipe && suggestionCandidates.length > 0" type="button" @click="suggestRecipe()" class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700" x-text="t('suggestButton')"></button>
++        <p x-show="suggestionCandidates.length > 0" class="mt-3 text-xs text-slate-500" x-text="tf('suggestCandidates', { count: suggestionCandidates.length })"></p>
+       </section>
+ 
+       <section class="mb-6 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto_auto]">
+diff --git a/js/app.js b/js/app.js
+index 47723f1..b6b4f55 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -128,7 +128,18 @@ const translations = {
+     giInvalid: 'Glykemický index musí být číslo od 0 do 100.',
+     giLow: 'Nízký GI',
+     giMedium: 'Střední GI',
+-    giHigh: 'Vysoký GI'
++    giHigh: 'Vysoký GI',
++    suggestTitle: 'Co uvařím?',
++    suggestIntro: 'Nechte si náhodně vybrat recept. Podmínky jsou volitelné.',
++    suggestFavoritesOnly: 'Jen oblíbené',
++    suggestLowGi: 'Jen nízký GI',
++    suggestMaxSj: 'Nejvýše SJ na porci',
++    suggestMaxSjHint: 'Recepty bez počtu porcí a hmotnosti se při této podmínce vynechají.',
++    suggestMaxSjInvalid: 'Zadejte nezáporné číslo, např. 2,5.',
++    suggestButton: 'Navrhni recept',
++    suggestAnother: 'Jiný návrh',
++    suggestNone: 'Žádný recept nesplňuje tyto podmínky. Zkuste je zmírnit.',
++    suggestCandidates: 'Vhodné recepty: {count}'
+   },
+   sk: {
+     tagline: 'Vaše recepty, prehľadne',
+@@ -259,7 +270,18 @@ const translations = {
+     giInvalid: 'Glykemický index musí byť číslo od 0 do 100.',
+     giLow: 'Nízky GI',
+     giMedium: 'Stredný GI',
+-    giHigh: 'Vysoký GI'
++    giHigh: 'Vysoký GI',
++    suggestTitle: 'Čo uvarím?',
++    suggestIntro: 'Nechajte si náhodne vybrať recept. Podmienky sú voliteľné.',
++    suggestFavoritesOnly: 'Len obľúbené',
++    suggestLowGi: 'Len nízky GI',
++    suggestMaxSj: 'Najviac SJ na porciu',
++    suggestMaxSjHint: 'Recepty bez počtu porcií a hmotnosti sa pri tejto podmienke vynechajú.',
++    suggestMaxSjInvalid: 'Zadajte nezáporné číslo, napr. 2,5.',
++    suggestButton: 'Navrhni recept',
++    suggestAnother: 'Iný návrh',
++    suggestNone: 'Žiadny recept nespĺňa tieto podmienky. Skúste ich zmierniť.',
++    suggestCandidates: 'Vhodné recepty: {count}'
+   }
+ };
+ 
+@@ -519,6 +541,19 @@ const GI_CLASSES = {
+ };
+ const GI_LABEL_KEYS = { low: 'giLow', medium: 'giMedium', high: 'giHigh' };
+ 
++// --- "Čo uvarím?": a random suggestion from the recipes that match ------------
++// Picks one candidate at random. With more than one candidate the previous
++// suggestion is skipped, so "another one" always shows a different recipe.
++function pickSuggestion(candidates, previousId = null, random = Math.random) {
++  const list = Array.isArray(candidates) ? candidates : [];
++  const pool = list.length > 1 && previousId !== null
++    ? list.filter((recipe) => String(recipe.id) !== String(previousId))
++    : list;
++  if (!pool.length) return null;
++  const index = Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)));
++  return pool[index];
++}
++
+ // A recipe needs at least one title, Slovak or Czech.
+ function hasTitle(recipe) {
+   return Boolean(textValue(recipe.title_sk) || textValue(recipe.title_cs));
+@@ -716,6 +751,53 @@ function recipeApp() {
+     portionSizeInput: '',
+     // Servings chosen in the detail for scaling ingredients, for one recipe id.
+     scaledServings: { recipeId: null, value: null },
++    // "Čo uvarím?" panel: optional conditions and the id of the suggested recipe.
++    showSuggestion: false,
++    suggestionFilters: { category: '', favoritesOnly: false, lowGi: false, maxSj: '' },
++    suggestedRecipeId: null,
++
++    // Max SJ per portion from the panel, or null when empty or invalid.
++    get suggestionMaxSj() {
++      const parsed = parseDecimal(this.suggestionFilters.maxSj);
++      return parsed.valid ? parsed.value : null;
++    },
++
++    get suggestionMaxSjInvalid() {
++      return !parseDecimal(this.suggestionFilters.maxSj).valid;
++    },
++
++    // Recipes that meet the panel's conditions. A max SJ needs SJ per portion,
++    // so recipes without servings and weight are left out while it is set.
++    get suggestionCandidates() {
++      const filters = this.suggestionFilters;
++      const maxSj = this.suggestionMaxSj;
++      return this.recipes.filter((recipe) => {
++        if (filters.category && this.displayCategory(recipe) !== filters.category) return false;
++        if (filters.favoritesOnly && !recipe.favorite) return false;
++        if (filters.lowGi && giCategory(recipe.gi) !== 'low') return false;
++        if (maxSj !== null) {
++          const sj = this.recipePortionSj(recipe);
++          if (sj === null || sj > maxSj + 1e-9) return false;
++        }
++        return true;
++      });
++    },
++
++    // The suggested recipe, as long as it still exists and meets the conditions.
++    get suggestedRecipe() {
++      if (this.suggestedRecipeId === null) return null;
++      return this.suggestionCandidates.find((recipe) => String(recipe.id) === String(this.suggestedRecipeId)) || null;
++    },
++
++    toggleSuggestion() {
++      this.showSuggestion = !this.showSuggestion;
++      if (this.showSuggestion && !this.suggestedRecipe) this.suggestRecipe();
++    },
++
++    suggestRecipe() {
++      const recipe = pickSuggestion(this.suggestionCandidates, this.suggestedRecipeId);
++      this.suggestedRecipeId = recipe ? recipe.id : null;
++    },
+ 
+     get filteredRecipes() {
+       const query = this.search.trim().toLocaleLowerCase(this.language);
+diff --git a/sw.js b/sw.js
+index b34b7b2..23d5fd7 100644
+--- a/sw.js
++++ b/sw.js
+@@ -1,9 +1,9 @@
+-const CACHE_NAME = 'ham-mnam-shell-v10';
++const CACHE_NAME = 'ham-mnam-shell-v11';
+ const APP_SHELL = [
+   './',
+   './index.html',
+   './manifest.json',
+-  './js/app.js?v=10',
++  './js/app.js?v=11',
+   './config.js',
+   './icons/app-icon.svg'
+ ];
+diff --git a/tests/test-suggestion.js b/tests/test-suggestion.js
+new file mode 100644
+index 0000000..f828d23
+--- /dev/null
++++ b/tests/test-suggestion.js
+@@ -0,0 +1,139 @@
++// "Čo uvarím?": a random recipe suggestion, with optional conditions.
++const assert = require('node:assert/strict');
++const test = require('node:test');
++const { loadApp, readRepoFile } = require('./helpers/app-harness');
++
++const lib = loadApp().context;
++
++// servings + total_weight give SJ per portion: carbs per 100 g x portion weight / 100 / 10.
++const RECIPES = [
++  { id: 1, title_sk: 'Šošovicová polievka', category_sk: 'Polievky', gi: 30, carbs: 10, servings: 4, total_weight: 1200, favorite: true },
++  { id: 2, title_sk: 'Palacinky', category_sk: 'Dezerty', gi: 75, carbs: 30, servings: 4, total_weight: 800, favorite: false },
++  { id: 3, title_sk: 'Kuracie s ryžou', category_sk: 'Hlavné jedlá', gi: 60, carbs: 20, favorite: true },
++  { id: 4, title_sk: 'Tekvicová polievka', category_sk: 'Polievky', gi: 'nízky', carbs: 8, servings: 2, total_weight: 600, favorite: false }
++];
++
++function appWithRecipes() {
++  const app = loadApp();
++  app.recipes = RECIPES.map((recipe) => ({ ...recipe }));
++  return app;
++}
++
++const ids = (recipes) => recipes.map((recipe) => recipe.id);
++
++test('pickSuggestion picks from the candidates using the random source', () => {
++  const list = [{ id: 1 }, { id: 2 }, { id: 3 }];
++  assert.equal(lib.pickSuggestion(list, null, () => 0).id, 1);
++  assert.equal(lib.pickSuggestion(list, null, () => 0.5).id, 2);
++  assert.equal(lib.pickSuggestion(list, null, () => 0.999).id, 3);
++  // A random source returning exactly 1 must not run past the end.
++  assert.equal(lib.pickSuggestion(list, null, () => 1).id, 3);
++});
++
++test('pickSuggestion never repeats the previous recipe when there is a choice', () => {
++  const list = [{ id: 1 }, { id: 2 }];
++  for (const value of [0, 0.3, 0.6, 0.99]) {
++    assert.equal(lib.pickSuggestion(list, 1, () => value).id, 2);
++    assert.equal(lib.pickSuggestion(list, '2', () => value).id, 1);
++  }
++  // With one candidate the same recipe is fine.
++  assert.equal(lib.pickSuggestion([{ id: 1 }], 1, () => 0).id, 1);
++});
++
++test('pickSuggestion returns null without candidates', () => {
++  assert.equal(lib.pickSuggestion([], null), null);
++  assert.equal(lib.pickSuggestion(null, null), null);
++});
++
++test('without conditions every recipe is a candidate', () => {
++  const app = appWithRecipes();
++  assert.deepEqual(ids(app.suggestionCandidates), [1, 2, 3, 4]);
++});
++
++test('category, favorites and low GI narrow the candidates', () => {
++  const app = appWithRecipes();
++  app.suggestionFilters.category = 'Polievky';
++  assert.deepEqual(ids(app.suggestionCandidates), [1, 4]);
++  app.suggestionFilters.favoritesOnly = true;
++  assert.deepEqual(ids(app.suggestionCandidates), [1]);
++  app.suggestionFilters = { category: '', favoritesOnly: false, lowGi: true, maxSj: '' };
++  // Text GI such as "nízky" has no numeric category, so only GI 30 counts as low.
++  assert.deepEqual(ids(app.suggestionCandidates), [1]);
++});
++
++test('max SJ per portion keeps recipes at or under the limit and skips unknown portions', () => {
++  const app = appWithRecipes();
++  // SJ per portion: #1 = 10 x 300 / 100 / 10 = 3, #2 = 30 x 200 / 100 / 10 = 6, #4 = 8 x 300 / 100 / 10 = 2.4, #3 unknown.
++  app.suggestionFilters.maxSj = '3';
++  assert.deepEqual(ids(app.suggestionCandidates), [1, 4]);
++  app.suggestionFilters.maxSj = '2,5';
++  assert.deepEqual(ids(app.suggestionCandidates), [4]);
++  app.suggestionFilters.maxSj = '1';
++  assert.deepEqual(ids(app.suggestionCandidates), []);
++});
++
++test('the SJ limit follows the chosen SJ factor', () => {
++  const app = appWithRecipes();
++  app.setSjFactor(12);
++  // #2 = 60 g carbs per portion / 12 = 5 SJ.
++  app.suggestionFilters.maxSj = '5';
++  assert.deepEqual(ids(app.suggestionCandidates), [1, 2, 4]);
++});
++
++test('an invalid SJ limit is flagged and ignored', () => {
++  const app = appWithRecipes();
++  app.suggestionFilters.maxSj = 'veľa';
++  assert.equal(app.suggestionMaxSjInvalid, true);
++  assert.equal(app.suggestionMaxSj, null);
++  assert.deepEqual(ids(app.suggestionCandidates), [1, 2, 3, 4]);
++  app.suggestionFilters.maxSj = '';
++  assert.equal(app.suggestionMaxSjInvalid, false);
++});
++
++test('opening the panel suggests a recipe right away; another one is different', () => {
++  const app = appWithRecipes();
++  assert.equal(app.suggestedRecipe, null);
++  app.toggleSuggestion();
++  assert.equal(app.showSuggestion, true);
++  const first = app.suggestedRecipe;
++  assert.ok(first);
++  for (let i = 0; i < 20; i += 1) {
++    const previous = app.suggestedRecipe.id;
++    app.suggestRecipe();
++    assert.notEqual(app.suggestedRecipe.id, previous);
++  }
++  app.toggleSuggestion();
++  assert.equal(app.showSuggestion, false);
++});
++
++test('the suggestion disappears when it no longer meets the conditions', () => {
++  const app = appWithRecipes();
++  app.suggestedRecipeId = 2;
++  assert.equal(app.suggestedRecipe.id, 2);
++  app.suggestionFilters.lowGi = true;
++  assert.equal(app.suggestedRecipe, null);
++  app.suggestRecipe();
++  assert.equal(app.suggestedRecipe.id, 1);
++});
++
++test('with no matching recipe there is no suggestion', () => {
++  const app = appWithRecipes();
++  app.suggestionFilters.category = 'Neexistuje';
++  app.suggestRecipe();
++  assert.equal(app.suggestedRecipe, null);
++  assert.equal(app.suggestedRecipeId, null);
++});
++
++test('the suggestion reads the current recipe after an edit replaces it', () => {
++  const app = appWithRecipes();
++  app.suggestedRecipeId = 1;
++  app.recipes.splice(0, 1, { ...RECIPES[0], title_sk: 'Nová polievka' });
++  assert.equal(app.displayTitle(app.suggestedRecipe), 'Nová polievka');
++});
++
++test('index.html has the button and panel for the suggestion', () => {
++  const html = readRepoFile('index.html');
++  assert.match(html, /@click="toggleSuggestion\(\)"/);
++  assert.match(html, /id="suggestion-panel"/);
++  assert.match(html, /@click="openRecipe\(suggestedRecipe\)"/);
++});
+-- 
+2.34.1
+

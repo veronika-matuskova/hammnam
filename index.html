@@ -84,21 +84,7 @@
             <span class="whitespace-nowrap" x-text="t('shoppingNav')"></span>
           </button>
           <button
-            x-show="canEdit"
-            x-cloak
-            type="button"
-            @click="showHistory ? closeHistory() : openHistory()"
-            class="relative inline-flex min-w-[3rem] flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1 text-[11px] font-bold leading-none transition focus:outline-none focus:ring-2 focus:ring-slate-400"
-            :class="showHistory ? 'bg-amber-100 text-amber-900' : 'text-slate-700 hover:bg-slate-100'"
-            :aria-label="t('historyNav')"
-            :aria-pressed="showHistory ? 'true' : 'false'"
-            :title="t('historyNav')"
-          >
-            <svg class="h-7 w-7 shrink-0 text-emerald-600" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,80V184a24,24,0,0,1-24,24H64a24,24,0,0,1-24-24V80Z" opacity="0.2"/><path d="M88,48V16a8,8,0,0,1,16,0V48a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,128,56Zm32,0a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,160,56Zm92.8,46.4L224,124v60a32,32,0,0,1-32,32H64a32,32,0,0,1-32-32V124L3.2,102.4a8,8,0,0,1,9.6-12.8L32,104V80a8,8,0,0,1,8-8H216a8,8,0,0,1,8,8v24l19.2-14.4a8,8,0,0,1,9.6,12.8ZM208,88H48v96a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16Z"/></svg>
-            <span class="whitespace-nowrap" x-text="t('historyNav')"></span>
-          </button>
-          <button
-            x-show="canEdit && !selectedRecipe && !showForm && !showShoppingList && !showHistory"
+            x-show="canEdit && !selectedRecipe && !showForm && !showShoppingList && !showHistory && !showAccount"
             x-cloak
             type="button"
             @click="openForm()"
@@ -113,25 +99,27 @@
             x-show="isSignedIn"
             x-cloak
             type="button"
-            @click="signOut()"
-            class="inline-flex min-w-[3rem] flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1 text-[11px] font-bold leading-none transition focus:outline-none focus:ring-2 focus:ring-slate-400 text-slate-700 hover:bg-slate-100"
-            :aria-label="t('signOut')"
-            :title="signedInEmail ? `${t('signOut')} (${signedInEmail})` : t('signOut')"
+            @click="showAccount ? closeAccount() : openAccount()"
+            class="inline-flex min-w-[3rem] flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1 text-[11px] font-bold leading-none transition focus:outline-none focus:ring-2 focus:ring-slate-400"
+            :class="showAccount || showHistory ? 'bg-amber-100 text-amber-900' : 'text-slate-700 hover:bg-slate-100'"
+            :aria-label="t('accountNav')"
+            :aria-pressed="showAccount ? 'true' : 'false'"
+            :title="signedInEmail ? `${t('accountNav')} (${signedInEmail})` : t('accountNav')"
           >
-            <svg class="h-7 w-7 shrink-0 text-slate-900" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,56V200a16,16,0,0,1-16,16H48V40H208A16,16,0,0,1,224,56Z" opacity="0.2"/><path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/></svg>
-            <span class="whitespace-nowrap" x-text="t('signOut')"></span>
+            <svg class="h-7 w-7 shrink-0 text-slate-900" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z"/></svg>
+            <span class="whitespace-nowrap" x-text="t('accountNav')"></span>
           </button>
         </nav>
       </div>
     </header>
 
-    <section x-show="!isSignedIn && (showSignIn || showForm || showShoppingList || showHistory)" x-cloak class="mx-auto mt-6 max-w-md px-4 sm:px-6" aria-labelledby="sign-in-title">
+    <section x-show="!isSignedIn && (showSignIn || showForm || showShoppingList || showHistory || showAccount)" x-cloak class="mx-auto mt-6 max-w-md px-4 sm:px-6" aria-labelledby="sign-in-title">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between gap-3">
           <h2 id="sign-in-title" class="text-lg font-semibold text-slate-900" x-text="t('signInTitle')"></h2>
-          <button x-show="!showForm && !showShoppingList && !showHistory" type="button" @click="showSignIn = false; authError = ''" :aria-label="t('close')" class="shrink-0 text-lg font-semibold leading-none text-slate-500">&times;</button>
+          <button x-show="!showForm && !showShoppingList && !showHistory && !showAccount" type="button" @click="showSignIn = false; authError = ''" :aria-label="t('close')" class="shrink-0 text-lg font-semibold leading-none text-slate-500">&times;</button>
         </div>
-        <p class="mt-1 text-sm text-slate-600" x-text="showShoppingList ? t('shoppingSignInNote') : showHistory ? t('historySignInNote') : showForm ? t('signInToEdit') : t('signInIntro')"></p>
+        <p class="mt-1 text-sm text-slate-600" x-text="showShoppingList ? t('shoppingSignInNote') : showHistory ? t('historySignInNote') : showAccount ? t('accountSignInNote') : showForm ? t('signInToEdit') : t('signInIntro')"></p>
         <form @submit.prevent="requestMagicLink()" class="mt-4 flex flex-col gap-2 sm:flex-row">
           <label class="min-w-0 flex-1">
             <span class="sr-only" x-text="t('email')"></span>
@@ -141,12 +129,12 @@
         </form>
         <p x-show="magicLinkSent" class="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800" role="status" x-text="t('magicLinkSent')"></p>
         <p x-show="authError" class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="authError"></p>
-        <button x-show="showForm || showShoppingList || showHistory" type="button" @click="showForm ? closeForm() : showHistory ? closeHistory() : closeShoppingList()" class="mt-4 text-sm font-semibold text-slate-600 hover:text-slate-950" x-text="t('backToRecipes')"></button>
+        <button x-show="showForm || showShoppingList || showHistory || showAccount" type="button" @click="showForm ? closeForm() : showHistory ? closeHistory() : showAccount ? closeAccount() : closeShoppingList()" class="mt-4 text-sm font-semibold text-slate-600 hover:text-slate-950" x-text="t('backToRecipes')"></button>
       </div>
     </section>
     <p x-show="isSignedIn && familyMember === false" x-cloak class="mx-auto mt-4 max-w-6xl px-4 text-sm text-amber-800 sm:px-6" role="status" x-text="t('notFamilyMember')"></p>
 
-    <main x-show="!selectedRecipe && !showForm && !showShoppingList && !showHistory" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main x-show="!selectedRecipe && !showForm && !showShoppingList && !showHistory && !showAccount" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <section class="relative mb-8 overflow-hidden rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-amber-100 via-white to-emerald-50 p-5 shadow-md sm:p-8">
         <div aria-hidden="true" class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-red-100/70"></div>
         <div aria-hidden="true" class="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-emerald-100/70"></div>
@@ -858,10 +846,49 @@
       </section>
     </main>
 
+    <main x-show="showAccount && isSignedIn" x-cloak class="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10" aria-labelledby="account-title">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <button type="button" @click="closeAccount()" class="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950">
+          <span aria-hidden="true">←</span><span x-text="t('backToRecipes')"></span>
+        </button>
+        <div class="flex items-center gap-4">
+          <span class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-amber-100 text-2xl font-extrabold uppercase text-amber-900" aria-hidden="true" x-text="(signedInEmail || '?').charAt(0)"></span>
+          <div class="min-w-0">
+            <h1 id="account-title" class="text-2xl font-bold tracking-tight sm:text-3xl" x-text="t('accountTitle')"></h1>
+            <p x-show="signedInEmail" class="mt-0.5 truncate text-sm text-slate-500">
+              <span class="sr-only" x-text="t('accountSignedInAs') + ': '"></span><span x-text="signedInEmail"></span>
+            </p>
+          </div>
+        </div>
+
+        <ul class="mt-6 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+          <li x-show="canEdit">
+            <button type="button" @click="openHistory()" class="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50 focus:outline-none focus-visible:bg-slate-50">
+              <svg class="h-7 w-7 shrink-0 text-emerald-600" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,80V184a24,24,0,0,1-24,24H64a24,24,0,0,1-24-24V80Z" opacity="0.2"/><path d="M88,48V16a8,8,0,0,1,16,0V48a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,128,56Zm32,0a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0V48A8,8,0,0,0,160,56Zm92.8,46.4L224,124v60a32,32,0,0,1-32,32H64a32,32,0,0,1-32-32V124L3.2,102.4a8,8,0,0,1,9.6-12.8L32,104V80a8,8,0,0,1,8-8H216a8,8,0,0,1,8,8v24l19.2-14.4a8,8,0,0,1,9.6,12.8ZM208,88H48v96a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16Z"/></svg>
+              <span class="min-w-0 flex-1">
+                <span class="block font-semibold text-slate-900" x-text="t('historyNav')"></span>
+                <span class="block text-xs text-slate-500" x-text="t('accountHistoryHint')"></span>
+              </span>
+              <span class="text-lg text-slate-400" aria-hidden="true">›</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" @click="signOutFromAccount()" class="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50 focus:outline-none focus-visible:bg-slate-50">
+              <svg class="h-7 w-7 shrink-0 text-red-600" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,56V200a16,16,0,0,1-16,16H48V40H208A16,16,0,0,1,224,56Z" opacity="0.2"/><path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/></svg>
+              <span class="min-w-0 flex-1">
+                <span class="block font-semibold text-red-700" x-text="t('signOut')"></span>
+                <span class="block text-xs text-slate-500" x-text="t('accountSignOutHint')"></span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </section>
+    </main>
+
     <main x-show="showHistory && canEdit" x-cloak class="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10" aria-labelledby="history-title">
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <button type="button" @click="closeHistory()" class="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950">
-          <span aria-hidden="true">←</span><span x-text="t('backToRecipes')"></span>
+          <span aria-hidden="true">←</span><span x-text="t('back')"></span>
         </button>
         <h1 id="history-title" class="text-2xl font-bold tracking-tight sm:text-3xl" x-text="t('historyTitle')"></h1>
         <p class="mt-1 text-sm text-slate-500" x-text="t('historyIntro')"></p>
