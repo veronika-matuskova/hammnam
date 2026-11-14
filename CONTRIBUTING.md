@@ -16,6 +16,8 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 │   ├── app.js          # Alpine component, REST and Auth calls, filters, translations
 │   └── learn.js        # Calculators for learn.html
 ├── supabase/
+│   ├── functions/
+│   │   └── import-recipe/  # Edge Function: recipe from a link, in the app's format
 │   └── migrations/     # SQL for the recipes table, allow-list and RLS policies
 ├── tests/
 │   ├── test-recipe-details.js # Recipe detail state and Supabase payload tests
@@ -93,6 +95,23 @@ To remove someone, delete their row from `allowed_users` (writes stop immediatel
 
 - In **Authentication → URL Configuration** set the *Site URL* to `https://hammnam.app` (see `CNAME`) and add `https://hammnam.app/` (and `http://localhost:*` for local testing) to the *Redirect URLs*.
 - The session (access and refresh token) is stored in `localStorage` under `hamMnam-session`. Writes send the access token in the `Authorization` header; reads use the publishable key.
+
+## Import from a link (Edge Function)
+
+**Načítať recept z odkazu** in the new-recipe form calls `POST /functions/v1/import-recipe` with `{ "url": "…" }` and the signed-in user's access token. The function (`supabase/functions/import-recipe/index.ts`):
+
+1. checks the caller with `rpc/is_family_member` (deployed with `verify_jwt = false` because it does this check itself and must answer the CORS preflight);
+2. fetches the page (http/https only, no private or local addresses, 5 redirects, 3 MB, 15 s);
+3. reads the schema.org `Recipe` JSON-LD, the photo (`image` or `og:image`) and the page text;
+4. asks Claude (Anthropic API, forced tool call) to rewrite it in the app's style, using the two newest recipes and the existing categories as examples: Slovak, per-100 g values of the finished dish, GI, GL per portion, notes ending with `Zdroj: <url>`;
+5. cleans the answer (rounding, SJ = carbs / 10, GI 0–100, notes ≤ 2000 characters) and returns `{ mode: "ai", recipe }`. It never writes to the database; the app fills the form and the user saves it.
+
+Secrets (**Edge Functions → Secrets**, or `supabase secrets set`):
+
+- `ANTHROPIC_API_KEY` – needed for the full import. Without it the function returns the JSON-LD recipe as published (`mode: "basic"`), untranslated and without values.
+- `IMPORT_MODEL` – optional, overrides the Claude model (default `claude-sonnet-5-5`).
+
+Deploy with `supabase functions deploy import-recipe --no-verify-jwt`. Error codes in the response body (`invalid_url`, `no_recipe`, `page_unreachable`, `ai_failed`, `unauthorized`, `forbidden`) are mapped to Slovak messages in `IMPORT_ERROR_KEYS` in `js/app.js`.
 
 ## Pull requests
 
