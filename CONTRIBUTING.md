@@ -96,6 +96,18 @@ To remove someone, delete their row from `allowed_users` (writes stop immediatel
 - In **Authentication → URL Configuration** set the *Site URL* to `https://hammnam.app` (see `CNAME`) and add `https://hammnam.app/` (and `http://localhost:*` for local testing) to the *Redirect URLs*.
 - The session (access and refresh token) is stored in `localStorage` under `hamMnam-session`. Writes send the access token in the `Authorization` header; reads use the publishable key.
 
+## Shopping list
+
+The **Nákupný zoznam** view (`#shopping-list`) is for signed-in family members only (`canUseShoppingList`, the same check as `canEdit`). It uses `public.shopping_lists` (migration `20261114124921_add_user_cooked_meals_and_shopping_lists.sql`):
+
+- Each user has one open list: their newest row with `completed_at` NULL. The app reads it with `GET /rest/v1/shopping_lists?completed_at=is.null&order=created_at.desc&limit=1` and the user's access token (`request(path, { table, auth: true })`), creates it with `POST` on the first change, and then `PATCH`es `items` and `recipe_ids`.
+- `items` is `[{ name, amount, unit, checked }]`; amounts are text, like recipe ingredients. `mergeShoppingItems()` adds up plain numbers for the same name and unit (case and diacritics ignored).
+- RLS lets a user read and change only rows with their own `user_id`, and writes need `is_family_member()`. Sharing a list with others would need a new policy (and probably a members table).
+- Writes are serialized (`saveShoppingList()`): one request at a time, and changes made meanwhile are sent once more afterwards.
+- Nothing is written until the list has loaded, so a failed load can't start a second open list.
+
+Tests: `tests/test-shopping-list.js`.
+
 ## Recipe photos (Supabase Storage)
 
 **Nahrať fotku** in the form uploads to the public Storage bucket `recipe-photos` (`POST /storage/v1/object/recipe-photos/<time>-<random>.<ext>` with the user's token) and puts the public URL (`/storage/v1/object/public/recipe-photos/…`) into `recipes.photo`. Photos are scaled to 1600 px and re-encoded as JPEG in the browser when possible. The bucket accepts JPEG/PNG/WebP up to 5 MB; only family members can upload, replace or delete (policies in `20261114123603_recipe_photos_storage.sql`). Photos never go into this repository.
