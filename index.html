@@ -58,7 +58,7 @@
             x-cloak
             type="button"
             @click="showShoppingList ? closeShoppingList() : openShoppingList()"
-            class="relative inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition"
+            class="relative inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm font-semibold transition sm:px-3"
             :class="showShoppingList ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-700 hover:bg-slate-100'"
             :aria-label="shoppingRemainingCount ? `${t('shoppingList')} – ${tf('shoppingRemaining', { count: shoppingRemainingCount })}` : t('shoppingList')"
             :aria-pressed="showShoppingList ? 'true' : 'false'"
@@ -78,7 +78,7 @@
             x-cloak
             type="button"
             @click="signOut()"
-            class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            class="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             x-text="t('signOut')"
           ></button>
           <button
@@ -616,14 +616,14 @@
         </div>
 
         <div x-show="shoppingLoaded && !shoppingLoading">
-          <form @submit.prevent="addShoppingDraft()" class="grid grid-cols-[minmax(0,1fr)_4.5rem_4.5rem] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]" autocomplete="off">
+          <form @submit.prevent="addShoppingDraft()" class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]" autocomplete="off">
             <label class="sr-only" for="shopping-name" x-text="t('shoppingItemName')"></label>
-            <input id="shopping-name" x-model="shoppingDraft.name" maxlength="120" :placeholder="t('shoppingItemPlaceholder')" class="min-w-0 rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+            <input id="shopping-name" x-model="shoppingDraft.name" maxlength="120" :placeholder="t('shoppingItemPlaceholder')" class="col-span-3 min-w-0 rounded-lg sm:col-span-1 border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             <label class="sr-only" for="shopping-amount" x-text="t('shoppingAmount')"></label>
             <input id="shopping-amount" x-model="shoppingDraft.amount" maxlength="40" inputmode="decimal" :placeholder="t('shoppingAmount')" class="min-w-0 rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
             <label class="sr-only" for="shopping-unit" x-text="t('shoppingUnit')"></label>
             <input id="shopping-unit" x-model="shoppingDraft.unit" maxlength="40" :placeholder="t('shoppingUnit')" class="min-w-0 rounded-lg border border-slate-200 px-3 py-2.5 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
-            <button type="submit" :disabled="!shoppingDraft.name.trim()" class="col-span-3 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:col-span-1" x-text="t('shoppingAdd')"></button>
+            <button type="submit" :disabled="!shoppingDraft.name.trim()" class="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40" x-text="t('shoppingAdd')"></button>
           </form>
 
           <p x-show="shoppingSaveError" x-cloak class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert" x-text="shoppingSaveError"></p>
