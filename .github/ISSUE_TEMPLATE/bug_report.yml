@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in the app is broken or behaves unexpectedly.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      placeholder: The form is pre-filled with the previous recipe.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: An empty form.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a recipe
+        2. Tap Upraviť recept
+        3. ...
+    validations:
+      required: false
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: iPhone 13, Safari / Pixel 7, Chrome
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Installed app or browser tab?
+      options:
+        - Installed app (home screen)
+        - Browser tab
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: recipe
+    attributes:
+      label: Recipe link
+      description: If the bug is about a specific recipe.
+      placeholder: https://hammnam.app/#recipe/...
+    validations:
+      required: false
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Paste or drag an image here.
+    validations:
+      required: false
