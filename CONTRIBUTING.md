@@ -93,7 +93,7 @@ To remove someone, delete their row from `allowed_users` (writes stop immediatel
 
 ## Pull requests
 
-Open PRs with `scripts/create-pr.sh` from your feature branch. It needs the [GitHub CLI](https://cli.github.com) (`gh auth login`). Run `scripts/create-pr.sh --help` for the options and the allowed title types; the types and the PR checklist are defined in [`.github/pull_request_template.md`](.github/pull_request_template.md).
+Open PRs with `scripts/create-pr.sh` from your feature branch. It needs the [GitHub CLI](https://cli.github.com) (`gh auth login`). Run `scripts/create-pr.sh --help` for the options and the allowed title types; the types and the PR checklist are defined in [`.github/pull_request_template.md`](.github/pull_request_template.md). The `PR title` workflow fails any PR to `main` whose title is not `<type>: <description>` with one of those types; it re-runs when the title is edited.
 
 ## Deployment (GitHub Pages)
 
