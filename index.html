@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=9"></script>
+    <script defer src="./js/app.js?v=10"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -366,12 +366,39 @@
           </section>
 
           <section class="mb-8" aria-labelledby="detail-ingredients-heading">
-            <h3 id="detail-ingredients-heading" class="mb-3 text-lg font-semibold text-slate-900" x-text="t('ingredients')"></h3>
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 id="detail-ingredients-heading" class="text-lg font-semibold text-slate-900" x-text="t('ingredients')"></h3>
+              <div x-show="selectedRecipe && recipeIngredients(selectedRecipe).length" class="flex items-center gap-2 text-sm text-slate-600">
+                <span x-text="t('scaleServings')"></span>
+                <div class="flex items-center rounded-lg border border-slate-200 bg-white">
+                  <button
+                    type="button"
+                    @click="changeIngredientServings(selectedRecipe, -1)"
+                    :disabled="!selectedRecipe || ingredientServings(selectedRecipe) <= 1"
+                    class="h-9 w-9 rounded-l-lg text-lg font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    :aria-label="t('fewerServings')"
+                  >−</button>
+                  <span class="min-w-[2.5rem] text-center font-bold text-slate-900" aria-live="polite" x-text="selectedRecipe ? formatNumber(ingredientServings(selectedRecipe)) : ''"></span>
+                  <button
+                    type="button"
+                    @click="changeIngredientServings(selectedRecipe, 1)"
+                    :disabled="!selectedRecipe || ingredientServings(selectedRecipe) >= 99"
+                    class="h-9 w-9 rounded-r-lg text-lg font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    :aria-label="t('moreServings')"
+                  >+</button>
+                </div>
+                <span x-text="t('scaleServingsUnit')"></span>
+              </div>
+            </div>
+            <p x-show="selectedRecipe && isIngredientScaled(selectedRecipe)" class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+              <span x-text="selectedRecipe ? tf('scaledFrom', { servings: formatNumber(recipeBaseServings(selectedRecipe)) }) : ''"></span>
+              <button type="button" @click="resetIngredientServings()" class="font-semibold text-slate-700 underline underline-offset-2 hover:text-slate-900" x-text="t('resetServings')"></button>
+            </p>
             <ul x-show="selectedRecipe && recipeIngredients(selectedRecipe).length" class="divide-y divide-slate-100 rounded-xl border border-slate-200">
               <template x-for="(ingredient, index) in selectedRecipe ? recipeIngredients(selectedRecipe) : []" :key="index">
                 <li class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-sm">
                   <span class="font-medium text-slate-800" x-text="ingredient.name || ''"></span>
-                  <span class="text-right text-slate-500" x-text="ingredientMeasure(ingredient)"></span>
+                  <span class="text-right text-slate-500" :class="isIngredientScaled(selectedRecipe) && 'font-semibold text-slate-800'" x-text="scaledIngredientMeasure(selectedRecipe, ingredient)"></span>
                 </li>
               </template>
             </ul>

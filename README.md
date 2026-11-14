@@ -44,6 +44,10 @@ Tap a recipe to open it. The detail shows:
 
 Use **Späť na recepty** to go back to the list, or **Upraviť recept** to edit the recipe. Each recipe has its own link, so you can bookmark it or send it to someone.
 
+### Ingredients for more or fewer servings
+
+Above the ingredients, use **−** and **+** to choose how many servings to cook (1 to 99). The amounts are recalculated from the servings the recipe is written for; a recipe without servings counts as 1. Amounts written as text, such as "podľa chuti", stay as they are. Tap **Pôvodné množstvo** to go back to the amounts in the recipe. The choice only changes what you see; the recipe itself is not changed, and the nutrition values per portion stay the same.
+
 ### Values per portion
 
 The **Na jednu porciu** block works out one portion from the values per 100 g: portion weight = weight of the finished dish / number of servings. It shows SJ per portion on its own, and calories, proteins, carbohydrates, fats, fiber and salt per portion below it. Type a weight into **Vlastná porcia (g)** to calculate a different portion; leave it empty to go back to weight / servings. Without servings and weight (or your own portion), the block says what is missing.

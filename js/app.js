@@ -108,6 +108,12 @@ const translations = {
     portionUnavailable: 'Pro výpočet porce zadejte počet porcí a celkovou hmotnost hotového pokrmu, nebo vlastní porci v gramech.',
     sjPerPortion: 'SJ na porci',
     perPortionSuffix: '/porce',
+    scaleServings: 'Suroviny pro',
+    scaleServingsUnit: 'porcí',
+    fewerServings: 'Méně porcí',
+    moreServings: 'Více porcí',
+    scaledFrom: 'Přepočteno z {servings} porcí v receptu.',
+    resetServings: 'Původní množství',
     sjFactor: '1 SJ =',
     sjFactorOption: 'g sacharidů',
     conflictTitle: 'Nutriční hodnoty si neodpovídají',
@@ -231,6 +237,12 @@ const translations = {
     portionUnavailable: 'Na výpočet porcie zadajte počet porcií a celkovú hmotnosť hotového jedla, alebo vlastnú porciu v gramoch.',
     sjPerPortion: 'SJ na porciu',
     perPortionSuffix: '/porcia',
+    scaleServings: 'Suroviny na',
+    scaleServingsUnit: 'porcií',
+    fewerServings: 'Menej porcií',
+    moreServings: 'Viac porcií',
+    scaledFrom: 'Prepočítané z {servings} porcií v recepte.',
+    resetServings: 'Pôvodné množstvo',
     sjFactor: '1 SJ =',
     sjFactorOption: 'g sacharidov',
     conflictTitle: 'Nutričné hodnoty si nezodpovedajú',
@@ -302,6 +314,56 @@ function nonNegativeNumber(value) {
 function positiveNumber(value) {
   const number = nonNegativeNumber(value);
   return number !== null && number > 0 ? number : null;
+}
+
+// --- Scaling ingredient amounts to a chosen number of servings ------------
+// Amounts are free text ("250", "1,5", "½", "1 1/2", "2-3", "podľa chuti").
+// A number, fraction, mixed number or range is scaled; anything else is kept
+// as written, because "a pinch" or "to taste" cannot be multiplied.
+const MAX_SCALED_SERVINGS = 99;
+const UNICODE_FRACTIONS = { '½': 0.5, '⅓': 1 / 3, '⅔': 2 / 3, '¼': 0.25, '¾': 0.75, '⅕': 0.2, '⅛': 0.125 };
+
+// One quantity: "2", "1,5", ".5", "½", "1½", "1 ½", "1/2" or "1 1/2". null if not a quantity.
+function parseQuantity(text) {
+  const value = String(text).trim();
+  const decimal = value.match(/^(\d+(?:[.,]\d+)?|[.,]\d+)$/);
+  if (decimal) return Number(decimal[1].replace(',', '.'));
+  const unicode = value.match(/^(?:(\d+)\s*)?([½⅓⅔¼¾⅕⅛])$/);
+  if (unicode) return Number(unicode[1] || 0) + UNICODE_FRACTIONS[unicode[2]];
+  const fraction = value.match(/^(?:(\d+)\s+)?(\d+)\s*\/\s*(\d+)$/);
+  if (fraction && Number(fraction[3]) > 0) return Number(fraction[1] || 0) + Number(fraction[2]) / Number(fraction[3]);
+  return null;
+}
+
+// "2" -> [2]; "2-3" or "2 – 3" -> [2, 3]; "podľa chuti" -> null.
+function parseAmount(raw) {
+  if (raw === null || raw === undefined) return null;
+  const text = String(raw).trim();
+  if (!text) return null;
+  const single = parseQuantity(text);
+  if (single !== null) return [single];
+  const range = text.match(/^(.+?)\s*[-–]\s*(.+)$/);
+  if (!range) return null;
+  const from = parseQuantity(range[1]);
+  const to = parseQuantity(range[2]);
+  return from !== null && to !== null ? [from, to] : null;
+}
+
+// Coarser rounding for bigger amounts: 375 g, 1.5 l, 0.25 ČL.
+function roundAmount(value) {
+  const digits = value >= 10 ? 0 : value >= 1 ? 1 : 2;
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
+// The amount for factor x the recipe, formatted with formatNumber(value, digits),
+// or the original text when it cannot be scaled (or the factor is 1).
+function scaleAmount(raw, factor, formatNumber) {
+  const original = raw === null || raw === undefined ? '' : String(raw).trim();
+  if (!(factor > 0) || factor === 1) return original;
+  const parts = parseAmount(original);
+  if (!parts) return original;
+  return parts.map((part) => formatNumber(roundAmount(part * factor), 2)).join('–');
 }
 
 function normalizeSjFactor(value) {
@@ -637,6 +699,8 @@ function recipeApp() {
     sjFactor: getSavedSjFactor(),
     sjFactors: SJ_FACTORS,
     portionSizeInput: '',
+    // Servings chosen in the detail for scaling ingredients, for one recipe id.
+    scaledServings: { recipeId: null, value: null },
 
     get filteredRecipes() {
       const query = this.search.trim().toLocaleLowerCase(this.language);
@@ -763,6 +827,47 @@ function recipeApp() {
       return Array.isArray(recipe.ingredients)
         ? recipe.ingredients.filter((ingredient) => ingredient && typeof ingredient === 'object')
         : [];
+    },
+
+    // Servings the recipe is written for; recipes without a count scale from 1.
+    recipeBaseServings(recipe) {
+      const servings = positiveNumber(recipe && recipe.servings);
+      return servings !== null ? servings : 1;
+    },
+
+    ingredientServings(recipe) {
+      if (!recipe) return 1;
+      const { recipeId, value } = this.scaledServings;
+      return recipeId !== null && String(recipeId) === String(recipe.id) && value !== null
+        ? value
+        : this.recipeBaseServings(recipe);
+    },
+
+    setIngredientServings(recipe, value) {
+      if (!recipe) return;
+      const number = Math.round(Number(value));
+      if (!Number.isFinite(number)) return;
+      const clamped = Math.min(MAX_SCALED_SERVINGS, Math.max(1, number));
+      this.scaledServings = { recipeId: recipe.id, value: clamped };
+    },
+
+    changeIngredientServings(recipe, delta) {
+      this.setIngredientServings(recipe, Math.round(this.ingredientServings(recipe)) + delta);
+    },
+
+    resetIngredientServings() {
+      this.scaledServings = { recipeId: null, value: null };
+    },
+
+    isIngredientScaled(recipe) {
+      return Boolean(recipe) && this.ingredientServings(recipe) !== this.recipeBaseServings(recipe);
+    },
+
+    // Ingredient amount and unit for the servings chosen in the detail.
+    scaledIngredientMeasure(recipe, ingredient) {
+      const factor = this.ingredientServings(recipe) / this.recipeBaseServings(recipe);
+      const amount = scaleAmount(ingredient.amount, factor, (value, digits) => this.formatNumber(value, digits));
+      return this.ingredientMeasure({ amount, unit: ingredient.unit });
     },
 
     ingredientMeasure(ingredient) {
