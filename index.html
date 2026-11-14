@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400..900&display=swap">
     <link rel="stylesheet" href="./css/theme.css">
     <script defer src="./config.js"></script>
-    <script defer src="./js/app.js?v=21"></script>
+    <script defer src="./js/app.js?v=22"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body
@@ -26,7 +26,7 @@
   >
     <header class="sticky top-0 z-40 border-b-2 border-slate-200 bg-white/90 backdrop-blur">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <a href="./" class="flex min-w-0 items-center gap-2.5" aria-label="hamMňam — domov">
+        <a href="./" @click.prevent="goHome()" class="flex min-w-0 items-center gap-2.5" aria-label="hamMňam — domov">
           <img src="./icons/mascots/cookbook-96.png" alt="" width="44" height="44" class="mascot h-11 w-11 shrink-0 -my-1">
           <span class="min-w-0" :class="isSignedIn ? 'hidden sm:block' : ''">
             <span class="font-display block truncate text-xl font-semibold leading-tight text-slate-900">ham<span class="text-emerald-600">Mňam</span></span>

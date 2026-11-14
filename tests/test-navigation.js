@@ -284,3 +284,24 @@ test('browser Back while an edit is saving still updates the list',
     assert.equal(app.recipes[0].title_sk, 'Upravený koláč');
     assert.equal(app.formError, '');
   });
+
+test('the header logo goes back to the recipe list in-app, from any view', async () => {
+  const app = createNavigationApp(stubFetch(), '#account');
+  await app.init();
+  assert.equal(app.showAccount, true);
+
+  app.goHome();
+  assert.equal(app.location.hash, '');
+  assert.equal(app.showAccount, false);
+  assert.equal(app.history.leftApp, false);
+
+  app.openRecipe(app.recipes[0]);
+  app.goHome();
+  assert.equal(app.selectedRecipe, null);
+  assert.equal(app.location.hash, '');
+
+  app.openForm();
+  app.goHome();
+  assert.equal(app.showForm, false);
+  assert.equal(app.location.hash, '');
+});
