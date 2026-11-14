@@ -180,6 +180,17 @@ const translations = {
     giLow: 'Nízký GI',
     giMedium: 'Střední GI',
     giHigh: 'Vysoký GI',
+    suggestTitle: 'Co uvařím?',
+    suggestIntro: 'Nechte si náhodně vybrat recept. Podmínky jsou volitelné.',
+    suggestFavoritesOnly: 'Jen oblíbené',
+    suggestLowGi: 'Jen nízký GI',
+    suggestMaxSj: 'Nejvýše SJ na porci',
+    suggestMaxSjHint: 'Recepty bez počtu porcí a hmotnosti se při této podmínce vynechají.',
+    suggestMaxSjInvalid: 'Zadejte nezáporné číslo, např. 2,5.',
+    suggestButton: 'Navrhni recept',
+    suggestAnother: 'Jiný návrh',
+    suggestNone: 'Žádný recept nesplňuje tyto podmínky. Zkuste je zmírnit.',
+    suggestCandidates: 'Vhodné recepty: {count}',
     nutritionFilters: 'Filtry',
     nutritionFiltersActive: 'Aktivní filtry: {count}',
     nutritionFiltersHeading: 'Filtrovat podle hodnot',
@@ -403,6 +414,17 @@ const translations = {
     giLow: 'Nízky GI',
     giMedium: 'Stredný GI',
     giHigh: 'Vysoký GI',
+    suggestTitle: 'Čo uvarím?',
+    suggestIntro: 'Nechajte si náhodne vybrať recept. Podmienky sú voliteľné.',
+    suggestFavoritesOnly: 'Len obľúbené',
+    suggestLowGi: 'Len nízky GI',
+    suggestMaxSj: 'Najviac SJ na porciu',
+    suggestMaxSjHint: 'Recepty bez počtu porcií a hmotnosti sa pri tejto podmienke vynechajú.',
+    suggestMaxSjInvalid: 'Zadajte nezáporné číslo, napr. 2,5.',
+    suggestButton: 'Navrhni recept',
+    suggestAnother: 'Iný návrh',
+    suggestNone: 'Žiadny recept nespĺňa tieto podmienky. Skúste ich zmierniť.',
+    suggestCandidates: 'Vhodné recepty: {count}',
     nutritionFilters: 'Filtre',
     nutritionFiltersActive: 'Aktívne filtre: {count}',
     nutritionFiltersHeading: 'Filtrovať podľa hodnôt',
@@ -762,6 +784,19 @@ function normalizeSearchText(value) {
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// --- "Čo uvarím?": a random suggestion from the recipes that match ------------
+// Picks one candidate at random. With more than one candidate the previous
+// suggestion is skipped, so "another one" always shows a different recipe.
+function pickSuggestion(candidates, previousId = null, random = Math.random) {
+  const list = Array.isArray(candidates) ? candidates : [];
+  const pool = list.length > 1 && previousId !== null
+    ? list.filter((recipe) => String(recipe.id) !== String(previousId))
+    : list;
+  if (!pool.length) return null;
+  const index = Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)));
+  return pool[index];
 }
 
 // A recipe needs at least one title, Slovak or Czech.
@@ -1199,6 +1234,53 @@ function recipeApp() {
     portionSizeInput: '',
     // Servings chosen in the detail for scaling ingredients, for one recipe id.
     scaledServings: { recipeId: null, value: null },
+    // "Čo uvarím?" panel: optional conditions and the id of the suggested recipe.
+    showSuggestion: false,
+    suggestionFilters: { category: '', favoritesOnly: false, lowGi: false, maxSj: '' },
+    suggestedRecipeId: null,
+
+    // Max SJ per portion from the panel, or null when empty or invalid.
+    get suggestionMaxSj() {
+      const parsed = parseDecimal(this.suggestionFilters.maxSj);
+      return parsed.valid ? parsed.value : null;
+    },
+
+    get suggestionMaxSjInvalid() {
+      return !parseDecimal(this.suggestionFilters.maxSj).valid;
+    },
+
+    // Recipes that meet the panel's conditions. A max SJ needs SJ per portion,
+    // so recipes without servings and weight are left out while it is set.
+    get suggestionCandidates() {
+      const filters = this.suggestionFilters;
+      const maxSj = this.suggestionMaxSj;
+      return this.recipes.filter((recipe) => {
+        if (filters.category && this.displayCategory(recipe) !== filters.category) return false;
+        if (filters.favoritesOnly && !recipe.favorite) return false;
+        if (filters.lowGi && giCategory(recipe.gi) !== 'low') return false;
+        if (maxSj !== null) {
+          const sj = this.recipePortionSj(recipe);
+          if (sj === null || sj > maxSj + 1e-9) return false;
+        }
+        return true;
+      });
+    },
+
+    // The suggested recipe, as long as it still exists and meets the conditions.
+    get suggestedRecipe() {
+      if (this.suggestedRecipeId === null) return null;
+      return this.suggestionCandidates.find((recipe) => String(recipe.id) === String(this.suggestedRecipeId)) || null;
+    },
+
+    toggleSuggestion() {
+      this.showSuggestion = !this.showSuggestion;
+      if (this.showSuggestion && !this.suggestedRecipe) this.suggestRecipe();
+    },
+
+    suggestRecipe() {
+      const recipe = pickSuggestion(this.suggestionCandidates, this.suggestedRecipeId);
+      this.suggestedRecipeId = recipe ? recipe.id : null;
+    },
 
     // Every word of the search must appear in the title, the category or an
     // ingredient name; case and diacritics are ignored ("ryza" finds "ryža").
