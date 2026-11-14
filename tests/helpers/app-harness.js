@@ -124,6 +124,7 @@ function loadApp({
     },
     document: { addEventListener(event, callback) { if (event === 'alpine:init') callback(); } },
     navigator: {},
+    URL,
     fetch: fetch || (async () => { throw new Error('unexpected fetch in test'); }),
     localStorage: {
       getItem: (key) => (Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null),

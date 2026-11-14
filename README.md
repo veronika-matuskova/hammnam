@@ -102,12 +102,19 @@ Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detai
 
 Tap **Uložiť recept** (or **Uložiť zmeny** when editing) to save, or **Zrušiť** to leave without saving.
 
+### Add a recipe from a link
+
+At the top of **+ Nový recept**, paste the web address of a recipe into **Načítať recept z odkazu** and tap **Načítať recept**. After up to a minute the form is filled in the way the app's recipes are written: in Slovak, with ingredients in g, ks, ČL…, short steps, the nutrition values per 100 g of the finished dish, servings and weight, SJ, GI and GL, the photo from the page, and notes that explain how the values were worked out and end with *Zdroj:* and the link. Many pages have no nutrition table; then the values are worked out from the ingredients, the notes say so, and the app tells you they are an estimate. The photo is the one from the page. Check the values, then tap **Uložiť recept**. Nothing is saved until you do.
+
+If the app says the recipe was taken over as it is on the page (not translated, no values), the full import is not switched on yet; fill in the rest by hand. Only signed-in family members can import.
+
 ## Troubleshooting
 
 - **"Recepty sa nepodarilo načítať."** – check your internet connection and tap **Skúsiť znova**.
 - **"Recept sa nepodarilo uložiť."** – your changes are still in the form; check the connection and save again.
 - **"Prihlasovací odkaz sa nepodarilo odoslať."** – your e-mail is not on the family list yet, or too many links were requested; wait a minute and try again.
 - **"Prihlásenie vypršalo."** – sign in again with a new link.
+- **"Recept sa nepodarilo načítať."** – the page could not be opened, it has no recipe, or the import is busy; check the link, try again later, or fill in the form by hand.
 - **The app looks out of date** – close it and open it again (sometimes twice); the new version loads in the background.
 
 ---

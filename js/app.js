@@ -144,7 +144,20 @@ const translations = {
     learnLink: 'Vysvětlivky',
     learnLinkLabel: 'Co znamenají čísla v receptech',
     learnNutrition: 'Co je kalorická tabulka?',
-    learnGlycemic: 'Co znamenají SJ, GI a GL?'
+    learnGlycemic: 'Co znamenají SJ, GI a GL?',
+    importHeading: 'Načíst recept z odkazu',
+    importNote: 'Vložte odkaz na recept. Aplikace ho přečte, přepíše po svém a vyplní formulář; před uložením hodnoty zkontrolujte.',
+    importUrl: 'Odkaz na recept',
+    importButton: 'Načíst recept',
+    importing: 'Načítám recept… (může to trvat až minutu)',
+    importDone: 'Recept je načtený. Zkontrolujte ho a uložte.',
+    importDoneBasic: 'Recept je načtený tak, jak je na stránce – není přeložený a nemá výživové hodnoty. Doplňte je a uložte.',
+    importError: 'Recept se nepodařilo načíst.',
+    importInvalidUrl: 'Zadejte celý odkaz začínající na https://',
+    importNoRecipe: 'Na této stránce jsme nenašli recept.',
+    importPageUnreachable: 'Stránku se nepodařilo otevřít.',
+    importAiFailed: 'Recept se nepodařilo přepsat. Zkuste to znovu za chvíli.',
+    importNutritionCalculated: 'Stránka neuvádí nutriční hodnoty, proto jsou vypočtené ze surovin – berte je jako odhad.'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -291,7 +304,20 @@ const translations = {
     learnLink: 'Vysvetlivky',
     learnLinkLabel: 'Čo znamenajú čísla v receptoch',
     learnNutrition: 'Čo je kalorická tabuľka?',
-    learnGlycemic: 'Čo znamenajú SJ, GI a GL?'
+    learnGlycemic: 'Čo znamenajú SJ, GI a GL?',
+    importHeading: 'Načítať recept z odkazu',
+    importNote: 'Vložte odkaz na recept. Aplikácia ho prečíta, prepíše po svojom a vyplní formulár; pred uložením hodnoty skontrolujte.',
+    importUrl: 'Odkaz na recept',
+    importButton: 'Načítať recept',
+    importing: 'Načítavam recept… (môže to trvať až minútu)',
+    importDone: 'Recept je načítaný. Skontrolujte ho a uložte.',
+    importDoneBasic: 'Recept je načítaný tak, ako je na stránke – nie je preložený a nemá výživové hodnoty. Doplňte ich a uložte.',
+    importError: 'Recept sa nepodarilo načítať.',
+    importInvalidUrl: 'Zadajte celý odkaz začínajúci na https://',
+    importNoRecipe: 'Na tejto stránke sme nenašli recept.',
+    importPageUnreachable: 'Stránku sa nepodarilo otvoriť.',
+    importAiFailed: 'Recept sa nepodarilo prepísať. Skúste to znova o chvíľu.',
+    importNutritionCalculated: 'Stránka neuvádza výživové hodnoty, preto sú vypočítané zo surovín – berte ich ako odhad.'
   }
 };
 
@@ -688,6 +714,56 @@ function textValue(value) {
 
 const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'notes'];
 
+// --- Import from a link (Edge Function supabase/functions/import-recipe) ---
+const IMPORT_FUNCTION_PATH = '/functions/v1/import-recipe';
+const IMPORT_ERROR_KEYS = {
+  invalid_url: 'importInvalidUrl',
+  no_recipe: 'importNoRecipe',
+  page_unreachable: 'importPageUnreachable',
+  ai_failed: 'importAiFailed'
+};
+
+// A web address the import can read: http(s) with a host. Adds https:// when it is missing.
+function normalizeImportUrl(raw) {
+  let text = textValue(raw);
+  if (!text) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(text)) text = `https://${text}`;
+  try {
+    const url = new URL(text);
+    return ['http:', 'https:'].includes(url.protocol) && url.hostname.includes('.') ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+// The function's answer as form values: numbers stay numbers (the form accepts both),
+// missing values become null or '' like emptyRecipe().
+function importedRecipeForm(recipe) {
+  const form = emptyRecipe();
+  const source = recipe && typeof recipe === 'object' ? recipe : {};
+  for (const field of Object.keys(form)) {
+    const value = source[field];
+    if (value === undefined || value === null) continue;
+    if (field === 'ingredients') {
+      form.ingredients = Array.isArray(value)
+        ? value.filter((item) => item && typeof item === 'object').map((item) => ({
+          name: textValue(item.name),
+          amount: textValue(item.amount),
+          unit: textValue(item.unit)
+        }))
+        : [];
+    } else if (field === 'steps') {
+      form.steps = Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+    } else if (TEXT_FIELDS.includes(field) || field === 'gi') {
+      form[field] = textValue(value);
+    } else {
+      const parsed = parseDecimal(value);
+      form[field] = parsed.valid ? parsed.value : null;
+    }
+  }
+  return form;
+}
+
 // --- Supabase Auth (magic link) over plain REST, without supabase-js. ---
 const AUTH_STORAGE_KEY = 'hamMnam-session';
 // Refresh the access token when it has less than this many seconds left.
@@ -784,6 +860,10 @@ function recipeApp() {
     showNutritionFilters: false,
     recipesLoaded: false,
     newRecipe: emptyRecipe(),
+    importUrl: '',
+    importing: false,
+    importMessage: '',
+    importError: '',
     session: loadStoredSession(),
     // true/false once the allow-list check has answered; null while unknown.
     familyMember: null,
@@ -1352,6 +1432,7 @@ function recipeApp() {
       this.selectedRecipe = null;
       this.editingRecipeId = null;
       this.newRecipe = emptyRecipe();
+      this.resetImport();
       if (window.location.hash !== '#new-recipe') {
         window.history.pushState(
           { ...(window.history.state || {}), hamMnamNewRecipe: true },
@@ -1455,6 +1536,79 @@ function recipeApp() {
         window.history.back();
       } else {
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
+    },
+
+    resetImport() {
+      this.importUrl = '';
+      this.importMessage = '';
+      this.importError = '';
+    },
+
+    // Sends the link to the import function and fills the new-recipe form with
+    // the answer. Nothing is saved until the user taps Save.
+    async importRecipe() {
+      if (this.importing || this.saving) return;
+      this.importMessage = '';
+      this.importError = '';
+      const url = normalizeImportUrl(this.importUrl);
+      if (!url) {
+        this.importError = this.t('importInvalidUrl');
+        return;
+      }
+      this.importUrl = url;
+      this.importing = true;
+      try {
+        const { url: projectUrl, key } = this.projectConfig();
+        const send = async (token) => {
+          try {
+            return await fetch(`${projectUrl}${IMPORT_FUNCTION_PATH}`, {
+              method: 'POST',
+              headers: { apikey: key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url })
+            });
+          } catch (error) {
+            throw apiError('network', `Network request failed: ${error && error.message}`);
+          }
+        };
+        const token = await this.accessToken();
+        if (!token) throw apiError('http', 'Not signed in.', 401);
+        let response = await send(token);
+        if (response.status === 401) response = await send(await this.accessToken({ forceRefresh: true }));
+        let body = null;
+        try {
+          body = await response.json();
+        } catch {
+          body = null;
+        }
+        if (!response.ok) {
+          const error = apiError('http', `Import HTTP ${response.status}`, response.status);
+          error.importCode = body && typeof body.error === 'string' ? body.error : '';
+          throw error;
+        }
+        if (!body || !body.recipe || typeof body.recipe !== 'object') {
+          throw apiError('http', 'The import returned no recipe.', 502);
+        }
+        // Keep anything already typed into the form where the import has no value.
+        const imported = importedRecipeForm(body.recipe);
+        const current = this.newRecipe || emptyRecipe();
+        const merged = { ...current };
+        for (const [field, value] of Object.entries(imported)) {
+          const empty = value === null || value === '' || (Array.isArray(value) && value.length === 0);
+          if (!empty) merged[field] = value;
+        }
+        this.newRecipe = merged;
+        const basicImport = body.mode === 'basic';
+        const calculated = !basicImport && body.recipe.nutrition_from_source === false;
+        this.importMessage = basicImport
+          ? this.t('importDoneBasic')
+          : `${this.t('importDone')}${calculated ? ` ${this.t('importNutritionCalculated')}` : ''}`;
+      } catch (error) {
+        console.error('Could not import the recipe:', error);
+        const specific = error && IMPORT_ERROR_KEYS[error.importCode];
+        this.importError = `${this.t('importError')} ${this.t(specific || errorReasonKey(error))}`;
+      } finally {
+        this.importing = false;
       }
     },
 
