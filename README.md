@@ -97,10 +97,14 @@ Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detai
 - **Extra values** – number of servings, carbohydrate units (SJ), glycemic index (a number or a word such as "nízky") and glycemic load (GL).
 - **Ingredients** – add a row for each ingredient with its name, amount and unit. Remove a row with ×.
 - **Preparation steps** – add one step at a time; they are numbered automatically.
-- **Notes and tips** and a **photo link** (the web address of an image).
+- **Notes and tips** and a **photo**: tap **Nahrať fotku** to pick a photo from your phone or computer (it is made smaller and stored with the app's data), or paste the web address of an image.
 - **Totals for the whole recipe** – the weight of the finished dish (it depends on how much water evaporates while cooking) and the total calories, proteins, fats and carbohydrates.
 
 Tap **Uložiť recept** (or **Uložiť zmeny** when editing) to save, or **Zrušiť** to leave without saving.
+
+### Main dish and side dish
+
+In the form, **Príloha k tomuto jedlu** links a main dish to another recipe served as its side (for example chicken and gratinated potatoes). The main dish's detail then shows a card for the side dish, and the side dish's detail shows a card for its main dish. Tap a card to open the other recipe; **Back** returns to the first one. Each recipe keeps its own ingredients, values and notes.
 
 ### Add a recipe from a link
 
