@@ -102,6 +102,10 @@ Tap **+ Nový recept** to add a recipe, or **Upraviť recept** in a recipe detai
 
 Tap **Uložiť recept** (or **Uložiť zmeny** when editing) to save, or **Zrušiť** to leave without saving.
 
+### Main dish and side dish
+
+In the form, **Príloha k tomuto jedlu** links a main dish to another recipe served as its side (for example chicken and gratinated potatoes). The main dish's detail then shows a card for the side dish, and the side dish's detail shows a card for its main dish. Tap a card to open the other recipe; **Back** returns to the first one. Each recipe keeps its own ingredients, values and notes.
+
 ### Add a recipe from a link
 
 At the top of **+ Nový recept**, paste the web address of a recipe into **Načítať recept z odkazu** and tap **Načítať recept**. After up to a minute the form is filled in the way the app's recipes are written: in Slovak, with ingredients in g, ks, ČL…, short steps, the nutrition values per 100 g of the finished dish, servings and weight, SJ, GI and GL, the photo from the page, and notes that explain how the values were worked out and end with *Zdroj:* and the link. Many pages have no nutrition table; then the values are worked out from the ingredients, the notes say so, and the app tells you they are an estimate. The photo is the one from the page. Check the values, then tap **Uložiť recept**. Nothing is saved until you do.

@@ -136,7 +136,8 @@ test('number inputs use text with a decimal keyboard so commas are not mangled',
 
 test('every numeric field is parsed on save and has a translated error label', async () => {
   const numericFields = Object.entries(createRecipeApp().newRecipe)
-    .filter(([, value]) => value === null)
+    // side_recipe_id is a link to another recipe, not a measurement (see test-side-dish.js).
+    .filter(([field, value]) => value === null && field !== 'side_recipe_id')
     .map(([field]) => field);
   assert.ok(numericFields.length >= 10, numericFields.join(','));
 

@@ -29,8 +29,10 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 │   └── migrations/     # Database schema, allow-list and RLS policies, one SQL file per change
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
-└── icons/
-    └── app-icon.svg    # PWA and browser icon
+├── icons/
+│   └── app-icon.svg    # PWA and browser icon
+└── images/
+    └── recipes/        # Recipe photos served by the app (photo = https://hammnam.app/images/recipes/…)
 ```
 
 ## Language

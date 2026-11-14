@@ -157,7 +157,12 @@ const translations = {
     importNoRecipe: 'Na této stránce jsme nenašli recept.',
     importPageUnreachable: 'Stránku se nepodařilo otevřít.',
     importAiFailed: 'Recept se nepodařilo přepsat. Zkuste to znovu za chvíli.',
-    importNutritionCalculated: 'Stránka neuvádí nutriční hodnoty, proto jsou vypočtené ze surovin – berte je jako odhad.'
+    importNutritionCalculated: 'Stránka neuvádí nutriční hodnoty, proto jsou vypočtené ze surovin – berte je jako odhad.',
+    sideDish: 'Příloha',
+    mainDish: 'Hlavní jídlo',
+    sideDishField: 'Příloha k tomuto jídlu (volitelné)',
+    sideDishHint: 'Vyberte recept, který se k tomuto jídlu podává jako příloha.',
+    noSideDish: '— bez přílohy —'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -317,7 +322,12 @@ const translations = {
     importNoRecipe: 'Na tejto stránke sme nenašli recept.',
     importPageUnreachable: 'Stránku sa nepodarilo otvoriť.',
     importAiFailed: 'Recept sa nepodarilo prepísať. Skúste to znova o chvíľu.',
-    importNutritionCalculated: 'Stránka neuvádza výživové hodnoty, preto sú vypočítané zo surovín – berte ich ako odhad.'
+    importNutritionCalculated: 'Stránka neuvádza výživové hodnoty, preto sú vypočítané zo surovín – berte ich ako odhad.',
+    sideDish: 'Príloha',
+    mainDish: 'Hlavné jedlo',
+    sideDishField: 'Príloha k tomuto jedlu (voliteľné)',
+    sideDishHint: 'Vyberte recept, ktorý sa k tomuto jedlu podáva ako príloha.',
+    noSideDish: '— bez prílohy —'
   }
 };
 
@@ -703,8 +713,16 @@ function emptyRecipe() {
     gi: '',
     ingredients: [],
     steps: [],
-    notes: ''
+    notes: '',
+    side_recipe_id: null
   };
+}
+
+// Side dish id from the form (a <select> gives strings): a positive integer or null.
+function recipeIdValue(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
 }
 
 // Older rows can hold NULL in text columns; treat missing values as empty strings.
@@ -754,6 +772,8 @@ function importedRecipeForm(recipe) {
         : [];
     } else if (field === 'steps') {
       form.steps = Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+    } else if (field === 'side_recipe_id') {
+      form.side_recipe_id = recipeIdValue(value);
     } else if (TEXT_FIELDS.includes(field) || field === 'gi') {
       form[field] = textValue(value);
     } else {
@@ -1539,6 +1559,42 @@ function recipeApp() {
       }
     },
 
+    // --- Main dish and side dish (recipes.side_recipe_id) ---
+    sideRecipe(recipe) {
+      const id = recipe ? recipeIdValue(recipe.side_recipe_id) : null;
+      if (id === null || String(id) === String(recipe.id)) return null;
+      return this.recipes.find((item) => String(item.id) === String(id)) || null;
+    },
+
+    // Main dishes that use this recipe as their side.
+    mainRecipes(recipe) {
+      if (!recipe) return [];
+      return this.recipes.filter((item) => String(item.id) !== String(recipe.id)
+        && String(recipeIdValue(item.side_recipe_id)) === String(recipe.id));
+    },
+
+    // Recipes that can be picked as the side dish in the form (not the recipe itself).
+    get sideRecipeOptions() {
+      return this.recipes
+        .filter((recipe) => this.editingRecipeId === null || String(recipe.id) !== String(this.editingRecipeId))
+        .map((recipe) => ({ id: String(recipe.id), title: this.displayTitle(recipe) }))
+        .filter((option) => option.title)
+        .sort((a, b) => a.title.localeCompare(b.title, this.language));
+    },
+
+    formSideRecipeId() {
+      const id = recipeIdValue(this.newRecipe.side_recipe_id);
+      return id !== null && String(id) === String(this.editingRecipeId) ? null : id;
+    },
+
+    // Opens a linked recipe from the detail; Back returns to the recipe it was opened from.
+    openLinkedRecipe(recipe) {
+      if (!recipe) return;
+      this.resetIngredientServings();
+      this.openRecipe(recipe);
+      if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+    },
+
     resetImport() {
       this.importUrl = '';
       this.importMessage = '';
@@ -1651,7 +1707,8 @@ function recipeApp() {
               unit: textValue(ingredient.unit)
             }))
             .filter((ingredient) => ingredient.name || ingredient.amount || ingredient.unit),
-          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean)
+          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean),
+          side_recipe_id: this.formSideRecipeId()
         };
         if (this.editingRecipeId !== null) {
           const updated = await this.request(`?id=eq.${encodeURIComponent(this.editingRecipeId)}`, {
