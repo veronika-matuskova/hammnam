@@ -339,15 +339,16 @@ async function claudeRecipe(apiKey: string, sourceUrl: string, recipeJson: unkno
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
         model: Deno.env.get('IMPORT_MODEL') || DEFAULT_MODEL,
-        max_tokens: 6000,
+        max_tokens: 10000,
         system: SYSTEM_PROMPT,
         tools: [{
           name: 'save_recipe',
           description: 'Uloží recept vo formáte aplikácie hamMňam.',
           input_schema: { type: 'object', properties: RECIPE_FIELDS, required: Object.keys(RECIPE_FIELDS) }
         }],
-        tool_choice: { type: 'tool', name: 'save_recipe' },
-        messages: [{ role: 'user', content: userPrompt }]
+        // Newer models reject a forced tool_choice; "auto" plus the instruction below is enough.
+        tool_choice: { type: 'auto' },
+        messages: [{ role: 'user', content: `${userPrompt}\n\nOdpovedz iba zavolaním nástroja save_recipe.` }]
       })
     });
   } catch {
@@ -358,9 +359,22 @@ async function claudeRecipe(apiKey: string, sourceUrl: string, recipeJson: unkno
     throw new ImportError('ai_failed', 502, `Claude API HTTP ${response.status}`);
   }
   const data = await response.json();
-  const tool = (data.content || []).find((block: any) => block.type === 'tool_use');
-  if (!tool || !tool.input) throw new ImportError('ai_failed', 502, 'no tool_use in the answer');
-  return tool.input;
+  const blocks = Array.isArray(data.content) ? data.content : [];
+  const tool = blocks.find((block: any) => block.type === 'tool_use' && block.input);
+  if (tool) return tool.input;
+  // Fallback: the recipe written as JSON in a text block.
+  const answer = blocks.filter((block: any) => block.type === 'text').map((block: any) => block.text).join('\n');
+  const start = answer.indexOf('{');
+  const end = answer.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(answer.slice(start, end + 1));
+    } catch {
+      // fall through
+    }
+  }
+  console.error('Claude answer without a recipe:', JSON.stringify(blocks).slice(0, 500));
+  throw new ImportError('ai_failed', 502, 'no tool_use in the answer');
 }
 
 // "200 g múky", "1 1/2 cups flour", "2 eggs" -> { amount, unit, name } (best effort).
