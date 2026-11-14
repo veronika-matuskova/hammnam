@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="sk">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Jednoduché vysvetlenie kalorickej tabuľky, sacharidových jednotiek (SJ), glykemického indexu (GI) a glykemickej záťaže (GL).">
+    <title>Čo znamenajú čísla v receptoch — hamMňam</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="./js/learn.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+      [x-cloak] { display: none !important; }
+      html { scroll-behavior: smooth; }
+      section[id] { scroll-margin-top: 1rem; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased" x-data="learnPage">
+    <header class="border-b border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
+          <span>
+            <span class="block text-lg font-bold tracking-tight">hamMňam</span>
+            <span class="hidden text-xs text-slate-500 sm:block">Vaše recepty, prehľadne</span>
+          </span>
+        </a>
+        <a href="./" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+          <span aria-hidden="true">←</span> Späť na recepty
+        </a>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <section class="mb-8">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Vysvetlivky</p>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Čo znamenajú čísla v receptoch</h1>
+        <p class="mt-3 text-lg leading-relaxed text-slate-600">
+          Pri každom recepte nájdete niekoľko čísel: kalórie, sacharidy, SJ, GI a GL. Tu si krok za krokom vysvetlíme,
+          čo znamenajú, odkiaľ sa berú a ako si ich vypočítať. Nepotrebujete nič vedieť vopred – stačí chuť skúšať.
+          Pri každej téme je malá kalkulačka, do ktorej môžete písať vlastné čísla.
+        </p>
+      </section>
+
+      <nav class="mb-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" aria-labelledby="toc-title">
+        <p id="toc-title" class="mb-3 text-sm font-semibold text-slate-800">Na tejto stránke</p>
+        <ol class="grid gap-2 text-sm sm:grid-cols-2">
+          <li><a href="#overview" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-bold">0</span>Rýchly prehľad</a></li>
+          <li><a href="#calorie-table" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-amber-100 text-xs font-bold text-amber-800">1</span>Kalorická tabuľka</a></li>
+          <li><a href="#sj" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">2</span>Sacharidová jednotka (SJ)</a></li>
+          <li><a href="#gi" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-red-100 text-xs font-bold text-red-800">3</span>Glykemický index (GI)</a></li>
+          <li><a href="#gl" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-800">4</span>Glykemická záťaž (GL)</a></li>
+          <li><a href="#glossary" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-bold">5</span>Malý slovníček</a></li>
+        </ol>
+      </nav>
+
+      <!-- 0. Overview -->
+      <section id="overview" class="mb-12" aria-labelledby="overview-title">
+        <h2 id="overview-title" class="mb-4 text-2xl font-bold tracking-tight">Rýchly prehľad</h2>
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <dl class="divide-y divide-slate-100">
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt class="font-semibold text-amber-800">Kalórie (kcal)</dt>
+              <dd class="text-slate-700">Koľko energie nám jedlo dá – ako palivo pre auto.</dd>
+            </div>
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt class="font-semibold text-blue-800">Sacharidy (g)</dt>
+              <dd class="text-slate-700">Časť jedla, z ktorej telo vyrobí cukor do krvi. Sú v pečive, cestovinách, ovocí, mlieku aj sladkostiach.</dd>
+            </div>
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt class="font-semibold text-emerald-800">SJ</dt>
+              <dd class="text-slate-700">Sacharidy spočítané „po balíčkoch“: 1 SJ = 10 g sacharidov.</dd>
+            </div>
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt class="font-semibold text-red-800">GI</dt>
+              <dd class="text-slate-700">Ako <strong>rýchlo</strong> stúpne cukor v krvi po jedle. Číslo od 0 do 100.</dd>
+            </div>
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt class="font-semibold text-blue-800">GL</dt>
+              <dd class="text-slate-700">Ako <strong>veľmi</strong> zvýši cukor v krvi konkrétna porcia. Spája GI a množstvo sacharidov.</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- 1. Calorie table -->
+      <section id="calorie-table" class="mb-12" aria-labelledby="calorie-table-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-amber-700">Kapitola 1</p>
+        <h2 id="calorie-table-title" class="mb-4 text-2xl font-bold tracking-tight">Kalorická tabuľka</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            Kalorická tabuľka (presnejšie <strong>tabuľka nutričných hodnôt</strong>) hovorí, z čoho je jedlo zložené
+            a koľko energie obsahuje. Podobnú tabuľku nájdete na obale takmer každej potraviny v obchode.
+          </p>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="font-semibold text-slate-900">Prečo „na 100 g“?</h3>
+            <p class="mt-2">
+              Hodnoty v tabuľke sú skoro vždy pre <strong>100 gramov</strong> jedla. Je to ako cena „za kilo“ v obchode:
+              keď majú všetky potraviny čísla pre rovnaké množstvo, môžeme ich ľahko porovnať.
+              Koľko z toho naozaj zjeme, si potom dopočítame podľa veľkosti porcie.
+            </p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Čo je v tabuľke</h3>
+          <ul class="space-y-3">
+            <li class="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
+              <p class="font-semibold text-amber-900">⚡ Energia – kalórie (kcal) a kilojouly (kJ)</p>
+              <p class="mt-1">
+                Telo potrebuje energiu na všetko: na beh, na učenie, aj keď spíme. Energiu z jedla meriame
+                v <strong>kilokalóriách (kcal)</strong>, ktorým ľudovo hovoríme „kalórie“. Na obaloch býva aj
+                <strong>kJ</strong> – to je tá istá energia v inej jednotke: 1 kcal = 4,184 kJ (zhruba 4,2).
+              </p>
+            </li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="font-semibold text-slate-900">💪 Bielkoviny (proteíny)</p>
+              <p class="mt-1">Stavebné kocky tela – z nich rastú svaly a opravuje sa telo. Sú v mäse, rybách, vajciach, mliečnych výrobkoch a strukovinách. <span class="whitespace-nowrap">1 g = 4 kcal.</span></p>
+            </li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="font-semibold text-slate-900">🍞 Sacharidy</p>
+              <p class="mt-1">
+                Najrýchlejší zdroj energie. Telo ich rozloží na <strong>glukózu</strong> – cukor, ktorý krv roznesie do celého tela.
+                Sú v pečive, cestovinách, ryži, zemiakoch, ovocí, mlieku a sladkostiach. <span class="whitespace-nowrap">1 g = 4 kcal.</span>
+              </p>
+              <p class="mt-2 text-sm text-slate-600">
+                Riadok „<em>z toho cukry</em>“ je len časť sacharidov (tie sladké). Pre SJ vždy počítame <strong>všetky sacharidy</strong>, nielen cukry.
+              </p>
+            </li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="font-semibold text-slate-900">🧈 Tuky</p>
+              <p class="mt-1">Zásobáreň energie. Majú jej viac ako dvakrát toľko ako sacharidy či bielkoviny. Sú v masle, oleji, orechoch, syroch, mäse. <span class="whitespace-nowrap">1 g = 9 kcal.</span></p>
+            </li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="font-semibold text-slate-900">🥦 Vláknina</p>
+              <p class="mt-1">Časť rastlín, ktorú telo celú nestrávi. Pomáha tráveniu, dlhšie zasýti a spomaľuje, ako rýchlo sa cukor dostane do krvi. Je v zelenine, ovocí, celozrnnom pečive a strukovinách. <span class="whitespace-nowrap">1 g ≈ 2 kcal.</span></p>
+            </li>
+            <li class="rounded-xl border border-slate-200 bg-white p-4">
+              <p class="font-semibold text-slate-900">🧂 Soľ</p>
+              <p class="mt-1">Nemá žiadne kalórie, ale je dobré ju sledovať. Dospelým sa odporúča najviac 5 g soli denne (asi jedna čajová lyžička), deťom ešte menej.</p>
+            </li>
+          </ul>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako sa vypočítajú kalórie</h3>
+          <p>Každý gram bielkovín, sacharidov a tukov prinesie určité množstvo energie. Stačí ich vynásobiť a sčítať:</p>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">
+            kcal = bielkoviny × 4 + sacharidy × 4 + tuky × 9 <span class="text-slate-400">(+ vláknina × 2)</span>
+          </p>
+          <p>
+            <strong>Príklad:</strong> 100 g jedla má 3 g bielkovín, 20 g sacharidov a 5 g tukov.<br>
+            3 × 4 + 20 × 4 + 5 × 9 = 12 + 80 + 45 = <strong>137 kcal</strong>.
+          </p>
+          <p class="text-sm text-slate-500">Na obale môže byť číslo trochu iné – výrobcovia hodnoty zaokrúhľujú a niekedy započítajú aj vlákninu.</p>
+
+          <div class="rounded-2xl border-2 border-amber-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="calc-kcal-title">
+            <h4 id="calc-kcal-title" class="font-semibold text-slate-900">🧮 Vyskúšajte si: kalórie zo živín</h4>
+            <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <label class="block text-xs font-medium text-slate-600">Bielkoviny (g)
+                <input type="text" inputmode="decimal" x-model.trim="kcal.proteins" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Sacharidy (g)
+                <input type="text" inputmode="decimal" x-model.trim="kcal.carbs" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Tuky (g)
+                <input type="text" inputmode="decimal" x-model.trim="kcal.fats" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Vláknina (g)
+                <input type="text" inputmode="decimal" x-model.trim="kcal.fiber" placeholder="nepovinné" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+            </div>
+            <p class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-amber-900" aria-live="polite">
+              Energia: <strong class="text-xl" x-text="`${format(kcalResult, 0)} kcal`">137 kcal</strong>
+              <span class="text-sm" x-show="kjResult !== null" x-text="`(${format(kjResult, 0)} kJ)`"></span>
+            </p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Zo 100 g na moju porciu</h3>
+          <p>Málokedy zjeme presne 100 g. Hodnotu na 100 g preto prepočítame na skutočnú porciu:</p>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">
+            hodnota v porcii = hodnota na 100 g × hmotnosť porcie (g) ÷ 100
+          </p>
+          <p><strong>Príklad:</strong> jedlo má 137 kcal na 100 g a porcia váži 250 g: 137 × 250 ÷ 100 = <strong>342,5 kcal</strong>.</p>
+
+          <div class="rounded-2xl border-2 border-amber-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="calc-portion-title">
+            <h4 id="calc-portion-title" class="font-semibold text-slate-900">🧮 Vyskúšajte si: koľko je v mojej porcii</h4>
+            <div class="mt-3 grid grid-cols-2 gap-3">
+              <label class="block text-xs font-medium text-slate-600">Hodnota na 100 g
+                <input type="text" inputmode="decimal" x-model.trim="portion.per100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Hmotnosť porcie (g)
+                <input type="text" inputmode="decimal" x-model.trim="portion.grams" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+            </div>
+            <p class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-amber-900" aria-live="polite">
+              V porcii: <strong class="text-xl" x-text="format(portionResult, 1)">342,5</strong>
+              <span class="text-sm">(v tej istej jednotke – kcal, g sacharidov…)</span>
+            </p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako vzniknú hodnoty pre celý recept</h3>
+          <ol class="list-decimal space-y-2 pl-5">
+            <li>Pri každej surovine zistíme hodnoty (z obalu alebo z tabuliek) a prepočítame ich na množstvo, ktoré dávame do jedla.</li>
+            <li>Hodnoty všetkých surovín sčítame. Máme hodnoty pre <strong>celý hrniec</strong>.</li>
+            <li><strong>Odvážime hotové jedlo.</strong> Počas varenia sa časť vody vyparí (alebo ju ryža či vločky nasajú), takže hotové jedlo váži inak ako suroviny spolu.</li>
+            <li>Hodnotu na 100 g dostaneme takto: <span class="whitespace-nowrap font-mono text-sm">celkom ÷ hmotnosť hotového jedla × 100</span>.</li>
+          </ol>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <p class="font-semibold text-slate-900">Príklad: ovsená kaša s banánom <span class="font-normal text-slate-500">(hodnoty sú približné)</span></p>
+            <div class="mt-3 overflow-x-auto">
+              <table class="w-full min-w-[22rem] text-left text-sm">
+                <thead class="text-slate-500">
+                  <tr><th class="py-1 pr-3 font-medium">Surovina</th><th class="py-1 pr-3 font-medium">Sacharidy</th><th class="py-1 font-medium">Energia</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                  <tr><td class="py-1.5 pr-3">50 g ovsených vločiek</td><td class="py-1.5 pr-3">30 g</td><td class="py-1.5">185 kcal</td></tr>
+                  <tr><td class="py-1.5 pr-3">200 ml polotučného mlieka</td><td class="py-1.5 pr-3">9,6 g</td><td class="py-1.5">94 kcal</td></tr>
+                  <tr><td class="py-1.5 pr-3">1 banán bez šupky (100 g)</td><td class="py-1.5 pr-3">20 g</td><td class="py-1.5">90 kcal</td></tr>
+                  <tr class="font-semibold text-slate-900"><td class="py-1.5 pr-3">Spolu (celý hrnček)</td><td class="py-1.5 pr-3">≈ 60 g</td><td class="py-1.5">≈ 369 kcal</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-3 text-sm">Hotová kaša váži 330 g. Na 100 g teda vychádza 60 ÷ 330 × 100 ≈ <strong>18 g sacharidov</strong> a 369 ÷ 330 × 100 ≈ <strong>112 kcal</strong>.</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-sm sm:p-5">
+            <p class="font-semibold text-slate-900">📱 Ako to robí hamMňam</p>
+            <p class="mt-1">
+              V recepte je tabuľka na 100 g. V časti <em>Na jednu porciu</em> aplikácia vypočíta hmotnosť porcie
+              (hmotnosť hotového jedla ÷ počet porcií) a z nej hodnoty pre jednu porciu. Ak jete viac či menej,
+              zadajte vlastnú porciu v gramoch.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. SJ -->
+      <section id="sj" class="mb-12" aria-labelledby="sj-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-emerald-700">Kapitola 2</p>
+        <h2 id="sj-title" class="mb-4 text-2xl font-bold tracking-tight">Sacharidová jednotka (SJ)</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p class="rounded-2xl bg-emerald-50 px-4 py-4 text-center text-xl font-bold text-emerald-900 sm:text-2xl">1 SJ = 10 g sacharidov</p>
+          <p>
+            SJ je jednoduchší spôsob, ako počítať sacharidy. Funguje to ako s vajíčkami: nehovoríme „dvanásť vajec“, ale „tucet“.
+            Namiesto „30 gramov sacharidov“ povieme „3 SJ“. Menšie čísla sa lepšie pamätajú aj sčítavajú.
+          </p>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="font-semibold text-slate-900">Prečo sa SJ počítajú?</h3>
+            <p class="mt-2">
+              Po jedle sa sacharidy zmenia na glukózu a cukor v krvi (glykémia) stúpne. Aby glukóza mohla vojsť do buniek,
+              potrebuje <strong>inzulín</strong> – ten funguje ako kľúč, ktorý bunky odomkne. Ľuďom s cukrovkou (diabetom)
+              telo inzulín nevyrába alebo naň nereaguje dobre, preto si ho často podávajú sami. Aby vedeli, koľko inzulínu treba,
+              musia vedieť, koľko sacharidov zjedia. A práve na to slúžia SJ.
+            </p>
+            <p class="mt-2 text-sm text-slate-600">Koľko SJ zjesť počas dňa a koľko inzulínu patrí na jednu SJ, určuje vždy lekár. Každý človek je iný.</p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako vyzerá 1 SJ</h3>
+          <p>Približne 1 SJ (10 g sacharidov) je napríklad v:</p>
+          <ul class="grid gap-2 sm:grid-cols-3">
+            <li class="rounded-xl border border-slate-200 bg-white p-3 text-center"><span class="block text-3xl" aria-hidden="true">🍞</span>pol krajci chleba</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-3 text-center"><span class="block text-3xl" aria-hidden="true">🥛</span>pohári mlieka (200 ml)</li>
+            <li class="rounded-xl border border-slate-200 bg-white p-3 text-center"><span class="block text-3xl" aria-hidden="true">🍎</span>jednom menšom jablku</li>
+          </ul>
+          <p class="text-sm text-slate-500">Presné množstvo závisí od konkrétnej potraviny – vždy je lepšie pozrieť obal alebo odvážiť.</p>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako sa SJ vypočítajú</h3>
+          <p>Stačí vedieť, koľko gramov sacharidov jedlo má, a vydeliť to desiatimi:</p>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">SJ = sacharidy (g) ÷ 10</p>
+          <p>Keď poznáme len hodnotu na 100 g z obalu, najprv zistíme sacharidy v porcii (ako v kapitole 1) a potom delíme desiatimi.</p>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <p class="font-semibold text-slate-900">Príklad: jogurt</p>
+            <ol class="mt-2 list-decimal space-y-1 pl-5">
+              <li>Na obale: <strong>12 g sacharidov na 100 g</strong>. Kelímok má 150 g.</li>
+              <li>Sacharidy v kelímku: 12 × 150 ÷ 100 = <strong>18 g</strong>.</li>
+              <li>SJ: 18 ÷ 10 = <strong>1,8 SJ</strong>.</li>
+            </ol>
+            <p class="mt-3 font-semibold text-slate-900">A naša ovsená kaša?</p>
+            <p class="mt-1">Celý hrnček má asi 60 g sacharidov, teda <strong>6 SJ</strong>. Na 100 g je to 18 g, čiže 1,8 SJ.</p>
+          </div>
+
+          <div class="rounded-2xl border-2 border-emerald-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="calc-sj-title">
+            <h4 id="calc-sj-title" class="font-semibold text-slate-900">🧮 Vyskúšajte si: koľko SJ zjem</h4>
+            <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <label class="block text-xs font-medium text-slate-600">Sacharidy na 100 g
+                <input type="text" inputmode="decimal" x-model.trim="sj.carbsPer100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Zjem (g)
+                <input type="text" inputmode="decimal" x-model.trim="sj.grams" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="col-span-2 block text-xs font-medium text-slate-600 sm:col-span-1">1 SJ =
+                <select x-model.number="sj.factor" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+                  <template x-for="factor in sjFactors" :key="factor">
+                    <option :value="factor" :selected="factor === sj.factor" x-text="`${factor} g sacharidov`"></option>
+                  </template>
+                </select>
+              </label>
+            </div>
+            <p class="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-emerald-900" aria-live="polite">
+              <span x-text="`Sacharidy: ${format(sjCarbs, 1)} g`">Sacharidy: 18 g</span> →
+              <strong class="text-xl" x-text="`${format(sjResult, 1)} SJ`">1,8 SJ</strong>
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="font-semibold text-slate-900">10 g alebo 12 g?</h3>
+            <p class="mt-2">
+              Na Slovensku sa dnes počíta 1 SJ = 10 g sacharidov. Niekde (a v starších materiáloch) sa stretnete aj s jednotkou
+              po 12 g – v Česku sa jej hovorí výmenná jednotka (VJ), inde chlebová jednotka. Dôležité je počítať vždy tak,
+              ako vás to naučili v diabetologickej ambulancii. V hamMňam si to môžete prepnúť pri receptoch.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-sm sm:p-5">
+            <p class="font-semibold text-slate-900">📱 Ako to robí hamMňam</p>
+            <p class="mt-1">
+              Pri recepte vidíte SJ na 100 g a v časti <em>Na jednu porciu</em> aj <strong>SJ na porciu</strong>. Ak zadané SJ
+              nesedia so sacharidmi, aplikácia vás upozorní – pravdepodobne je niekde preklep.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. GI -->
+      <section id="gi" class="mb-12" aria-labelledby="gi-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-red-700">Kapitola 3</p>
+        <h2 id="gi-title" class="mb-4 text-2xl font-bold tracking-tight">Glykemický index (GI)</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            SJ hovoria, <strong>koľko</strong> sacharidov zjeme. Glykemický index hovorí, <strong>ako rýchlo</strong>
+            sa z nich stane cukor v krvi. Niektoré jedlá zvýšia cukor v krvi rýchlo ako raketa,
+            iné pomaly, ako keď kráčame na mierny kopec.
+          </p>
+
+          <figure class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <svg viewBox="0 0 320 180" class="h-auto w-full" role="img" aria-labelledby="gi-chart-title gi-chart-desc">
+              <title id="gi-chart-title">Cukor v krvi po jedle s vysokým a nízkym GI</title>
+              <desc id="gi-chart-desc">Po jedle s vysokým GI cukor v krvi rýchlo vystúpi vysoko a rýchlo klesne. Po jedle s nízkym GI stúpa pomaly, menej a vydrží dlhšie.</desc>
+              <line x1="36" y1="150" x2="310" y2="150" stroke="#cbd5e1" stroke-width="1.5"/>
+              <line x1="36" y1="14" x2="36" y2="150" stroke="#cbd5e1" stroke-width="1.5"/>
+              <text x="40" y="168" font-size="10" fill="#64748b">jedlo</text>
+              <text x="172" y="168" font-size="10" fill="#64748b" text-anchor="middle">1 hodina</text>
+              <text x="306" y="168" font-size="10" fill="#64748b" text-anchor="end">2 hodiny</text>
+              <text x="12" y="82" font-size="10" fill="#64748b" transform="rotate(-90 12 82)" text-anchor="middle">cukor v krvi</text>
+              <path d="M36 130 C 70 130, 80 28, 110 26 S 150 110, 190 128 S 270 136, 310 134" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+              <path d="M36 130 C 90 128, 120 82, 170 80 S 260 104, 310 116" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="110" cy="26" r="4" fill="#dc2626"/>
+              <text x="118" y="24" font-size="11" font-weight="700" fill="#b91c1c">vysoký GI</text>
+              <circle cx="170" cy="80" r="4" fill="#059669"/>
+              <text x="178" y="76" font-size="11" font-weight="700" fill="#047857">nízky GI</text>
+            </svg>
+            <figcaption class="mt-2 text-sm text-slate-500">Po jedle s vysokým GI cukor v krvi rýchlo vyletí hore a rýchlo spadne (a často sme zase hladní). Pri nízkom GI stúpa pomaly a energia vydrží dlhšie.</figcaption>
+          </figure>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Čo znamená číslo</h3>
+          <p>
+            GI je číslo od 0 do 100. Porovnávame s čistou <strong>glukózou</strong> (hroznovým cukrom), ktorá má GI 100 –
+            rýchlejšie to už nejde. Čím je číslo menšie, tým pomalšie jedlo zvyšuje cukor v krvi.
+          </p>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div class="flex h-4 overflow-hidden rounded-full" aria-hidden="true">
+              <div class="bg-emerald-400" style="width: 55%"></div>
+              <div class="bg-amber-400" style="width: 14%"></div>
+              <div class="bg-red-400" style="width: 31%"></div>
+            </div>
+            <div class="relative mt-1 h-4 text-xs text-slate-500" aria-hidden="true">
+              <span class="absolute left-0">0</span>
+              <span class="absolute -translate-x-1/2" style="left: 55%">55</span>
+              <span class="absolute -translate-x-1/2" style="left: 69%">70</span>
+              <span class="absolute right-0">100</span>
+            </div>
+            <ul class="mt-4 grid gap-2 sm:grid-cols-3">
+              <li class="rounded-xl bg-emerald-50 p-3 text-emerald-900"><strong class="block">Nízky GI: 55 a menej</strong><span class="text-sm">strukoviny, jablko, pomaranč, mlieko, jogurt, ovsené vločky</span></li>
+              <li class="rounded-xl bg-amber-50 p-3 text-amber-900"><strong class="block">Stredný GI: 56 – 69</strong><span class="text-sm">ananás, hrozienka, kuskus, med</span></li>
+              <li class="rounded-xl bg-red-50 p-3 text-red-900"><strong class="block">Vysoký GI: 70 a viac</strong><span class="text-sm">biele pečivo, biela ryža, zemiaková kaša, kukuričné lupienky, melón</span></li>
+            </ul>
+            <p class="mt-3 text-sm text-slate-500">Rovnaké farby uvidíte pri receptoch v hamMňam.</p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako sa GI zisťuje</h3>
+          <p>
+            GI sa <strong>nedá vypočítať z obalu</strong> – meria sa v laboratóriu. Dobrovoľníci zjedia také množstvo jedla,
+            v ktorom je 50 g sacharidov, a dve hodiny sa im meria cukor v krvi. Potom sa výsledok porovná s tým,
+            ako stúpol cukor po 50 g čistej glukózy:
+          </p>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">GI = (vzostup cukru po jedle ÷ vzostup po glukóze) × 100</p>
+          <p>Doma preto GI potravín hľadáme v tabuľkách glykemického indexu. Rôzne tabuľky môžu mať pre to isté jedlo trochu iné číslo.</p>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Čo mení GI</h3>
+          <ul class="space-y-2">
+            <li class="flex gap-3"><span aria-hidden="true">🥦</span><span><strong>Vláknina, tuk a bielkoviny</strong> spomaľujú trávenie, takže GI klesá. Preto je dobré jesť sacharidy spolu so zeleninou alebo bielkovinami.</span></li>
+            <li class="flex gap-3"><span aria-hidden="true">🍝</span><span><strong>Dlhé varenie</strong> GI zvyšuje. Cestoviny „al dente“ majú nižší GI ako rozvarené.</span></li>
+            <li class="flex gap-3"><span aria-hidden="true">🏭</span><span><strong>Spracovanie</strong>: čím je jedlo jemnejšie pomleté či „instantnejšie“, tým má vyšší GI. Celé vločky majú nižší GI ako instantná kaša.</span></li>
+            <li class="flex gap-3"><span aria-hidden="true">🍌</span><span><strong>Zrelosť</strong>: zrelší banán má vyšší GI ako zelenší.</span></li>
+          </ul>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">GI celého receptu</h3>
+          <p>
+            Recept je zmes surovín, preto je jeho GI len <strong>odhad</strong>. Počíta sa ako priemer GI surovín, pri ktorom
+            má väčšiu váhu tá surovina, ktorá prinesie viac sacharidov:
+          </p>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">GI receptu ≈ súčet (GI suroviny × jej sacharidy) ÷ všetky sacharidy</p>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <p class="font-semibold text-slate-900">Príklad: naša ovsená kaša <span class="font-normal text-slate-500">(GI z tabuliek, približne)</span></p>
+            <ul class="mt-2 space-y-1 text-sm">
+              <li>vločky: GI 55 × 30 g = 1 650</li>
+              <li>mlieko: GI 41 × 9,6 g ≈ 394</li>
+              <li>banán: GI 51 × 20 g = 1 020</li>
+            </ul>
+            <p class="mt-2">Spolu 3 064 ÷ 60 g sacharidov ≈ <strong>GI 51</strong> – nízky.</p>
+          </div>
+
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:p-5">
+            <p class="font-semibold">⚠️ Pozor</p>
+            <p class="mt-1">Nízky GI ešte neznamená „zdravé“. Napríklad čokoláda má nízky GI, lebo obsahuje veľa tuku – a ten má veľa kalórií. A GI nič nehovorí o tom, koľko sacharidov zjeme. Na to je GL.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. GL -->
+      <section id="gl" class="mb-12" aria-labelledby="gl-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-blue-700">Kapitola 4</p>
+        <h2 id="gl-title" class="mb-4 text-2xl font-bold tracking-tight">Glykemická záťaž (GL)</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            GI má jednu slabinu: nevie, koľko toho zjeme. Melón má vysoký GI, ale je to hlavne voda – sacharidov
+            je v ňom málo. Jeden plátok preto cukor v krvi veľmi nezvýši.
+          </p>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <p>
+              Predstavte si kohútik a vedro vody. <strong>GI</strong> hovorí, ako rýchlo tečie voda z kohútika.
+              <strong>Sacharidy</strong> hovoria, koľko vody je vo vedre. <strong>Glykemická záťaž</strong> spojí obe veci
+              a povie, ako veľmi jedlo v skutočnosti „naplní“ krv cukrom.
+            </p>
+          </div>
+
+          <h3 class="pt-2 text-lg font-semibold text-slate-900">Ako sa GL vypočíta</h3>
+          <p class="rounded-xl bg-slate-900 px-4 py-3 text-center font-mono text-sm text-white sm:text-base">GL = GI × sacharidy v porcii (g) ÷ 100</p>
+          <p>GL teda vždy patrí ku konkrétnemu množstvu jedla – k porcii, ktorú naozaj zjeme. Väčšia porcia = väčšia GL.</p>
+          <ul class="grid gap-2 sm:grid-cols-3">
+            <li class="rounded-xl bg-emerald-50 p-3 text-emerald-900"><strong class="block">Nízka GL</strong>10 a menej</li>
+            <li class="rounded-xl bg-amber-50 p-3 text-amber-900"><strong class="block">Stredná GL</strong>11 – 19</li>
+            <li class="rounded-xl bg-red-50 p-3 text-red-900"><strong class="block">Vysoká GL</strong>20 a viac</li>
+          </ul>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <p class="font-semibold text-slate-900">Príklady <span class="font-normal text-slate-500">(hodnoty sú približné)</span></p>
+            <ul class="mt-2 space-y-3">
+              <li><strong>🍉 Plátok melóna (150 g):</strong> GI 72 (vysoký), ale len asi 11 g sacharidov. GL = 72 × 11 ÷ 100 ≈ <strong>8 → nízka</strong>.</li>
+              <li><strong>🍚 Tanier varenej bielej ryže (150 g):</strong> GI 73, asi 42 g sacharidov. GL = 73 × 42 ÷ 100 ≈ <strong>31 → vysoká</strong>.</li>
+              <li><strong>🥣 Naša ovsená kaša:</strong> GI 51 (nízky), ale celý hrnček má 60 g sacharidov. GL ≈ <strong>31 → vysoká</strong>. Polovica hrnčeka: GL ≈ <strong>15 → stredná</strong>.</li>
+            </ul>
+            <p class="mt-3 text-sm text-slate-600">Vidíte? Aj jedlo s nízkym GI môže mať vysokú GL, keď ho zjeme veľa. A naopak.</p>
+          </div>
+
+          <div class="rounded-2xl border-2 border-blue-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="calc-gl-title">
+            <h4 id="calc-gl-title" class="font-semibold text-slate-900">🧮 Vyskúšajte si: glykemická záťaž</h4>
+            <div class="mt-3 grid grid-cols-2 gap-3">
+              <label class="block text-xs font-medium text-slate-600">GI jedla (0–100)
+                <input type="text" inputmode="decimal" x-model.trim="gl.gi" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+              <label class="block text-xs font-medium text-slate-600">Sacharidy v porcii (g)
+                <input type="text" inputmode="decimal" x-model.trim="gl.carbs" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+              </label>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-blue-900" aria-live="polite">
+              <span>GL: <strong class="text-xl" x-text="format(glResult, 1)">7,9</strong></span>
+              <span x-show="glLevel" class="rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1" :class="levelClass(glLevel)" x-text="glLevelLabel(glLevel)"></span>
+              <span x-show="giLevel" class="rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1" :class="levelClass(giLevel)" x-text="giLevelLabel(giLevel)"></span>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Sacharidy v porcii vypočítate v kalkulačke pri SJ.</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-sm sm:p-5">
+            <p class="font-semibold text-slate-900">💡 Ako GL znížiť</p>
+            <ul class="mt-1 list-disc space-y-1 pl-5">
+              <li>zjesť menšiu porciu jedla s vysokým GI,</li>
+              <li>vybrať si podobné jedlo s nižším GI (napríklad celozrnné namiesto bieleho),</li>
+              <li>pridať k jedlu zeleninu, bielkoviny alebo trochu tuku.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Glossary -->
+      <section id="glossary" class="mb-12" aria-labelledby="glossary-title">
+        <h2 id="glossary-title" class="mb-4 text-2xl font-bold tracking-tight">Malý slovníček</h2>
+        <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="px-4 py-3"><dt class="font-semibold text-slate-900">Glukóza</dt><dd class="mt-0.5 text-slate-700">Hroznový cukor. Na ňu sa v tele menia sacharidy a krv ju roznáša ako palivo pre bunky.</dd></div>
+          <div class="px-4 py-3"><dt class="font-semibold text-slate-900">Glykémia</dt><dd class="mt-0.5 text-slate-700">Množstvo cukru (glukózy) v krvi. Meria sa glukomerom alebo senzorom, v jednotkách mmol/l.</dd></div>
+          <div class="px-4 py-3"><dt class="font-semibold text-slate-900">Inzulín</dt><dd class="mt-0.5 text-slate-700">Látka, ktorú vyrába podžalúdková žľaza. Ako kľúč odomyká bunky, aby do nich mohla vojsť glukóza.</dd></div>
+          <div class="px-4 py-3"><dt class="font-semibold text-slate-900">Diabetes (cukrovka)</dt><dd class="mt-0.5 text-slate-700">Choroba, pri ktorej telo nemá dosť inzulínu alebo ho nevie dobre použiť, a cukor v krvi preto stúpa príliš vysoko.</dd></div>
+          <div class="px-4 py-3"><dt class="font-semibold text-slate-900">Nutričné hodnoty</dt><dd class="mt-0.5 text-slate-700">Čísla o tom, z čoho je jedlo zložené: energia, bielkoviny, sacharidy, tuky, vláknina, soľ.</dd></div>
+        </dl>
+      </section>
+
+      <aside class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm sm:p-5">
+        <p class="font-semibold text-slate-900">Dôležité</p>
+        <p class="mt-1">
+          Táto stránka vysvetľuje pojmy jednoduchými slovami a čísla v príkladoch sú približné. Nenahrádza radu lekára,
+          diabetologickej sestry ani nutričného terapeuta. Koľko SJ jesť a koľko inzulínu si podať, vždy určuje váš lekár.
+        </p>
+      </aside>
+
+      <p class="mt-8 text-center">
+        <a href="./" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700">
+          <span aria-hidden="true">←</span> Späť na recepty
+        </a>
+      </p>
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
+      hamMňam <span aria-hidden="true">·</span> Recepty prehľadne.
+    </footer>
+  </body>
+</html>

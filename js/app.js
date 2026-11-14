@@ -140,7 +140,11 @@ const translations = {
     filterMin: 'od',
     filterMax: 'do',
     filterInvalid: 'Zadejte nezáporné číslo, např. 1,5.',
-    resetFilters: 'Zrušit filtry'
+    resetFilters: 'Zrušit filtry',
+    learnLink: 'Vysvětlivky',
+    learnLinkLabel: 'Co znamenají čísla v receptech',
+    learnNutrition: 'Co je kalorická tabulka?',
+    learnGlycemic: 'Co znamenají SJ, GI a GL?'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -283,7 +287,11 @@ const translations = {
     filterMin: 'od',
     filterMax: 'do',
     filterInvalid: 'Zadajte nezáporné číslo, napr. 1,5.',
-    resetFilters: 'Zrušiť filtre'
+    resetFilters: 'Zrušiť filtre',
+    learnLink: 'Vysvetlivky',
+    learnLinkLabel: 'Čo znamenajú čísla v receptoch',
+    learnNutrition: 'Čo je kalorická tabuľka?',
+    learnGlycemic: 'Čo znamenajú SJ, GI a GL?'
   }
 };
 
