@@ -1,9 +1,11 @@
-const CACHE_NAME = 'ham-mnam-shell-v11';
+const CACHE_NAME = 'ham-mnam-shell-v12';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './js/app.js?v=11',
+  './js/app.js?v=12',
+  './js/learn.js',
+  './learn.html',
   './config.js',
   './icons/app-icon.svg'
 ];
@@ -52,7 +54,9 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('./index.html'))
+      // Offline: serve the cached page itself (e.g. learn.html), else the app shell.
+      fetch(request).catch(() => caches.match(request, { ignoreSearch: true })
+        .then((cachedResponse) => cachedResponse || caches.match('./index.html')))
     );
     return;
   }

@@ -56,6 +56,17 @@ SJ are calculated from carbohydrates. Pick **1 SJ = 10 g** (default) or **12 g**
 
 Recipe cards also show **SJ per portion** when servings and weight are filled in.
 
+## Learn what the numbers mean
+
+Tap **📖 Vysvetlivky** in the header (or **Čo je kalorická tabuľka?** / **Čo znamenajú SJ, GI a GL?** in a recipe detail) to open a page that explains, in simple words for kids and beginners:
+
+- the **calorie table** – what kcal, proteins, carbohydrates, fats, fiber and salt are, why values are per 100 g, and how to work out a portion or a whole recipe,
+- **SJ** (carbohydrate units) – 1 SJ = 10 g of carbohydrates (or 12 g), and how to count them from a food label,
+- the **glycemic index (GI)** – what the 0–100 scale and the colors mean, how GI is measured and what changes it,
+- the **glycemic load (GL)** – GL = GI × carbohydrates in the portion ÷ 100, and why portion size matters.
+
+Each topic has a small calculator to try your own numbers. The page also works offline once the app has been opened.
+
 ## Sign in
 
 Everyone can browse recipes. Adding, editing and starring recipes is only for the family:
