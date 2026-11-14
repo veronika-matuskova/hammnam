@@ -132,6 +132,13 @@ const translations = {
     saveError: 'Recept se nepodařilo uložit.',
     favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
     historyNav: 'Historie',
+    accountNav: 'Účet',
+    accountTitle: 'Můj účet',
+    accountSignedInAs: 'Přihlášený e-mail',
+    accountHistoryHint: 'Uvařená jídla a dokončené nákupní seznamy',
+    accountSignOutHint: 'Odhlásit se na tomto zařízení',
+    accountSignInNote: 'Účet je jen pro přihlášené. Přihlaste se a uvidíte svou historii.',
+    back: 'Zpět',
     historyTitle: 'Moje historie',
     historyIntro: 'Uvařená jídla a dokončené nákupní seznamy vidíte jen vy.',
     historySignInNote: 'Historie je jen pro přihlášené. Přihlaste se a uvidíte svá uvařená jídla a nákupy.',
@@ -368,6 +375,13 @@ const translations = {
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
     historyNav: 'História',
+    accountNav: 'Účet',
+    accountTitle: 'Môj účet',
+    accountSignedInAs: 'Prihlásený e-mail',
+    accountHistoryHint: 'Uvarené jedlá a dokončené nákupné zoznamy',
+    accountSignOutHint: 'Odhlásiť sa na tomto zariadení',
+    accountSignInNote: 'Účet je len pre prihlásených. Prihláste sa a uvidíte svoju históriu.',
+    back: 'Späť',
     historyTitle: 'Moja história',
     historyIntro: 'Uvarené jedlá a dokončené nákupné zoznamy vidíte len vy.',
     historySignInNote: 'História je len pre prihlásených. Prihláste sa a uvidíte svoje uvarené jedlá a nákupy.',
@@ -1177,6 +1191,8 @@ function recipeApp() {
     shoppingDraft: { name: '', amount: '', unit: '' },
     // { recipeId, count } after "Do nákupného zoznamu" in a recipe detail.
     shoppingAddedNotice: null,
+    // Account page (#account): signed-in e-mail, links to History and Logout.
+    showAccount: false,
     // History of cooked meals and finished shopping lists (#history).
     showHistory: false,
     historyTab: 'meals',
@@ -1803,6 +1819,7 @@ function recipeApp() {
         : null;
       this.showForm = hash === '#new-recipe' || Boolean(recipeToEdit);
       this.showShoppingList = hash === '#shopping-list';
+      this.showAccount = hash === '#account';
       this.showHistory = hash === '#history';
       if (this.showHistory && this.canEdit && !this.historyLoading && !this.historyLoaded) {
         this.fetchHistory();
@@ -1904,6 +1921,7 @@ function recipeApp() {
       this.showForm = false;
       this.showShoppingList = false;
       this.shoppingAddedNotice = null;
+      this.showAccount = false;
       this.showHistory = false;
       this.cookNotice = null;
       this.cookError = '';
@@ -2223,6 +2241,35 @@ function recipeApp() {
       this.cookNotice = null;
       this.cookError = '';
       this.finishShoppingError = '';
+    },
+
+    openAccount() {
+      this.showForm = false;
+      this.selectedRecipe = null;
+      if (window.location.hash !== '#account') {
+        window.history.pushState(
+          { ...(window.history.state || {}), hamMnamAccount: true },
+          '',
+          `${window.location.pathname}${window.location.search}#account`
+        );
+      }
+      this.syncRoute();
+    },
+
+    closeAccount() {
+      this.showAccount = false;
+      if (window.location.hash !== '#account') return;
+      if (window.history.state && window.history.state.hamMnamAccount) {
+        window.history.back();
+      } else {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
+    },
+
+    // Logout on the account page also leaves #account, so the sign-in form does not take its place.
+    async signOutFromAccount() {
+      this.closeAccount();
+      await this.signOut();
     },
 
     openHistory(tab = this.historyTab) {
