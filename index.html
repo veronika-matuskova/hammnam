@@ -23,7 +23,7 @@
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
           <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
-          <span>
+          <span :class="canUseShoppingList && 'hidden min-[400px]:block'">
             <span class="block text-lg font-bold tracking-tight">hamMňam</span>
             <span class="hidden text-xs text-slate-500 sm:block" x-text="t('tagline')"></span>
           </span>
