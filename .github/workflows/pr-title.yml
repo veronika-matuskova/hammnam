@@ -21,7 +21,7 @@ jobs:
       # Only the PR template is needed: it is the single source of truth for
       # the allowed types (lines like "  fix:      bug fix" in its top comment).
       - name: Checkout PR template
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: .github/pull_request_template.md
           sparse-checkout-cone-mode: false
