@@ -157,7 +157,17 @@ const translations = {
     importNoRecipe: 'Na této stránce jsme nenašli recept.',
     importPageUnreachable: 'Stránku se nepodařilo otevřít.',
     importAiFailed: 'Recept se nepodařilo přepsat. Zkuste to znovu za chvíli.',
-    importNutritionCalculated: 'Stránka neuvádí nutriční hodnoty, proto jsou vypočtené ze surovin – berte je jako odhad.'
+    importNutritionCalculated: 'Stránka neuvádí nutriční hodnoty, proto jsou vypočtené ze surovin – berte je jako odhad.',
+    sideDish: 'Příloha',
+    mainDish: 'Hlavní jídlo',
+    sideDishField: 'Příloha k tomuto jídlu (volitelné)',
+    sideDishHint: 'Vyberte recept, který se k tomuto jídlu podává jako příloha.',
+    noSideDish: '— bez přílohy —',
+    uploadPhoto: 'Nahrát fotku',
+    uploadingPhoto: 'Nahrávám fotku…',
+    photoWrongType: 'Vyberte fotku (JPG, PNG nebo WebP).',
+    photoTooLarge: 'Fotka je příliš velká (nejvýše 5 MB).',
+    photoUploadError: 'Fotku se nepodařilo nahrát.'
   },
   sk: {
     tagline: 'Vaše recepty, prehľadne',
@@ -317,7 +327,17 @@ const translations = {
     importNoRecipe: 'Na tejto stránke sme nenašli recept.',
     importPageUnreachable: 'Stránku sa nepodarilo otvoriť.',
     importAiFailed: 'Recept sa nepodarilo prepísať. Skúste to znova o chvíľu.',
-    importNutritionCalculated: 'Stránka neuvádza výživové hodnoty, preto sú vypočítané zo surovín – berte ich ako odhad.'
+    importNutritionCalculated: 'Stránka neuvádza výživové hodnoty, preto sú vypočítané zo surovín – berte ich ako odhad.',
+    sideDish: 'Príloha',
+    mainDish: 'Hlavné jedlo',
+    sideDishField: 'Príloha k tomuto jedlu (voliteľné)',
+    sideDishHint: 'Vyberte recept, ktorý sa k tomuto jedlu podáva ako príloha.',
+    noSideDish: '— bez prílohy —',
+    uploadPhoto: 'Nahrať fotku',
+    uploadingPhoto: 'Nahrávam fotku…',
+    photoWrongType: 'Vyberte fotku (JPG, PNG alebo WebP).',
+    photoTooLarge: 'Fotka je príliš veľká (najviac 5 MB).',
+    photoUploadError: 'Fotku sa nepodarilo nahrať.'
   }
 };
 
@@ -703,8 +723,16 @@ function emptyRecipe() {
     gi: '',
     ingredients: [],
     steps: [],
-    notes: ''
+    notes: '',
+    side_recipe_id: null
   };
+}
+
+// Side dish id from the form (a <select> gives strings): a positive integer or null.
+function recipeIdValue(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
 }
 
 // Older rows can hold NULL in text columns; treat missing values as empty strings.
@@ -713,6 +741,37 @@ function textValue(value) {
 }
 
 const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'notes'];
+
+// --- Recipe photos in Supabase Storage (bucket recipe-photos, migration 20261114123603) ---
+const PHOTO_BUCKET = 'recipe-photos';
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_MAX_SIDE = 1600;
+const PHOTO_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+function photoFileName(type, nowMs = Date.now()) {
+  const random = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2, 12);
+  return `${nowMs}-${random}.${PHOTO_TYPES[type] || 'jpg'}`;
+}
+
+// Phone photos are large: scale to at most PHOTO_MAX_SIDE px and re-encode as JPEG.
+// Where the browser cannot (no canvas, decoding fails), the original file is used.
+async function shrinkPhoto(file) {
+  try {
+    if (typeof createImageBitmap !== 'function' || typeof document === 'undefined' || !document.createElement) return file;
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
 
 // --- Import from a link (Edge Function supabase/functions/import-recipe) ---
 const IMPORT_FUNCTION_PATH = '/functions/v1/import-recipe';
@@ -754,6 +813,8 @@ function importedRecipeForm(recipe) {
         : [];
     } else if (field === 'steps') {
       form.steps = Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+    } else if (field === 'side_recipe_id') {
+      form.side_recipe_id = recipeIdValue(value);
     } else if (TEXT_FIELDS.includes(field) || field === 'gi') {
       form[field] = textValue(value);
     } else {
@@ -862,6 +923,8 @@ function recipeApp() {
     newRecipe: emptyRecipe(),
     importUrl: '',
     importing: false,
+    photoUploading: false,
+    photoError: '',
     importMessage: '',
     importError: '',
     session: loadStoredSession(),
@@ -1433,6 +1496,7 @@ function recipeApp() {
       this.editingRecipeId = null;
       this.newRecipe = emptyRecipe();
       this.resetImport();
+      this.photoError = '';
       if (window.location.hash !== '#new-recipe') {
         window.history.pushState(
           { ...(window.history.state || {}), hamMnamNewRecipe: true },
@@ -1536,6 +1600,95 @@ function recipeApp() {
         window.history.back();
       } else {
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
+    },
+
+    // --- Main dish and side dish (recipes.side_recipe_id) ---
+    sideRecipe(recipe) {
+      const id = recipe ? recipeIdValue(recipe.side_recipe_id) : null;
+      if (id === null || String(id) === String(recipe.id)) return null;
+      return this.recipes.find((item) => String(item.id) === String(id)) || null;
+    },
+
+    // Main dishes that use this recipe as their side.
+    mainRecipes(recipe) {
+      if (!recipe) return [];
+      return this.recipes.filter((item) => String(item.id) !== String(recipe.id)
+        && String(recipeIdValue(item.side_recipe_id)) === String(recipe.id));
+    },
+
+    // Recipes that can be picked as the side dish in the form (not the recipe itself).
+    get sideRecipeOptions() {
+      return this.recipes
+        .filter((recipe) => this.editingRecipeId === null || String(recipe.id) !== String(this.editingRecipeId))
+        .map((recipe) => ({ id: String(recipe.id), title: this.displayTitle(recipe) }))
+        .filter((option) => option.title)
+        .sort((a, b) => a.title.localeCompare(b.title, this.language));
+    },
+
+    formSideRecipeId() {
+      const id = recipeIdValue(this.newRecipe.side_recipe_id);
+      return id !== null && String(id) === String(this.editingRecipeId) ? null : id;
+    },
+
+    // Opens a linked recipe from the detail; Back returns to the recipe it was opened from.
+    openLinkedRecipe(recipe) {
+      if (!recipe) return;
+      this.resetIngredientServings();
+      this.openRecipe(recipe);
+      if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+    },
+
+    // Uploads the chosen photo to Supabase Storage and puts its public URL into the form.
+    async uploadPhoto(event) {
+      const input = event && event.target;
+      const file = input && input.files && input.files[0];
+      if (input) input.value = '';
+      if (!file || this.photoUploading) return;
+      this.photoError = '';
+      if (!file.type || !file.type.startsWith('image/')) {
+        this.photoError = this.t('photoWrongType');
+        return;
+      }
+      this.photoUploading = true;
+      try {
+        const photo = await shrinkPhoto(file);
+        const type = PHOTO_TYPES[photo.type] ? photo.type : null;
+        if (!type) {
+          this.photoError = this.t('photoWrongType');
+          return;
+        }
+        if (photo.size > PHOTO_MAX_BYTES) {
+          this.photoError = this.t('photoTooLarge');
+          return;
+        }
+        const { url, key } = this.projectConfig();
+        const path = photoFileName(type);
+        const send = async (token) => {
+          try {
+            return await fetch(`${url}/storage/v1/object/${PHOTO_BUCKET}/${path}`, {
+              method: 'POST',
+              headers: { apikey: key, Authorization: `Bearer ${token}`, 'Content-Type': type, 'x-upsert': 'false', 'cache-control': '31536000' },
+              body: photo
+            });
+          } catch (error) {
+            throw apiError('network', `Network request failed: ${error && error.message}`);
+          }
+        };
+        const token = await this.accessToken();
+        if (!token) throw apiError('http', 'Not signed in.', 401);
+        let response = await send(token);
+        if (response.status === 401) response = await send(await this.accessToken({ forceRefresh: true }));
+        if (!response.ok) {
+          const details = (await response.text()).slice(0, 240);
+          throw apiError('http', `Storage HTTP ${response.status}${details ? `: ${details}` : ''}`, response.status);
+        }
+        this.newRecipe.photo = `${url}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
+      } catch (error) {
+        console.error('Could not upload the photo:', error);
+        this.photoError = `${this.t('photoUploadError')} ${this.t(errorReasonKey(error))}`;
+      } finally {
+        this.photoUploading = false;
       }
     },
 
@@ -1651,7 +1804,8 @@ function recipeApp() {
               unit: textValue(ingredient.unit)
             }))
             .filter((ingredient) => ingredient.name || ingredient.amount || ingredient.unit),
-          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean)
+          steps: (Array.isArray(this.newRecipe.steps) ? this.newRecipe.steps : []).map(textValue).filter(Boolean),
+          side_recipe_id: this.formSideRecipeId()
         };
         if (this.editingRecipeId !== null) {
           const updated = await this.request(`?id=eq.${encodeURIComponent(this.editingRecipeId)}`, {
