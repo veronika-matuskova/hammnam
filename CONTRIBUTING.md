@@ -29,10 +29,8 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 │   └── migrations/     # Database schema, allow-list and RLS policies, one SQL file per change
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
-├── icons/
-│   └── app-icon.svg    # PWA and browser icon
-└── images/
-    └── recipes/        # Recipe photos served by the app (photo = https://hammnam.app/images/recipes/…)
+└── icons/
+    └── app-icon.svg    # PWA and browser icon
 ```
 
 ## Language
@@ -97,6 +95,10 @@ To remove someone, delete their row from `allowed_users` (writes stop immediatel
 
 - In **Authentication → URL Configuration** set the *Site URL* to `https://hammnam.app` (see `CNAME`) and add `https://hammnam.app/` (and `http://localhost:*` for local testing) to the *Redirect URLs*.
 - The session (access and refresh token) is stored in `localStorage` under `hamMnam-session`. Writes send the access token in the `Authorization` header; reads use the publishable key.
+
+## Recipe photos (Supabase Storage)
+
+**Nahrať fotku** in the form uploads to the public Storage bucket `recipe-photos` (`POST /storage/v1/object/recipe-photos/<time>-<random>.<ext>` with the user's token) and puts the public URL (`/storage/v1/object/public/recipe-photos/…`) into `recipes.photo`. Photos are scaled to 1600 px and re-encoded as JPEG in the browser when possible. The bucket accepts JPEG/PNG/WebP up to 5 MB; only family members can upload, replace or delete (policies in `20261114123603_recipe_photos_storage.sql`). Photos never go into this repository.
 
 ## Import from a link (Edge Function)
 
