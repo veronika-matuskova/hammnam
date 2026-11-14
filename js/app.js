@@ -2243,6 +2243,27 @@ function recipeApp() {
       this.finishShoppingError = '';
     },
 
+    // The header logo: back to the recipe list in-app, like the other header icons (no page reload).
+    goHome() {
+      if (this.saving) return;
+      this.showForm = false;
+      this.newRecipe = emptyRecipe();
+      this.editingRecipeId = null;
+      this.selectedRecipe = null;
+      this.portionSizeInput = '';
+      this.showSignIn = false;
+      this.authError = '';
+      if (window.location.hash) {
+        window.history.pushState(
+          { ...(window.history.state || {}), hamMnamHome: true },
+          '',
+          `${window.location.pathname}${window.location.search}`
+        );
+      }
+      this.syncRoute();
+      if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+    },
+
     openAccount() {
       this.showForm = false;
       this.selectedRecipe = null;
