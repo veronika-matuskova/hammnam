@@ -1,14 +1,20 @@
-const CACHE_NAME = 'ham-mnam-shell-v20';
+const CACHE_NAME = 'ham-mnam-shell-v21';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './js/app.js?v=20',
+  './js/app.js?v=21',
+  './js/theme.js',
+  './css/theme.css',
   './js/learn.js',
   './learn.html',
   './food-guide.html',
   './config.js',
-  './icons/app-icon.svg'
+  './icons/app-icon.svg',
+  './icons/mascots/cookbook-96.png',
+  './icons/mascots/cookbook-384.png',
+  './icons/mascots/learn-384.png',
+  './icons/mascots/shopping-384.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   if (url.origin !== self.location.origin) {
-    if (!['cdn.tailwindcss.com', 'cdn.jsdelivr.net'].includes(url.hostname)) return;
+    if (!['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'].includes(url.hostname)) return;
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);

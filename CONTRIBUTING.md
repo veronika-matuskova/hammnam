@@ -12,9 +12,12 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ├── manifest.json       # PWA install metadata
 ├── sw.js               # Offline app-shell cache
 ├── config.js           # Supabase URL and publishable/anon key
+├── css/
+│   └── theme.css       # Playful look shared by all pages (font, background, mascots, press effect)
 ├── js/
 │   ├── app.js          # Alpine component, REST and Auth calls, filters, translations
-│   └── learn.js        # Calculators for learn.html
+│   ├── learn.js        # Calculators for learn.html
+│   └── theme.js        # Tailwind config: navy/cream palette, radii, shadows (load right after the Tailwind CDN)
 ├── supabase/
 │   ├── functions/
 │   │   └── import-recipe/  # Edge Function: recipe from a link, in the app's format
@@ -30,7 +33,8 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
 └── icons/
-    └── app-icon.svg    # PWA and browser icon
+    ├── app-icon.svg    # PWA and browser icon
+    └── mascots/        # Mascot PNGs: cookbook = reading mascot (logo, recipes), shopping (shopping list), learn = spoon mascot (explainers); 96 px icons, 384 px heroes
 ```
 
 ## Language
