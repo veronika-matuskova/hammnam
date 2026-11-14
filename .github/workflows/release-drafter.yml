@@ -1,0 +1,55 @@
+name: Release Drafter
+
+# - Push to main: update the draft release with the merged PRs.
+# - PR opened/edited: label the PR from its title prefix (rules in
+#   .github/release-drafter.yml). pull_request_target is used so the token
+#   can label PRs from forks too; it is safe here because no PR code is
+#   checked out or run.
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited]
+  workflow_dispatch:
+
+# Least privilege by default; each job widens this for itself only.
+permissions:
+  contents: read
+
+jobs:
+  draft-release:
+    name: Update draft release
+    if: github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: release-drafter
+      cancel-in-progress: false
+    steps:
+      - name: Update draft release
+        uses: release-drafter/release-drafter@v6
+        with:
+          disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  autolabel:
+    name: Label PR from title
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: release-drafter-label-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Label PR from title prefix
+        uses: release-drafter/release-drafter@v6
+        with:
+          disable-releaser: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

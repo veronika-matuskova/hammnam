@@ -1,0 +1,69 @@
+# Release Drafter config: https://github.com/release-drafter/release-drafter
+#
+# PRs are grouped by the <type> prefix of their title. The autolabeler below
+# turns the prefix into a "type: <type>" label, and the categories group the
+# draft release by those labels.
+#
+# KEEP IN SYNC with the type list at the top of
+# .github/pull_request_template.md: every type there needs an autolabeler
+# rule, a category and a "type: <type>" label in the repository.
+
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+autolabeler:
+  - label: 'type: feat'
+    title:
+      - '/^feat:/i'
+  - label: 'type: fix'
+    title:
+      - '/^fix:/i'
+  - label: 'type: ui'
+    title:
+      - '/^ui:/i'
+  - label: 'type: i18n'
+    title:
+      - '/^i18n:/i'
+  - label: 'type: refactor'
+    title:
+      - '/^refactor:/i'
+  - label: 'type: chore'
+    title:
+      - '/^chore:/i'
+
+categories:
+  - title: 'New features'
+    labels:
+      - 'type: feat'
+  - title: 'Fixes'
+    labels:
+      - 'type: fix'
+  - title: 'UI'
+    labels:
+      - 'type: ui'
+  - title: 'Translations'
+    labels:
+      - 'type: i18n'
+  # Internal changes are listed but collapsed so they don't crowd the notes.
+  - title: 'Refactoring'
+    collapse-after: 0
+    labels:
+      - 'type: refactor'
+  - title: 'Maintenance'
+    collapse-after: 0
+    labels:
+      - 'type: chore'
+
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+no-changes-template: '- No changes'
+
+# feat bumps the minor version, everything else the patch version.
+version-resolver:
+  minor:
+    labels:
+      - 'type: feat'
+  default: patch
+
+template: |
+  $CHANGES
