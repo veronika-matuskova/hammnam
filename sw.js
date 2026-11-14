@@ -1,11 +1,12 @@
-const CACHE_NAME = 'ham-mnam-shell-v13';
+const CACHE_NAME = 'ham-mnam-shell-v14';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './js/app.js?v=13',
+  './js/app.js?v=14',
   './js/learn.js',
   './learn.html',
+  './food-guide.html',
   './config.js',
   './icons/app-icon.svg'
 ];

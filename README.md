@@ -68,6 +68,8 @@ Tap **📖 Vysvetlivky** in the header (or **Čo je kalorická tabuľka?** / **�
 
 Each topic has a small calculator to try your own numbers. The page also works offline once the app has been opened.
 
+A second tab, **🍽️ Výživný tanier**, shows how to put together a balanced plate (half vegetables and fruit, a quarter protein, a quarter complex carbohydrates, a little healthy fat and water) and lists good sources of carbohydrates and proteins, based on materials from a nutrition coach. It also points out which of these foods still count towards SJ. Both pages work offline once the app has been opened.
+
 ## Sign in
 
 Everyone can browse recipes. Adding, editing and starring recipes is only for the family:

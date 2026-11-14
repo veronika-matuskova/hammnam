@@ -98,3 +98,20 @@ test('the page is in Slovak (no Czech-only letters)', () => {
   assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>/g, ''), /[ěůřĚŮŘ]/);
   assert.doesNotMatch(readRepoFile('js/learn.js'), /[ěůřĚŮŘ]/);
 });
+
+test('the food guide page is linked, deployed, cached and in Slovak', () => {
+  const guide = readRepoFile('food-guide.html');
+  const ci = readRepoFile('.github/workflows/ci.yml');
+  const serviceWorker = readRepoFile('sw.js');
+  assert.match(page, /href="\.\/food-guide\.html"/, 'learn.html should link to the food guide');
+  assert.match(guide, /href="\.\/learn\.html"/, 'the food guide should link back to learn.html');
+  assert.match(ci, /cp [^\n]*\bfood-guide\.html\b[^\n]*_site\//, 'ci.yml must copy food-guide.html into _site');
+  assert.match(serviceWorker, /'\.\/food-guide\.html'/, 'APP_SHELL should precache food-guide.html');
+  for (const [, anchor] of guide.matchAll(/href="#([a-z0-9-]+)"/g)) {
+    assert.match(guide, new RegExp(`id="${anchor}"`), `table of contents link #${anchor} has no section`);
+  }
+  for (const [, anchor] of guide.matchAll(/href="\.\/learn\.html#([a-z0-9-]+)"/g)) {
+    assert.match(page, new RegExp(`id="${anchor}"`), `learn.html#${anchor} does not exist`);
+  }
+  assert.doesNotMatch(guide, /[ěůřĚŮŘ]/);
+});

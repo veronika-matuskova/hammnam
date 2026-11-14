@@ -7,6 +7,7 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ```text
 .
 ├── index.html          # App layout and CDN references
+├── food-guide.html    # Educational page: balanced plate, carbohydrate and protein sources (static, Slovak)
 ├── learn.html         # Educational page: calorie table, SJ, GI, GL (static, Slovak)
 ├── manifest.json       # PWA install metadata
 ├── sw.js               # Offline app-shell cache
