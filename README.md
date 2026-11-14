@@ -78,8 +78,16 @@ Signed-in family members get a **🛒 Nákupný zoznam** button in the header; t
 - **From a recipe** – in a recipe detail, choose the number of servings above the ingredients and tap **Do nákupného zoznamu**. All ingredients are added in the amounts for those servings, and the recipe is listed under *Z receptov* so you can open it from the list.
 - **The same item twice** – if an item with the same name and unit is already on the list, the amounts are added up (200 g + 150 g = 350 g). Amounts written as text or as a range ("podľa chuti", "1–2") stay on their own line. An item you already ticked off comes back unticked.
 - **While shopping** – tick an item when it's in the basket; ticked items move to the bottom. **Odstrániť kúpené** removes the ticked ones, and **Vymazať zoznam** (confirm with **Áno, vymazať**) empties the whole list.
+- **Done shopping** – tap **Nakúpené – presunúť do histórie**. The list moves to your history (see below) and the next item you add starts a new list.
 
 Every change is saved straight away (*Ukladám…* → *Uložené*), so a connection is needed. If saving fails, the change stays on screen with a message; the next change you make saves everything again. Reloading the page before that drops the unsaved changes.
+
+## History
+
+Signed-in family members get a **História** button (clock icon) in the header. It has two tabs, newest first, and like the shopping list it is private to you:
+
+- **Uvarené jedlá** – tap **Uvarené** in a recipe detail (under the ingredients) to note that you cooked it today, with the number of servings chosen above the ingredients. The history shows the date, the recipe (tap it to open the recipe) and the servings; × removes an entry. The entry keeps the recipe's name even if the recipe is later renamed or deleted.
+- **Nákupné zoznamy** – every list you finished with **Nakúpené**, with the date, what was bought (✓) and the recipes it was built from; × removes it.
 
 ## Sign in
 

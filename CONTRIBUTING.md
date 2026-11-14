@@ -108,6 +108,17 @@ The **Nákupný zoznam** view (`#shopping-list`) is for signed-in family members
 
 Tests: `tests/test-shopping-list.js`.
 
+## History (cooked meals and finished shopping lists)
+
+The **História** view (`#history`, `canEdit` only) has two tabs:
+
+- **Uvarené jedlá** reads `public.cooked_meals` (same migration): `recipe_id` (NULL once the recipe is deleted), `recipe_title` (a snapshot, so old entries stay readable), `servings`, `cooked_at`. **Uvarené** in the recipe detail (`logCookedMeal()`) `POST`s a row with the servings chosen for the ingredients; `user_id` defaults to `auth.uid()`.
+- **Nákupné zoznamy** reads the `shopping_lists` rows with `completed_at` set (`completed_at=not.is.null&order=completed_at.desc`). **Nakúpené – presunúť do histórie** in the shopping list (`finishShoppingList()`) waits for a running save, `PATCH`es `completed_at` on the open list and resets the in-memory list, so the next change `POST`s a new open list.
+
+Both reads send the user's token (`auth: true`) and load the newest 50 rows (`HISTORY_LIMIT`); there is no paging yet. RLS is the same as for the shopping list: own rows only, writes need `is_family_member()`. The history loads when `#history` first opens and refreshes on later visits; signing out clears it (`clearHistory()`).
+
+Tests: `tests/test-history.js`.
+
 ## Recipe photos (Supabase Storage)
 
 **Nahrať fotku** in the form uploads to the public Storage bucket `recipe-photos` (`POST /storage/v1/object/recipe-photos/<time>-<random>.<ext>` with the user's token) and puts the public URL (`/storage/v1/object/public/recipe-photos/…`) into `recipes.photo`. Photos are scaled to 1600 px and re-encoded as JPEG in the browser when possible. The bucket accepts JPEG/PNG/WebP up to 5 MB; only family members can upload, replace or delete (policies in `20261114123603_recipe_photos_storage.sql`). Photos never go into this repository.
