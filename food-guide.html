@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="sk">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Ako poskladať vyvážený tanier a ktoré potraviny sú vhodnými zdrojmi sacharidov a bielkovín.">
+    <title>Výživný tanier a vhodné potraviny — hamMňam</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html { scroll-behavior: smooth; }
+      section[id] { scroll-margin-top: 1rem; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+    <header class="border-b border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
+          <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
+          <span>
+            <span class="block text-lg font-bold tracking-tight">hamMňam</span>
+            <span class="hidden text-xs text-slate-500 sm:block">Vaše recepty, prehľadne</span>
+          </span>
+        </a>
+        <a href="./" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+          <span aria-hidden="true">←</span> Späť na recepty
+        </a>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <nav class="mb-8 grid grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 text-sm font-semibold" aria-label="Vysvetlivky">
+        <a href="./learn.html" class="rounded-lg px-3 py-2 text-center text-slate-600 transition hover:bg-white/60">📖 Čísla v receptoch</a>
+        <a href="./food-guide.html" aria-current="page" class="rounded-lg bg-white px-3 py-2 text-center text-slate-900 shadow-sm">🍽️ Výživný tanier</a>
+      </nav>
+
+      <section class="mb-8">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Vysvetlivky</p>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Výživný tanier a vhodné potraviny</h1>
+        <p class="mt-3 text-lg leading-relaxed text-slate-600">
+          Ako poskladať jedlo, aby nás zasýtilo, dodalo energiu na celý deň a cukor v krvi neskákal hore-dole?
+          Pomôže jednoduchý obrázok taniera a zoznamy potravín, ktoré sa oplatí vyberať častejšie.
+        </p>
+      </section>
+
+      <nav class="mb-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" aria-labelledby="toc-title">
+        <p id="toc-title" class="mb-3 text-sm font-semibold text-slate-800">Na tejto stránke</p>
+        <ol class="grid gap-2 text-sm sm:grid-cols-2">
+          <li><a href="#plate" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-bold">1</span>Výživný tanier</a></li>
+          <li><a href="#carbohydrates" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-amber-100 text-xs font-bold text-amber-800">2</span>Vhodné zdroje sacharidov</a></li>
+          <li><a href="#proteins" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-rose-100 text-xs font-bold text-rose-800">3</span>Vhodné zdroje bielkovín</a></li>
+          <li><a href="#fats-and-drinks" class="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"><span class="grid h-6 w-6 place-items-center rounded-full bg-sky-100 text-xs font-bold text-sky-800">4</span>Tuky a tekutiny</a></li>
+        </ol>
+      </nav>
+
+      <!-- 1. Plate -->
+      <section id="plate" class="mb-12" aria-labelledby="plate-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-slate-500">Kapitola 1</p>
+        <h2 id="plate-title" class="mb-4 text-2xl font-bold tracking-tight">Výživný tanier</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            Predstavte si svoj tanier rozdelený na časti. <strong>Polovicu</strong> zaberie zelenina a ovocie,
+            <strong>štvrtinu</strong> bielkoviny a <strong>štvrtinu</strong> komplexné sacharidy. K tomu trochu
+            dobrého tuku a pohár vody. Takto poskladané jedlo dlho zasýti a energia vydrží.
+          </p>
+
+          <figure class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <svg viewBox="0 0 400 300" class="mx-auto h-auto w-full max-w-md" role="img" aria-labelledby="plate-svg-title plate-svg-desc">
+              <title id="plate-svg-title">Výživný tanier</title>
+              <desc id="plate-svg-desc">Tanier: ľavá polovica zelenina a ovocie, pravá horná štvrtina bielkoviny, pravá dolná štvrtina komplexné sacharidy, v strede trochu oleja. Vedľa taniera pohár vody.</desc>
+              <circle cx="150" cy="150" r="138" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+              <circle cx="150" cy="150" r="124" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+              <path d="M150 32 A118 118 0 0 0 150 268 Z" fill="#dcfce7"/>
+              <path d="M150 150 L150 32 A118 118 0 0 1 268 150 Z" fill="#ffe4e6"/>
+              <path d="M150 150 L268 150 A118 118 0 0 1 150 268 Z" fill="#fef3c7"/>
+              <line x1="150" y1="30" x2="150" y2="270" stroke="#ffffff" stroke-width="5"/>
+              <line x1="150" y1="150" x2="270" y2="150" stroke="#ffffff" stroke-width="5"/>
+              <g font-size="22" text-anchor="middle">
+                <text x="88" y="78">🥦</text><text x="122" y="70">🍅</text>
+                <text x="66" y="118">🥕</text><text x="104" y="112">🥒</text>
+                <text x="60" y="206">🍎</text><text x="96" y="222">🫐</text><text x="128" y="246">🥗</text>
+                <text x="186" y="80">🐟</text><text x="222" y="98">🍗</text><text x="190" y="120">🥚</text><text x="240" y="132">🫘</text>
+                <text x="190" y="190">🥔</text><text x="232" y="180">🍞</text><text x="200" y="232">🍚</text>
+              </g>
+              <g font-family="ui-sans-serif, system-ui, sans-serif" font-weight="700" text-anchor="middle">
+                <text x="94" y="152" font-size="13" fill="#166534">Zelenina</text>
+                <text x="94" y="168" font-size="13" fill="#166534">a ovocie ½</text>
+                <text x="210" y="62" font-size="12" fill="#9f1239">Bielkoviny ¼</text>
+                <text x="210" y="256" font-size="12" fill="#92400e">Sacharidy ¼</text>
+              </g>
+              <circle cx="150" cy="150" r="17" fill="#fef9c3" stroke="#ffffff" stroke-width="3"/>
+              <text x="150" y="157" font-size="17" text-anchor="middle">🫒</text>
+              <path d="M318 108 L370 108 L364 224 Q363 232 355 232 L333 232 Q325 232 324 224 Z" fill="#f0f9ff" stroke="#7dd3fc" stroke-width="2"/>
+              <path d="M321 140 L367 140 L364 224 Q363 232 355 232 L333 232 Q325 232 324 224 Z" fill="#bae6fd"/>
+              <text x="344" y="252" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700" fill="#0369a1" text-anchor="middle">Voda</text>
+            </svg>
+          </figure>
+
+          <ul class="grid gap-3 sm:grid-cols-2">
+            <li class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
+              <p class="font-semibold">🥦 Zelenina a ovocie <span class="font-normal">– polovica</span></p>
+              <p class="mt-1 text-sm">Dávajú vlákninu, vitamíny a látky, ktoré chránia telo (antioxidanty). Čím viac farieb, tým lepšie, a najlepšie podľa sezóny. Zeleniny môže byť viac ako ovocia.</p>
+            </li>
+            <li class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-950">
+              <p class="font-semibold">🍗 Bielkoviny <span class="font-normal">– štvrtina</span></p>
+              <p class="mt-1 text-sm">Potrebujeme ich na rast, silné svaly a na to, aby sa telo vedelo opraviť. Vajcia, mäso, ryby, strukoviny, tofu, mliečne výrobky.</p>
+            </li>
+            <li class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+              <p class="font-semibold">🥔 Komplexné sacharidy <span class="font-normal">– štvrtina</span></p>
+              <p class="mt-1 text-sm">Hlavný zdroj energie. Vyberajte celozrnné potraviny, hnedú ryžu, zemiaky, strukoviny a celozrnné cestoviny.</p>
+            </li>
+            <li class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-yellow-950">
+              <p class="font-semibold">🫒 Tuky a oleje <span class="font-normal">– trochu</span></p>
+              <p class="mt-1 text-sm">Pomáhajú telu využiť niektoré vitamíny a sú potrebné pre hormóny. Najlepšie rastlinné oleje (hlavne olivový), orechy, semienka, avokádo.</p>
+            </li>
+            <li class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sky-950 sm:col-span-2">
+              <p class="font-semibold">💧 Tekutiny</p>
+              <p class="mt-1 text-sm">Najlepšia je obyčajná voda – počas celého dňa aj ku každému jedlu.</p>
+            </li>
+          </ul>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="font-semibold text-slate-900">Čo znamená „komplexné“ sacharidy?</h3>
+            <p class="mt-2">
+              Sacharidy sú poskladané z malých kúskov cukru. <strong>Jednoduché</strong> sacharidy (cukor, sladkosti, sladené nápoje)
+              sú krátke – telo ich rozloží hneď a cukor v krvi rýchlo vyskočí. <strong>Komplexné</strong> sacharidy sú dlhé reťaze
+              kúskov, často spolu s vlákninou. Telo ich rozkladá dlhšie, takže cukor stúpa pomalšie – majú nižší
+              <a href="./learn.html#gi" class="font-semibold text-slate-900 underline underline-offset-2">glykemický index</a>.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-sm sm:p-5">
+            <p class="font-semibold text-slate-900">🩺 Pri cukrovke</p>
+            <p class="mt-1">
+              Tanier ukazuje, z čoho jedlo poskladať. Koľko sacharidov (SJ) má byť v jednom jedle, určuje lekár –
+              podľa toho sa upraví veľkosť sacharidovej štvrtiny. Ako SJ spočítať, nájdete v časti
+              <a href="./learn.html#sj" class="font-semibold text-slate-900 underline underline-offset-2">Sacharidová jednotka</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Carbohydrates -->
+      <section id="carbohydrates" class="mb-12" aria-labelledby="carbohydrates-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-amber-700">Kapitola 2</p>
+        <h2 id="carbohydrates-title" class="mb-4 text-2xl font-bold tracking-tight">Vhodné zdroje sacharidov</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            Vyberajte <strong>komplexné sacharidy s množstvom vlákniny</strong>. Dlhšie zasýtia, energia z nich vydrží
+            a cukor v krvi stúpa pokojnejšie.
+          </p>
+
+          <div class="grid gap-3">
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🥔</span>Zemiaky a batáty</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🥔 zemiaky – najlepšie v šupke, varené alebo pečené</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍠 batáty (sladké zemiaky)</li>
+              </ul>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🍞</span>Pečivo a vločky</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🥣 ovsené vločky</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍞 celozrnné pečivo</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🥖 grahamový rožok</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 špaldový chlieb</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍞 ražný chlieb</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">💪 bielkovinový chlieb</li>
+              </ul>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🍚</span>Ryža a obilniny – prílohy</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍚 ryža natural (hnedá)</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 kuskus</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 bulgur</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 pšeno</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 quinoa</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 pohánka</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🌾 amarant</li>
+              </ul>
+              <p class="mt-3 text-sm text-slate-500">Quinoa, pohánka a amarant sú <strong>pseudoobilniny</strong> – varia sa ako obilie, ale botanicky obilím nie sú. Neobsahujú lepok.</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🫘</span>Zelenina a strukoviny</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🥦 zelenina</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🫘 strukoviny – šošovica, fazuľa, cícer, hrach</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍝 strukovinové cestoviny</li>
+              </ul>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🍓</span>Ovocie s menej cukru</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🫐 bobuľové ovocie – maliny, čučoriedky, jahody</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍇 černice, ríbezle, egreše</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">❄️ pokojne aj mrazené</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍌 zelenší banán</li>
+                <li class="rounded-full bg-amber-50 px-3 py-1.5 text-amber-900">🍈 melón</li>
+              </ul>
+              <p class="mt-3 text-sm text-slate-500">
+                Prečo <em>zelenší</em> banán? Čím je zrelší, tým má viac cukru a vyšší
+                <a href="./learn.html#gi" class="font-semibold text-slate-700 underline underline-offset-2">GI</a>.
+                A melón má síce vysoký GI, ale málo sacharidov, takže jeho
+                <a href="./learn.html#gl" class="font-semibold text-slate-700 underline underline-offset-2">glykemická záťaž</a> je nízka.
+              </p>
+            </article>
+          </div>
+
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:p-5">
+            <p class="font-semibold">⚠️ Aj „vhodné“ sacharidy sú sacharidy</p>
+            <p class="mt-1">Celozrnné pečivo, hnedá ryža, strukoviny aj ovocie zvyšujú cukor v krvi – len pomalšie. Do SJ sa preto počítajú rovnako ako biele pečivo.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Proteins -->
+      <section id="proteins" class="mb-12" aria-labelledby="proteins-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-rose-700">Kapitola 3</p>
+        <h2 id="proteins-title" class="mb-4 text-2xl font-bold tracking-tight">Vhodné zdroje bielkovín</h2>
+        <div class="space-y-4 leading-relaxed text-slate-700">
+          <p>
+            Bielkoviny dávajte na tanier <strong>každý deň a z rôznych zdrojov</strong> – raz mäso, inokedy rybu, vajcia,
+            tvaroh či strukoviny. Pomáhajú rásť, dodávajú silu a telo sa s nimi rýchlejšie zotaví.
+          </p>
+
+          <div class="grid gap-3">
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🍗</span>Mäso a ryby</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🍗 hydina</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🐇 králik</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥩 teľacie, jahňacie, chudé hovädzie</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥪 chudá hydinová šunka</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🐟 losos, makrela, tuniak, sardinky</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥫 tuniak v konzerve</li>
+              </ul>
+              <p class="mt-3 text-sm text-slate-500">Vyberajte <strong>chudé</strong> mäso (bez viditeľného tuku). Tučné ryby ako losos alebo makrela sú naopak výborné – ich tuky sú pre telo zdravé.</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🥚</span>Vajcia</h3>
+              <p class="mt-2 text-sm">Varené, na mäkko, praženica či omeleta – jednoduchý a lacný zdroj bielkovín.</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🧀</span>Mliečne výrobky – nízkotučné a polotučné</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">tvaroh</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">grécky jogurt</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">skyr</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">kefír</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">acidofilné mlieko</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">cottage (light)</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">mozzarella (light)</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">bryndza</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">olomoucké syrečky</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">camembert</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">feta</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">halloumi</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">tvarohové nátierky</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">tvrdé syry – eidam 30 %, gouda, leerdammer</li>
+              </ul>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🌱</span>Rastlinné zdroje</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🫘 strukoviny</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥙 strukovinové nátierky (napr. hummus)</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">tofu</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">tempeh</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥜 orechy</li>
+              </ul>
+              <p class="mt-3 text-sm text-slate-500">Orechy majú aj veľa tuku, takže stačí hrsť.</p>
+            </article>
+
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🛒</span>Praktické možnosti</h3>
+              <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🥯 bielkovinové pečivo</li>
+                <li class="rounded-full bg-rose-50 px-3 py-1.5 text-rose-900">🍝 strukovinové cestoviny</li>
+              </ul>
+              <p class="mt-3 text-sm text-slate-500">Majú viac bielkovín a zvyčajne menej sacharidov ako bežné pečivo a cestoviny. Sacharidy si overte na obale.</p>
+            </article>
+          </div>
+
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:p-5">
+            <p class="font-semibold">⚠️ Niektoré bielkoviny majú aj sacharidy</p>
+            <p class="mt-1">
+              Mlieko, kefír, acidofilné mlieko a jogurty obsahujú mliečny cukor (laktózu) a strukoviny majú veľa škrobu.
+              Do SJ sa preto počítajú. Mäso, ryby, vajcia a väčšina syrov naopak takmer žiadne sacharidy nemajú.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-sm sm:p-5">
+            <p class="font-semibold text-slate-900">💡 Tip</p>
+            <p class="mt-1">Keď k sacharidom pridáte bielkoviny (napríklad k pečivu vajíčko alebo tvaroh), cukor v krvi stúpa pomalšie a jedlo dlhšie zasýti.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Fats and drinks -->
+      <section id="fats-and-drinks" class="mb-12" aria-labelledby="fats-and-drinks-title">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-widest text-sky-700">Kapitola 4</p>
+        <h2 id="fats-and-drinks-title" class="mb-4 text-2xl font-bold tracking-tight">Tuky a tekutiny</h2>
+        <div class="grid gap-3 leading-relaxed text-slate-700 sm:grid-cols-2">
+          <article class="rounded-2xl border border-yellow-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">🫒</span>Tuky a oleje</h3>
+            <p class="mt-2 text-sm">Bez tuku by telo nevedelo využiť vitamíny A, D, E a K a nevytvorilo by niektoré hormóny. Stačí ho však trochu – má veľa kalórií.</p>
+            <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+              <li class="rounded-full bg-yellow-50 px-3 py-1.5 text-yellow-900">🫒 olivový a iné rastlinné oleje</li>
+              <li class="rounded-full bg-yellow-50 px-3 py-1.5 text-yellow-900">🥜 orechy</li>
+              <li class="rounded-full bg-yellow-50 px-3 py-1.5 text-yellow-900">🌻 semienka</li>
+              <li class="rounded-full bg-yellow-50 px-3 py-1.5 text-yellow-900">🥑 avokádo</li>
+            </ul>
+          </article>
+          <article class="rounded-2xl border border-sky-200 bg-white p-4 shadow-sm sm:p-5">
+            <h3 class="flex items-center gap-2 font-semibold text-slate-900"><span class="text-2xl" aria-hidden="true">💧</span>Tekutiny</h3>
+            <p class="mt-2 text-sm">Pite hlavne čistú vodu – priebežne počas celého dňa a ku každému jedlu. Sladené nápoje a džúsy majú veľa cukru, ktorý sa do krvi dostane veľmi rýchlo.</p>
+          </article>
+        </div>
+      </section>
+
+      <aside class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm sm:p-5">
+        <p class="font-semibold text-slate-900">Dôležité</p>
+        <p class="mt-1">
+          Zoznamy vychádzajú z podkladov od nutričného poradcu. Sú to všeobecné odporúčania – konkrétny jedálniček,
+          množstvo SJ a inzulínu vždy určuje váš lekár alebo nutričný terapeut.
+        </p>
+      </aside>
+
+      <p class="mt-8 text-center">
+        <a href="./" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700">
+          <span aria-hidden="true">←</span> Späť na recepty
+        </a>
+      </p>
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
+      hamMňam <span aria-hidden="true">·</span> Recepty prehľadne.
+    </footer>
+  </body>
+</html>
