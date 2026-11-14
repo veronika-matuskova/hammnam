@@ -33,7 +33,7 @@ hamMňam is a static web app: Alpine.js and Tailwind CSS load from their CDNs, a
 ├── scripts/
 │   └── create-pr.sh    # Opens a PR with a typed title and the PR template
 └── icons/
-    ├── app-icon.svg    # PWA and browser icon
+    ├── app-icon-*.png  # PWA, browser and home-screen icons (Platy reading)
     └── mascots/        # Mascot PNGs: cookbook = reading mascot (logo, recipes), shopping (shopping list), learn = spoon mascot (explainers); 96 px icons, 384 px heroes
 ```
 

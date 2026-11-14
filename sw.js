@@ -1,16 +1,18 @@
-const CACHE_NAME = 'ham-mnam-shell-v22';
+const CACHE_NAME = 'ham-mnam-shell-v23';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './js/app.js?v=22',
+  './js/app.js?v=23',
   './js/theme.js',
   './css/theme.css',
   './js/learn.js',
   './learn.html',
   './food-guide.html',
   './config.js',
-  './icons/app-icon.svg',
+  './icons/app-icon-64.png',
+  './icons/app-icon-192.png',
+  './icons/apple-touch-icon-180.png',
   './icons/mascots/cookbook-96.png',
   './icons/mascots/cookbook-384.png',
   './icons/mascots/learn-384.png',
