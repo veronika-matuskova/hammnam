@@ -28,7 +28,7 @@ const translations = {
     recipeCount: 'receptů',
     recipeCountOne: 'recept',
     recipeCountFew: 'recepty',
-    search: 'Hledat recept nebo kategorii…',
+    search: 'Hledat recept, kategorii nebo surovinu…',
     category: 'Kategorie',
     allCategories: 'Všechny kategorie',
     favorites: 'Oblíbené',
@@ -159,7 +159,7 @@ const translations = {
     recipeCount: 'receptov',
     recipeCountOne: 'recept',
     recipeCountFew: 'recepty',
-    search: 'Hľadať recept alebo kategóriu…',
+    search: 'Hľadať recept, kategóriu alebo surovinu…',
     category: 'Kategória',
     allCategories: 'Všetky kategórie',
     favorites: 'Obľúbené',
@@ -519,6 +519,18 @@ const GI_CLASSES = {
 };
 const GI_LABEL_KEYS = { low: 'giLow', medium: 'giMedium', high: 'giHigh' };
 
+// Lower-cased text without diacritics and with single spaces, for search:
+// "Raňajky  " and "ranajky" both become "ranajky". NFD splits letters such as
+// ň, ľ, ô, ů, ř into a base letter plus combining marks (U+0300–U+036F), which are dropped.
+function normalizeSearchText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // A recipe needs at least one title, Slovak or Czech.
 function hasTitle(recipe) {
   return Boolean(textValue(recipe.title_sk) || textValue(recipe.title_cs));
@@ -717,14 +729,20 @@ function recipeApp() {
     // Servings chosen in the detail for scaling ingredients, for one recipe id.
     scaledServings: { recipeId: null, value: null },
 
+    // Every word of the search must appear in the title, the category or an
+    // ingredient name; case and diacritics are ignored ("ryza" finds "ryža").
     get filteredRecipes() {
-      const query = this.search.trim().toLocaleLowerCase(this.language);
+      const words = normalizeSearchText(this.search).split(' ').filter(Boolean);
       return this.recipes.filter((recipe) => {
-        const title = this.displayTitle(recipe).toLocaleLowerCase(this.language);
-        const category = this.displayCategory(recipe).toLocaleLowerCase(this.language);
-        return (!query || title.includes(query) || category.includes(query))
-          && (!this.selectedCategory || this.displayCategory(recipe) === this.selectedCategory)
-          && (!this.favoritesOnly || Boolean(recipe.favorite));
+        if (this.selectedCategory && this.displayCategory(recipe) !== this.selectedCategory) return false;
+        if (this.favoritesOnly && !recipe.favorite) return false;
+        if (!words.length) return true;
+        const haystack = normalizeSearchText([
+          this.displayTitle(recipe),
+          this.displayCategory(recipe),
+          ...this.recipeIngredients(recipe).map((ingredient) => ingredient.name)
+        ].join('\n'));
+        return words.every((word) => haystack.includes(word));
       });
     },
 
