@@ -7,6 +7,8 @@ PR title format: <type>: <short description>
   refactor: refactor / cleanup
   chore:    docs / config / CI
 Example: fix: Correct SJ calculation for recipes without servings
+The type groups the PR in the release notes. Keep this list in sync with
+.github/release-drafter.yml.
 -->
 
 ## Summary
