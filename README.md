@@ -17,7 +17,7 @@ Once you've opened the app, it starts even without a connection. Recipes are loa
 
 The home screen lists all recipes, newest first. Each card shows the category, name, photo, SJ, carbohydrates, calories and the glycemic index.
 
-- **Search** – type in the search box to find recipes by name or category.
+- **Search** – type in the search box to find recipes by name, category or ingredient. Case and diacritics are ignored ("ryza" finds "ryža"), and with several words every word must match.
 - **Category** – pick a category to see only those recipes.
 - **Obľúbené (Favorites)** – shows only your favorite recipes. When signed in, tap the star on a card to add a recipe to favorites or remove it.
 
