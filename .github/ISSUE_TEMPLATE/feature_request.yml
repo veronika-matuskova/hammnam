@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea or improvement.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or hard to do today?
+      placeholder: There is no way to remove a recipe.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: A delete button on the recipe detail, behind a confirmation.
+    validations:
+      required: false
+  - type: input
+    id: audience
+    attributes:
+      label: Who does it help?
+      placeholder: Everyone who adds recipes / signed-in editors / ...
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Optional. How do we know it is done?
+      placeholder: |
+        - [ ] A delete button on the recipe detail.
+        - [ ] The deleted recipe disappears from the list.
+    validations:
+      required: false
