@@ -131,6 +131,27 @@ const translations = {
     unexpectedError: 'Nastala neočekávaná chyba. Zkuste to znovu.',
     saveError: 'Recept se nepodařilo uložit.',
     favoriteError: 'Oblíbený recept se nepodařilo aktualizovat.',
+    historyNav: 'Historie',
+    historyTitle: 'Moje historie',
+    historyIntro: 'Uvařená jídla a dokončené nákupní seznamy vidíte jen vy.',
+    historySignInNote: 'Historie je jen pro přihlášené. Přihlaste se a uvidíte svá uvařená jídla a nákupy.',
+    cookedMealsTab: 'Uvařená jídla',
+    pastListsTab: 'Nákupní seznamy',
+    historyLoading: 'Načítám historii…',
+    historyError: 'Historii se nepodařilo načíst.',
+    noCookedMeals: 'Zatím jste nic nezapsali. V detailu receptu klikněte na „Uvařeno“.',
+    noPastLists: 'Zatím tu nejsou žádné dokončené seznamy. Až nakoupíte, v nákupním seznamu klikněte na „Nakoupeno“.',
+    markCooked: 'Uvařeno',
+    markCookedNote: 'Zapíše se do historie s dnešním datem a zvoleným počtem porcí.',
+    cookedSaved: 'Zapsáno do historie uvařených jídel.',
+    cookedError: 'Uvařené jídlo se nepodařilo zapsat.',
+    servingsShort: 'Porce: {servings}',
+    deleteEntry: 'Odstranit',
+    deleteError: 'Záznam se nepodařilo odstranit.',
+    itemsChecked: '{checked} z {total} nakoupeno',
+    finishShopping: 'Nakoupeno – přesunout do historie',
+    finishShoppingNote: 'Seznam se uloží do historie a další suroviny začnou nový seznam.',
+    finishShoppingError: 'Seznam se nepodařilo přesunout do historie.',
     invalidNumber: 'Zadejte nezáporné číslo (např. 1,5 nebo 1.5) do polí:',
     portionHeading: 'Na jednu porci',
     portionNote: 'Vypočteno z hodnot na 100 g a hmotnosti porce.',
@@ -333,6 +354,27 @@ const translations = {
     unexpectedError: 'Nastala neočakávaná chyba. Skúste to znova.',
     saveError: 'Recept sa nepodarilo uložiť.',
     favoriteError: 'Obľúbený recept sa nepodarilo aktualizovať.',
+    historyNav: 'História',
+    historyTitle: 'Moja história',
+    historyIntro: 'Uvarené jedlá a dokončené nákupné zoznamy vidíte len vy.',
+    historySignInNote: 'História je len pre prihlásených. Prihláste sa a uvidíte svoje uvarené jedlá a nákupy.',
+    cookedMealsTab: 'Uvarené jedlá',
+    pastListsTab: 'Nákupné zoznamy',
+    historyLoading: 'Načítavam históriu…',
+    historyError: 'Históriu sa nepodarilo načítať.',
+    noCookedMeals: 'Zatiaľ ste nič nezapísali. V detaile receptu kliknite na „Uvarené“.',
+    noPastLists: 'Zatiaľ tu nie sú žiadne dokončené zoznamy. Keď nakúpite, v nákupnom zozname kliknite na „Nakúpené“.',
+    markCooked: 'Uvarené',
+    markCookedNote: 'Zapíše sa do histórie s dnešným dátumom a zvoleným počtom porcií.',
+    cookedSaved: 'Zapísané do histórie uvarených jedál.',
+    cookedError: 'Uvarené jedlo sa nepodarilo zapísať.',
+    servingsShort: 'Porcie: {servings}',
+    deleteEntry: 'Odstrániť',
+    deleteError: 'Záznam sa nepodarilo odstrániť.',
+    itemsChecked: '{checked} z {total} nakúpené',
+    finishShopping: 'Nakúpené – presunúť do histórie',
+    finishShoppingNote: 'Zoznam sa uloží do histórie a ďalšie suroviny začnú nový zoznam.',
+    finishShoppingError: 'Zoznam sa nepodarilo presunúť do histórie.',
     invalidNumber: 'Zadajte nezáporné číslo (napr. 1,5 alebo 1.5) do polí:',
     portionHeading: 'Na jednu porciu',
     portionNote: 'Vypočítané z hodnôt na 100 g a hmotnosti porcie.',
@@ -806,6 +848,13 @@ function textValue(value) {
 
 const TEXT_FIELDS = ['title_cs', 'title_sk', 'category_cs', 'category_sk', 'photo', 'notes'];
 
+// --- History (#history): cooked meals and finished shopping lists ---
+// public.cooked_meals and the shopping_lists rows with completed_at set
+// (migration 20261114124921). Both are private to the user, so reads send their token.
+const COOKED_TABLE = 'cooked_meals';
+const HISTORY_LIMIT = 50;
+const HISTORY_TABS = ['meals', 'lists'];
+
 // --- Recipe photos in Supabase Storage (bucket recipe-photos, migration 20261114123603) ---
 const PHOTO_BUCKET = 'recipe-photos';
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
@@ -1039,6 +1088,8 @@ function recipeApp() {
   // One shopping-list write at a time; changes made meanwhile are saved right after.
   let shoppingWrite = null;
   let shoppingDirty = false;
+  // The history request in flight, so opening #history twice loads it once.
+  let pendingHistory = null;
   return {
     language: getSavedLanguage(),
     recipes: [],
@@ -1087,6 +1138,21 @@ function recipeApp() {
     shoppingDraft: { name: '', amount: '', unit: '' },
     // { recipeId, count } after "Do nákupného zoznamu" in a recipe detail.
     shoppingAddedNotice: null,
+    // History of cooked meals and finished shopping lists (#history).
+    showHistory: false,
+    historyTab: 'meals',
+    cookedMeals: [],
+    pastShoppingLists: [],
+    historyLoading: false,
+    historyLoaded: false,
+    historyError: '',
+    historyActionError: '',
+    historySavingIds: {},
+    cookSaving: false,
+    cookNotice: null,
+    cookError: '',
+    finishingShopping: false,
+    finishShoppingError: '',
 
     get isSignedIn() {
       return Boolean(this.session && this.session.access_token);
@@ -1472,6 +1538,7 @@ function recipeApp() {
       if (!session) {
         this.familyMember = null;
         this.resetShoppingList();
+        this.clearHistory();
       }
       storeSession(session);
     },
@@ -1650,6 +1717,10 @@ function recipeApp() {
         : null;
       this.showForm = hash === '#new-recipe' || Boolean(recipeToEdit);
       this.showShoppingList = hash === '#shopping-list';
+      this.showHistory = hash === '#history';
+      if (this.showHistory && this.canEdit && !this.historyLoading && !this.historyLoaded) {
+        this.fetchHistory();
+      }
       this.shoppingConfirmClear = false;
       if (this.showShoppingList && this.canUseShoppingList && !this.shoppingLoaded && !this.shoppingLoading) {
         this.loadShoppingList();
@@ -1747,6 +1818,9 @@ function recipeApp() {
       this.showForm = false;
       this.showShoppingList = false;
       this.shoppingAddedNotice = null;
+      this.showHistory = false;
+      this.cookNotice = null;
+      this.cookError = '';
       window.history.pushState(
         { ...(window.history.state || {}), hamMnamRecipeDetail: true },
         '',
@@ -2049,6 +2123,190 @@ function recipeApp() {
         this.formError = this.errorText('saveError', error);
       } finally {
         this.saving = false;
+      }
+    },
+
+    // --- History: cooked meals and finished shopping lists ---
+    clearHistory() {
+      this.cookedMeals = [];
+      this.pastShoppingLists = [];
+      this.historyLoaded = false;
+      this.historyError = '';
+      this.historyActionError = '';
+      this.historySavingIds = {};
+      this.cookNotice = null;
+      this.cookError = '';
+      this.finishShoppingError = '';
+    },
+
+    openHistory(tab = this.historyTab) {
+      if (HISTORY_TABS.includes(tab)) this.historyTab = tab;
+      this.showForm = false;
+      this.selectedRecipe = null;
+      this.historyActionError = '';
+      if (window.location.hash !== '#history') {
+        window.history.pushState(
+          { ...(window.history.state || {}), hamMnamHistory: true },
+          '',
+          `${window.location.pathname}${window.location.search}#history`
+        );
+      }
+      this.syncRoute();
+      // syncRoute starts the first load; later visits refresh the history.
+      return this.historyLoading ? pendingHistory : this.fetchHistory();
+    },
+
+    closeHistory() {
+      this.showHistory = false;
+      if (window.location.hash !== '#history') return;
+      if (window.history.state && window.history.state.hamMnamHistory) {
+        window.history.back();
+      } else {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
+    },
+
+    fetchHistory() {
+      if (!this.canEdit) return Promise.resolve();
+      if (!pendingHistory) {
+        pendingHistory = this.loadHistory().finally(() => { pendingHistory = null; });
+      }
+      return pendingHistory;
+    },
+
+    async loadHistory() {
+      this.historyLoading = true;
+      this.historyError = '';
+      try {
+        const [meals, lists] = await Promise.all([
+          this.request(`?select=*&order=cooked_at.desc&limit=${HISTORY_LIMIT}`, { table: COOKED_TABLE, auth: true }),
+          this.request(
+            `?select=*&completed_at=not.is.null&order=completed_at.desc&limit=${HISTORY_LIMIT}`,
+            { table: SHOPPING_TABLE, auth: true }
+          )
+        ]);
+        if (!this.session) return;
+        if (!Array.isArray(meals) || !Array.isArray(lists)) throw new Error('Supabase returned an unexpected history response.');
+        this.cookedMeals = meals;
+        this.pastShoppingLists = lists;
+        this.historyLoaded = true;
+      } catch (error) {
+        console.error('Could not load the history:', error);
+        this.historyError = this.errorText('historyError', error);
+      } finally {
+        this.historyLoading = false;
+      }
+    },
+
+    formatDate(value) {
+      const date = new Date(value);
+      if (!value || Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat(this.language, { day: 'numeric', month: 'numeric', year: 'numeric' }).format(date);
+    },
+
+    recipeById(id) {
+      if (id === null || id === undefined) return null;
+      return this.recipes.find((recipe) => String(recipe.id) === String(id)) || null;
+    },
+
+    // Recipes a finished list was built from, that still exist.
+    pastListRecipes(list) {
+      return (Array.isArray(list && list.recipe_ids) ? list.recipe_ids : [])
+        .map((id) => this.recipeById(id))
+        .filter(Boolean);
+    },
+
+    pastListItems(list) {
+      return normalizeShoppingItems(list && list.items);
+    },
+
+    pastListProgress(list) {
+      const items = this.pastListItems(list);
+      return this.tf('itemsChecked', { checked: items.filter((item) => item.checked).length, total: items.length });
+    },
+
+    isHistorySaving(kind, id) {
+      return Boolean(this.historySavingIds[`${kind}-${id}`]);
+    },
+
+    // Logs the recipe as cooked now, with the servings chosen for the ingredients.
+    async logCookedMeal(recipe) {
+      if (!recipe || !this.canEdit || this.cookSaving) return;
+      this.cookSaving = true;
+      this.cookNotice = null;
+      this.cookError = '';
+      try {
+        const rows = await this.request('', {
+          table: COOKED_TABLE,
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            recipe_id: recipe.id,
+            recipe_title: this.displayTitle(recipe) || String(recipe.id),
+            servings: Math.max(1, Math.round(this.ingredientServings(recipe)))
+          })
+        });
+        if (!Array.isArray(rows) || rows.length === 0) throw apiError('noRows', 'Supabase did not save the cooked meal.');
+        if (this.historyLoaded) this.cookedMeals = [rows[0], ...this.cookedMeals];
+        this.cookNotice = { recipeId: recipe.id };
+      } catch (error) {
+        console.error('Could not log the cooked meal:', error);
+        this.cookError = this.errorText('cookedError', error);
+      } finally {
+        this.cookSaving = false;
+      }
+    },
+
+    // Closes the open shopping list (sets completed_at) so it moves to the history;
+    // the next item added starts a new list.
+    async finishShoppingList() {
+      if (this.finishingShopping || !this.shoppingLoaded || !this.shoppingItems.length) return;
+      this.finishingShopping = true;
+      this.finishShoppingError = '';
+      try {
+        // Let a running save finish first, so the list has an id and its last items.
+        if (shoppingWrite) await shoppingWrite;
+        if (this.shoppingSaveError) throw apiError('noRows', 'The shopping list was not saved.');
+        if (this.shoppingListId === null) throw apiError('noRows', 'The shopping list has no row yet.');
+        const rows = await this.request(`?id=eq.${encodeURIComponent(this.shoppingListId)}`, {
+          table: SHOPPING_TABLE,
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({ completed_at: new Date().toISOString() })
+        });
+        if (!Array.isArray(rows) || rows.length === 0) throw apiError('noRows', 'Supabase did not finish the shopping list.');
+        if (this.historyLoaded) this.pastShoppingLists = [rows[0], ...this.pastShoppingLists];
+        this.resetShoppingList();
+        // The user now has no open list: an empty one, saved on the next change.
+        this.shoppingLoaded = true;
+      } catch (error) {
+        console.error('Could not finish the shopping list:', error);
+        this.finishShoppingError = this.errorText('finishShoppingError', error);
+      } finally {
+        this.finishingShopping = false;
+      }
+    },
+
+    async deleteHistoryEntry(kind, entry) {
+      const table = kind === 'meal' ? COOKED_TABLE : SHOPPING_TABLE;
+      const listName = kind === 'meal' ? 'cookedMeals' : 'pastShoppingLists';
+      const key = `${kind}-${entry.id}`;
+      if (this.historySavingIds[key]) return;
+      this.historySavingIds[key] = true;
+      this.historyActionError = '';
+      try {
+        const rows = await this.request(`?id=eq.${encodeURIComponent(entry.id)}`, {
+          table,
+          method: 'DELETE',
+          headers: { Prefer: 'return=representation' }
+        });
+        if (!Array.isArray(rows) || rows.length === 0) throw apiError('noRows', `Supabase did not delete the ${kind}.`);
+        this[listName] = this[listName].filter((item) => String(item.id) !== String(entry.id));
+      } catch (error) {
+        console.error(`Could not delete the ${kind}:`, error);
+        this.historyActionError = this.errorText('deleteError', error);
+      } finally {
+        delete this.historySavingIds[key];
       }
     },
 
