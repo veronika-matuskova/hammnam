@@ -1,0 +1,20 @@
+# Dependabot keeps the GitHub Actions used in .github/workflows/ up to date.
+# Docs: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Bundle all action updates into a single PR per run.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    # Dependabot appends ": " after a prefix ending in a letter, so PR titles
+    # become "chore: bump ..." and match the repo's "<type>: ..." convention.
+    commit-message:
+      prefix: "chore"
+
+  # TODO: add the "npm" ecosystem (directory "/", monthly, same prefix and
+  # grouping) once package.json lands with #19 (ESLint).
