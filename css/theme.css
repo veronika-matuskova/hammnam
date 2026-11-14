@@ -1,0 +1,75 @@
+/* Playful look shared by every page (colors and radii live in js/theme.js). */
+
+[x-cloak] { display: none !important; }
+
+body {
+  background-color: #fffaf1;
+  background-image: radial-gradient(rgb(19 78 74 / 0.05) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+h1, h2, h3,
+.font-display {
+  font-family: "Baloo 2", Nunito, ui-rounded, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+h1 { line-height: 1.1; }
+
+/* Cards and panels: a thicker, warmer outline like the mascot drawings. */
+.rounded-2xl.border,
+.rounded-xl.border {
+  border-width: 2px;
+}
+
+/* Buttons press down a little, like a sticker being tapped. */
+button:not(:disabled),
+a.rounded-lg,
+a.rounded-xl {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+}
+button:not(:disabled):active,
+a.rounded-lg:active,
+a.rounded-xl:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+/* Inputs: friendlier focus ring in the leaf green. */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #6fd6a1 !important;
+  box-shadow: 0 0 0 3px rgb(111 214 161 / 0.35) !important;
+}
+
+/* Mascot images */
+.mascot {
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.mascot-hero {
+  filter: drop-shadow(0 8px 0 rgb(19 78 74 / 0.08));
+}
+
+/* Recipe cards: tilt a hair on hover. */
+article.group:hover {
+  transform: translateY(-3px) rotate(-0.4deg);
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  button:active, a:active, article.group:hover { transform: none !important; }
+}

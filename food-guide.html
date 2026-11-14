@@ -3,42 +3,47 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#134e4a">
     <meta name="description" content="Ako poskladať vyvážený tanier a ktoré potraviny sú vhodnými zdrojmi sacharidov a bielkovín.">
     <title>Výživný tanier a vhodné potraviny — hamMňam</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/app-icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./js/theme.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400..900&display=swap">
+    <link rel="stylesheet" href="./css/theme.css">
     <style>
       html { scroll-behavior: smooth; }
       section[id] { scroll-margin-top: 1rem; }
     </style>
   </head>
   <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
-    <header class="border-b border-slate-200 bg-white">
+    <header class="sticky top-0 z-40 border-b-2 border-slate-200 bg-white/90 backdrop-blur">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <a href="./" class="flex items-center gap-3" aria-label="hamMňam — domov">
-          <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-xl text-white" aria-hidden="true">🍲</span>
+          <img src="./icons/mascots/cookbook-96.png" alt="" width="44" height="44" class="mascot h-11 w-11 shrink-0 -my-1">
           <span>
-            <span class="block text-lg font-bold tracking-tight">hamMňam</span>
+            <span class="font-display block text-xl font-semibold leading-tight text-slate-900">ham<span class="text-emerald-600">Mňam</span></span>
             <span class="hidden text-xs text-slate-500 sm:block">Vaše recepty, prehľadne</span>
           </span>
         </a>
-        <a href="./" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+        <a href="./" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
           <span aria-hidden="true">←</span> Späť na recepty
         </a>
       </div>
     </header>
 
     <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-      <nav class="mb-8 grid grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 text-sm font-semibold" aria-label="Vysvetlivky">
-        <a href="./learn.html" class="rounded-lg px-3 py-2 text-center text-slate-600 transition hover:bg-white/60">📖 Čísla v receptoch</a>
-        <a href="./food-guide.html" aria-current="page" class="rounded-lg bg-white px-3 py-2 text-center text-slate-900 shadow-sm">🍽️ Výživný tanier</a>
+      <nav class="mb-8 grid grid-cols-2 gap-1 rounded-full border-2 border-slate-200 bg-white p-1 text-sm font-bold" aria-label="Vysvetlivky">
+        <a href="./learn.html" class="rounded-full px-3 py-2 text-center text-slate-600 transition hover:bg-slate-100">📖 Čísla v receptoch</a>
+        <a href="./food-guide.html" aria-current="page" class="rounded-full bg-slate-900 px-3 py-2 text-center text-white shadow-sm">🍽️ Výživný tanier</a>
       </nav>
 
-      <section class="mb-8">
-        <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-slate-500">Vysvetlivky</p>
+      <section class="relative mb-8 overflow-hidden rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-amber-100 via-white to-emerald-50 p-5 shadow-md sm:p-8">
+        <img src="./icons/mascots/learn-384.png" alt="" width="160" height="160" class="mascot mascot-hero float-right -mr-1 -mt-1 ml-3 h-24 w-24 motion-safe:animate-bob sm:h-40 sm:w-40">
         <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Výživný tanier a vhodné potraviny</h1>
         <p class="mt-3 text-lg leading-relaxed text-slate-600">
           Ako poskladať jedlo, aby nás zasýtilo, dodalo energiu na celý deň a cukor v krvi neskákal hore-dole?
